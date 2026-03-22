@@ -70,10 +70,10 @@ const OperatorCard = ({
 }) => (
   <Box
     bg="rgba(15,15,15,0.95)"
-    border="1px solid rgba(255,255,255,0.09)"
+    border="1px solid rgba(255,255,255,0.13)"
     borderRadius="16px"
     overflow="hidden"
-    boxShadow="0 24px 48px rgba(0,0,0,0.7)"
+    boxShadow="0 24px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,80,95,0.07)"
     w="100%"
   >
     {/* ── TOP SECTION ── */}

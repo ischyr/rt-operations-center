@@ -74,7 +74,7 @@ const Operators = () => (
     <OperatorShapes />
     <Stack spacing={10} align="center" zIndex={1}>
       <OperatorsIntro />
-      <Stack spacing={6} w="100%">
+      <Stack spacing={10} w="100%">
         {operators.map((op) => (
           <OperatorCard key={op.callsign} {...op} />
         ))}
