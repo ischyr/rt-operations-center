@@ -386,6 +386,7 @@ function App() {
               transform={{ base: 'none', md: 'skewX(-10deg)' }}
               transformOrigin="left"
               zIndex={1}
+              pointerEvents="none"
             />
 
             <Box w={{ base: '100%', md: '580px' }} zIndex={3}>
