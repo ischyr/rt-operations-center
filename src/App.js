@@ -32,7 +32,7 @@ const theme = extendTheme({
   styles: {
     global: {
       'html, body': {
-        background: '#0f0f0f',
+        background: '#111111',
         color: '#f5f5f5',
         minHeight: '100vh',
         fontFamily: `'Inter', sans-serif`,
@@ -145,24 +145,89 @@ function App() {
 
   const renderPageSection = () => {
     if (selectedPanel === 'about') {
+      const aboutFeatures = [
+        {
+          title: 'Comprehensive Red Team Operations',
+          text: 'We execute advanced adversary emulation across networks, cloud, and applications to expose real-world risks with clarity.',
+        },
+        {
+          title: '10+ Years Combined Experience',
+          text: 'Our operators are certified professionals (OSCP, CRTO, CEH, ECIH) with diverse backgrounds in offensive and defensive domains.',
+        },
+        {
+          title: 'Adaptive Methodology',
+          text: 'We continuously tune attack frameworks and tooling with lessons learned from the field, ensuring up-to-date tradecraft.',
+        },
+        {
+          title: 'Risk-Driven Reporting',
+          text: 'Actionable executive summaries and technical tracking allow decision-makers to prioritize remediation effectively.',
+        },
+      ];
+
       return (
-        <Stack spacing={6}>
-          <Heading>About Red Team Operations Center</Heading>
-          <Text fontSize="lg" color="white">
-            Red Team Operations Center offers an all-in-one command suite for offensive security teams. Track campaigns,
-            operator readiness, and mission objectives with collaborative playbooks and live attack telemetry.
+        <Box position="relative" w="100%" py={{ base: 8, md: 12 }} overflow="hidden">
+          <Box
+            pos="absolute"
+            inset="0"
+            bgImage="radial-gradient(circle at 15% 25%, rgba(255, 0, 0, 0.2), transparent 40%), radial-gradient(circle at 85% 20%, rgba(90, 20, 20, 0.25), transparent 50%)"
+            opacity={0.4}
+            zIndex={-2}
+          />
+          <Stack spacing={8} align="center" textAlign="center" zIndex={1}>
+            <Heading>About us</Heading>
+            <Text maxW="820px" fontSize={{ base: 'sm', md: 'md' }} color="#e6e6e6">
+            We are a team of dedicated red team operators and cybersecurity professionals, continuously training and refining our skills to stay ahead of evolving threats.
+            We actively develop and test new tradecraft, techniques, and methodologies to simulate real-world adversaries with precision.
+            Through our extensive portfolio of services—including Penetration Testing, Incident Response, Cloud Security Assessments, OSINT Investigations,
+            Security Hardening, Training, and Security Awareness—we help organizations strengthen their defenses and elevate their overall security posture.
           </Text>
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <Card sx={commonCard} p={4}>
-              <Heading size="md">Command Planning</Heading>
-              <Text>A unified mission planner with target profiling, phase gates, and escalation controls.</Text>
-            </Card>
-            <Card sx={commonCard} p={4}>
-              <Heading size="md">Data-Driven Ops</Heading>
-              <Text>Continuous feed from vulnerability findings, persistence channels, and command traces.</Text>
-            </Card>
+          <Text maxW="900px" fontSize={{ base: 'sm', md: 'md' }} color="gray.300" px={{ base: 2, md: 0 }}>
+            Our deep expertise is built on a culture of constant improvement and collaborative war-game preparation. We deliver practical outcomes and a resilient security posture for every client.
+          </Text>
+
+          <Box width="100%" mt={8} mb={8} p={{ base: 4, md: 6 }} borderRadius="24px" boxShadow="0 16px 36px rgba(0,0,0,0.4)" bg="#131313" border="1px solid rgba(255,80,95,0.35)">
+            <Heading size="lg" mb={3} color="red.300">Strategic Success Framework</Heading>
+            <Text fontSize={{ base: 'md', md: 'lg' }} color="gray.100" maxW="900px" mx="auto">
+              We specialize in keeping your company’s digital assets and reputation intact through adversary-grade simulations, continuous threat detection, and security-aware training.
+            </Text>
+            <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.300" mt={2} maxW="900px" mx="auto">
+              Our tailored operational playbooks ensure you can rapidly recover from incidents while minimizing residue and reducing attack surface.
+            </Text>
+          </Box>
+
+          <Heading>Why choose Red Team Ops Center?</Heading>
+
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} width="100%" px={{ base: 2, md: 0 }}>
+            {aboutFeatures.map((feature) => (
+              <Box
+                key={feature.title}
+                p={4}
+                minH="210px"
+                borderRadius="20px"
+                bg="rgba(18,20,25,0.9)"
+                border="1px solid rgba(255,80,95,0.35)"
+                transition="transform 0.24s ease, box-shadow 0.24s ease"
+                _hover={{ transform: 'translateY(-6px)', boxShadow: '0 18px 28px rgba(255, 55, 55, 0.45)' }}
+              >
+                <Heading size="md" color="red.200" mb={2}>{feature.title}</Heading>
+                <Text fontSize="sm" color="gray.300">{feature.text}</Text>
+              </Box>
+            ))}
           </SimpleGrid>
+          <Button
+            colorScheme="red"
+            size="lg"
+            mt={8}
+            w={{ base: '100%', md: '320px' }}
+            h="16"
+            fontSize="lg"
+            border="1px solid rgba(255,80,95,0.45)"
+            _hover={{ bg: 'red.600', transform: 'scale(1.03)' }}
+          >
+            Get Started
+          </Button>
         </Stack>
+      </Box>
       );
     }
 
@@ -323,9 +388,9 @@ function App() {
   if (staticPanels.includes(selectedPanel)) {
     return (
       <ChakraProvider theme={theme}>
-        <Box minH="100vh" bg="#0f0f0f" p={{ base: 6, md: 12 }}>
+        <Box minH="100vh" bg="#111111" p={{ base: 6, md: 12 }}>
           {renderNav()}
-          <Box sx={commonCard} maxW="900px" mx="auto" mt={6} p={8}>
+          <Box maxW="1080px" mx="auto" mt={6} px={{ base: 3, md: 0 }}>
             {renderPageSection()}
           </Box>
         </Box>
