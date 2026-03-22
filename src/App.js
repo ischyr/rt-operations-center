@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ChakraProvider,
   extendTheme,
@@ -18,6 +18,7 @@ import {
   SimpleGrid,
   Progress,
 } from '@chakra-ui/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const theme = extendTheme({
   config: {
@@ -36,13 +37,29 @@ const theme = extendTheme({
 });
 
 function App() {
-  const [selectedPanel, setSelectedPanel] = useState('signin');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeUser, setActiveUser] = useState('');
   const [authMessage, setAuthMessage] = useState('');
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({ name: '', email: '', password: '' });
   const [users, setUsers] = useState([]);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const selectedPanel = useMemo(() => {
+    if (location.pathname.startsWith('/about')) return 'about';
+    if (location.pathname.startsWith('/operators')) return 'operators';
+    if (location.pathname.startsWith('/certifications')) return 'certifications';
+    if (location.pathname.startsWith('/register')) return 'register';
+    return 'signin';
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      navigate('/signin', { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const handleChange = (e, type) => {
     const { name, value } = e.target;
@@ -74,7 +91,7 @@ function App() {
     }
     setUsers((prev) => [...prev, { id: Date.now(), ...registerData }]);
     setRegisterData({ name: '', email: '', password: '' });
-    setSelectedPanel('signin');
+    navigate('/signin');
     setAuthMessage('Operator enrolled. Login now.');
   };
 
@@ -91,6 +108,176 @@ function App() {
     boxShadow: '0 20px 40px rgba(0,0,0,0.65)',
     borderRadius: '24px',
     p: 6,
+  };
+
+  const navItems = [
+    { key: 'about', label: 'ABOUT', path: '/about' },
+    { key: 'operators', label: 'OPERATORS', path: '/operators' },
+    { key: 'certifications', label: 'CERTIFICATIONS', path: '/certifications' },
+    { key: 'signin', label: 'SIGN IN', path: '/signin' },
+    { key: 'register', label: 'REGISTER', path: '/register' },
+  ];
+
+  const renderNav = () => (
+    <Stack direction="row" spacing={2} justify="center" flexWrap="wrap">
+      {navItems.map((item) => (
+        <Button
+          key={item.key}
+          size="sm"
+          variant={selectedPanel === item.key ? 'solid' : 'ghost'}
+          colorScheme={selectedPanel === item.key ? 'red' : 'gray'}
+          onClick={() => {
+            navigate(item.path);
+            setAuthMessage('');
+          }}
+        >
+          {item.label}
+        </Button>
+      ))}
+    </Stack>
+  );
+
+  const renderPageSection = () => {
+    if (selectedPanel === 'about') {
+      return (
+        <Stack spacing={6}>
+          <Heading>About Red Team Operations Center</Heading>
+          <Text fontSize="lg" color="gray.200">
+            Red Team Operations Center offers an all-in-one command suite for offensive security teams. Track campaigns,
+            operator readiness, and mission objectives with collaborative playbooks and live attack telemetry.
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <Card sx={commonCard} p={4}>
+              <Heading size="md">Command Planning</Heading>
+              <Text>A unified mission planner with target profiling, phase gates, and escalation controls.</Text>
+            </Card>
+            <Card sx={commonCard} p={4}>
+              <Heading size="md">Data-Driven Ops</Heading>
+              <Text>Continuous feed from vulnerability findings, persistence channels, and command traces.</Text>
+            </Card>
+          </SimpleGrid>
+        </Stack>
+      );
+    }
+
+    if (selectedPanel === 'operators') {
+      return (
+        <Stack spacing={6}>
+          <Heading>Operators</Heading>
+          <Text fontSize="lg" color="gray.200">
+            Manage squads, assign roles, and benchmark skill paths for SOC/Red Team integration.
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+            {['Wolfpack', 'Nightshade', 'Phantom'].map((team) => (
+              <Card key={team} sx={commonCard} p={4}>
+                <Heading size="md">{team}</Heading>
+                <Text>Active missions, status: live, command stack ready.</Text>
+              </Card>
+            ))}
+          </SimpleGrid>
+        </Stack>
+      );
+    }
+
+    if (selectedPanel === 'certifications') {
+      return (
+        <Stack spacing={6}>
+          <Heading>Certifications</Heading>
+          <Text fontSize="lg" color="gray.200">
+            Accreditation matrix and milestone tracking for OSCP, CRTO, GCIA, and internal red team criteria.
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {[
+              { title: 'OSCP', status: 'Active', progress: 72 },
+              { title: 'CRTO', status: 'Pending', progress: 56 },
+              { title: 'CIS-SP', status: 'Compliant', progress: 89 },
+              { title: 'Internal Blue', status: 'Planning', progress: 41 },
+            ].map((cert) => (
+              <Card key={cert.title} sx={commonCard} p={4}>
+                <Heading size="md">{cert.title}</Heading>
+                <Text>{cert.status}</Text>
+                <Progress value={cert.progress} mt={3} colorScheme="pink" />
+              </Card>
+            ))}
+          </SimpleGrid>
+        </Stack>
+      );
+    }
+
+    return null;
+  };
+
+  const renderAuthCard = () => {
+    const isRegister = selectedPanel === 'register';
+    return (
+      <Stack spacing={6} mt={{ base: 8, md: 16 }}>
+        <Card sx={{ ...commonCard, minH: '460px', pt: 8, pb: 8 }}>
+          <CardBody>
+            <Stack spacing={3} align="center">
+              <Heading fontSize="3xl">{isRegister ? 'Create operator profile' : 'Welcome back'}</Heading>
+              <Text color="gray.400">{isRegister ? 'Register and join the operation.' : 'Sign in to your account.'}</Text>
+            </Stack>
+            <Stack as="form" spacing={3} mt={6} onSubmit={isRegister ? handleRegister : handleLogin}>
+              {isRegister && (
+                <Input
+                  placeholder="Call-sign"
+                  name="name"
+                  value={registerData.name}
+                  onChange={(e) => handleChange(e, 'register')}
+                  variant="filled"
+                  bg="rgba(255,255,255,0.08)"
+                  _hover={{ bg: 'rgba(255,255,255,0.14)' }}
+                />
+              )}
+              <Input
+                placeholder="operator@red-domain.local"
+                name="email"
+                type="email"
+                value={isRegister ? registerData.email : loginData.email}
+                onChange={(e) => handleChange(e, isRegister ? 'register' : 'login')}
+                variant="filled"
+                bg="rgba(255,255,255,0.08)"
+                _hover={{ bg: 'rgba(255,255,255,0.14)' }}
+              />
+              <Input
+                placeholder="Secure password"
+                name="password"
+                type="password"
+                value={isRegister ? registerData.password : loginData.password}
+                onChange={(e) => handleChange(e, isRegister ? 'register' : 'login')}
+                variant="filled"
+                bg="rgba(255,255,255,0.08)"
+                _hover={{ bg: 'rgba(255,255,255,0.14)' }}
+              />
+              <Button colorScheme="red" type="submit" size="lg">
+                {isRegister ? 'Create Account' : 'Continue'}
+              </Button>
+            </Stack>
+            <Stack spacing={2} mt={3}>
+              <Divider />
+              <Button variant="outline" colorScheme="gray" size="md">
+                Continue with Google
+              </Button>
+              <Button variant="outline" colorScheme="gray" size="md">
+                Continue with X
+              </Button>
+              <Text textAlign="center" mt={2} color="gray.300">
+                {isRegister ? 'Already have an account? ' : "Don't have an account? "}
+                <Button variant="link" colorScheme="teal" onClick={() => navigate(isRegister ? '/signin' : '/register')}>
+                  {isRegister ? 'Sign in' : 'Sign up'}
+                </Button>
+              </Text>
+            </Stack>
+            {authMessage && (
+              <Alert status={authMessage.includes('Access') || authMessage.includes('enrolled') ? 'success' : 'warning'} mt={4}>
+                <AlertIcon />
+                {authMessage}
+              </Alert>
+            )}
+          </CardBody>
+        </Card>
+      </Stack>
+    );
   };
 
   if (isLoggedIn) {
@@ -125,83 +312,20 @@ function App() {
     );
   }
 
-  const panelContent = () => {
-    if (selectedPanel === 'about') {
-      return (
-        <Stack spacing={3}>
-          <Heading size="md">About Us</Heading>
-          <Text>
-            Red Team Operations Center is your offensive command center for targeted pentest campaigns,
-            stealth recon, and exploit execution. Monitor objectives, manage squads, and drill continuously.
-          </Text>
-        </Stack>
-      );
-    }
-    if (selectedPanel === 'operators') {
-      return (
-        <Stack spacing={3}>
-          <Heading size="md">Operators</Heading>
-          <Text>Active teams:
-            <Box as="span" color="red.300" ml={2}>Wolfpack, Nightshade, Phantom</Box>
-          </Text>
-          <Text>Skill zones include AD, cloud, ICS, IoT and source-level scalar analysis.</Text>
-        </Stack>
-      );
-    }
-    if (selectedPanel === 'certifications') {
-      return (
-        <Stack spacing={3}>
-          <Heading size="md">Certifications</Heading>
-          <Text>Current compliance level: CIS-3, ISO27001, NIST800-53. Red team status: elevated.</Text>
-          <Text>Operators may enroll for OSCP, CRTO, GWAPT training via built-in academy paths.</Text>
-        </Stack>
-      );
-    }
+  const staticPanels = ['about', 'operators', 'certifications'];
 
-    // signin/register forms
-    const isRegister = selectedPanel === 'register';
+  if (staticPanels.includes(selectedPanel)) {
     return (
-      <Stack as="form" spacing={3} onSubmit={isRegister ? handleRegister : handleLogin}>
-        {isRegister && (
-          <Input
-            placeholder="Call-sign"
-            name="name"
-            value={registerData.name}
-            onChange={(e) => handleChange(e, 'register')}
-            variant="filled"
-            bg="rgba(255,255,255,0.08)"
-            _hover={{ bg: 'rgba(255,255,255,0.16)' }}
-          />
-        )}
-
-        <Input
-          placeholder="operator@red-domain.local"
-          name="email"
-          type="email"
-          value={isRegister ? registerData.email : loginData.email}
-          onChange={(e) => handleChange(e, isRegister ? 'register' : 'login')}
-          variant="filled"
-          bg="rgba(255,255,255,0.08)"
-          _hover={{ bg: 'rgba(255,255,255,0.16)' }}
-        />
-
-        <Input
-          placeholder="Secure password"
-          name="password"
-          type="password"
-          value={isRegister ? registerData.password : loginData.password}
-          onChange={(e) => handleChange(e, isRegister ? 'register' : 'login')}
-          variant="filled"
-          bg="rgba(255,255,255,0.08)"
-          _hover={{ bg: 'rgba(255,255,255,0.16)' }}
-        />
-
-        <Button colorScheme="red" type="submit" size="lg">
-          {isRegister ? 'Register' : 'Sign In'}
-        </Button>
-      </Stack>
+      <ChakraProvider theme={theme}>
+        <Box minH="100vh" bg="linear-gradient(145deg, #02040a 0%, #090f1e 40%, #051429 100%)" p={{ base: 6, md: 12 }}>
+          {renderNav()}
+          <Box sx={commonCard} maxW="900px" mx="auto" mt={6} p={8}>
+            {renderPageSection()}
+          </Box>
+        </Box>
+      </ChakraProvider>
     );
-  };
+  }
 
   return (
     <ChakraProvider theme={theme}>
@@ -221,24 +345,24 @@ function App() {
             minH={{ base: '55vh', md: '100vh' }}
             color="white"
           >
-            <Box pos="absolute" top="-30px" right="20px" w="260px" h="260px" bg="red.500" opacity="0.13" borderRadius="full" />
-            <Box pos="absolute" bottom="40px" left="30px" w="200px" h="200px" bg="purple.500" opacity="0.12" borderRadius="full" />
+            <Box pos="absolute" top="-30px" right="20px" w="260px" h="260px" bg="red.500" opacity="0.13" borderRadius="full" pointerEvents="none" />
+            <Box pos="absolute" bottom="40px" left="30px" w="200px" h="200px" bg="purple.500" opacity="0.12" borderRadius="full" pointerEvents="none" />
             <Stack spacing={5} pt={{ base: 8, md: 16 }}>
               <Text fontWeight="black" letterSpacing="wider" fontSize={{ base: 'sm', md: 'md' }} color="red.300">
                 RED TEAM OPS CENTER
               </Text>
               <Heading fontSize={{ base: '4xl', md: '6xl' }} lineHeight="short">
-                Breach simulation hub
+                Operations Center
               </Heading>
               <Text fontSize={{ base: 'sm', md: 'lg' }} color="gray.200" maxW="lg">
-                Full stack offense operations, recon orchestration, and vector intelligence in one hardened console.
-                Bridge your payload crafting to environment persistence with next-gen command controls.
+                A platform that helps red team operators build structure, planning, and execution workflows for
+                continuous campaign preparedness and mission excellence.
               </Text>
               <Stack direction="row" spacing={3} wrap="wrap">
-                <Badge colorScheme="red" variant="solid">CAMPAIGN</Badge>
-                <Badge colorScheme="pink" variant="solid">RECON</Badge>
-                <Badge colorScheme="purple" variant="solid">INTRUSION</Badge>
-                <Badge colorScheme="orange" variant="solid">FORGE</Badge>
+                <Badge colorScheme="red" variant="solid">STRUCTURE</Badge>
+                <Badge colorScheme="pink" variant="solid">PLANNING</Badge>
+                <Badge colorScheme="purple" variant="solid">TACTICS</Badge>
+                <Badge colorScheme="orange" variant="solid">COMMAND</Badge>
               </Stack>
             </Stack>
           </Box>
@@ -265,75 +389,8 @@ function App() {
             />
 
             <Box w={{ base: '100%', md: '580px' }} zIndex={3}>
-              <Stack direction="row" spacing={2} justify="center" mb={4}>
-                {['about', 'operators', 'certifications', 'signin', 'register'].map((item) => (
-                  <Button
-                    key={item}
-                    size="sm"
-                    variant={selectedPanel === item ? 'solid' : 'ghost'}
-                    colorScheme={selectedPanel === item ? 'red' : 'gray'}
-                    onClick={() => {
-                      setSelectedPanel(item);
-                      setAuthMessage('');
-                    }}
-                  >
-                    {item === 'signin' ? 'SIGN IN' : item === 'register' ? 'REGISTER' : item.toUpperCase()}
-                  </Button>
-                ))}
-              </Stack>
-
-              <Card
-                sx={{
-                  ...commonCard,
-                  w: '100%',
-                  minH: '500px',
-                  border: '1px solid rgba(255, 80, 95, 0.35)',
-                  background: 'rgba(14, 20, 36, 0.94)',
-                  pt: 4,
-                }}
-              >
-                <CardBody>
-                  <Stack spacing={4}>
-                    <Stack>
-                      <Heading size="2xl">Connect</Heading>
-                      <Text color="gray.300">
-                        {selectedPanel === 'about'
-                          ? 'Learn more about our red team accelerator.'
-                          : selectedPanel === 'operators'
-                          ? 'Manage operators and team status.'
-                          : selectedPanel === 'certifications'
-                          ? 'Track compliance and cert progress.'
-                          : selectedPanel === 'signin'
-                          ? 'Enter your credentials to start a session.'
-                          : 'Create a new operator profile to join the dev ops.'}
-                      </Text>
-                    </Stack>
-
-                    {authMessage && (
-                      <Alert status={authMessage.includes('Access') || authMessage.includes('enrolled') ? 'success' : 'warning'}>
-                        <AlertIcon />
-                        {authMessage}
-                      </Alert>
-                    )}
-
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                      <Box>
-                        <Text fontWeight="bold" color="red.300">System telemetry</Text>
-                        <Progress value={70} colorScheme="red" size="sm" mt={2} />
-                        <Text fontSize="xs" color="gray.400" mt={1}>System integrity checks</Text>
-                        <Progress value={48} colorScheme="pink" size="sm" mt={3} />
-                        <Text fontSize="xs" color="gray.400" mt={1}>Payload readiness</Text>
-                        <Progress value={89} colorScheme="purple" size="sm" mt={3} />
-                        <Text fontSize="xs" color="gray.400" mt={1}>Comm channel stability</Text>
-                      </Box>
-
-                      <Box>
-                        {panelContent()}
-                      </Box>
-                    </SimpleGrid>
-                  </Stack>
-                </CardBody>
-              </Card>
+              {renderNav()}
+              {renderAuthCard()}
             </Box>
           </Box>
         </Box>
