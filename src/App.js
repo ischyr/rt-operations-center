@@ -25,12 +25,17 @@ const theme = extendTheme({
     initialColorMode: 'dark',
     useSystemColorMode: false,
   },
+  fonts: {
+    heading: `'Inter', sans-serif`,
+    body: `'Inter', sans-serif`,
+  },
   styles: {
     global: {
       'html, body': {
-        background: 'linear-gradient(145deg, #02040a 0%, #090f1e 40%, #051429 100%)',
-        color: '#e2e8f0',
+        background: '#0f0f0f',
+        color: '#f5f5f5',
         minHeight: '100vh',
+        fontFamily: `'Inter', sans-serif`,
       },
     },
   },
@@ -103,9 +108,9 @@ function App() {
   };
 
   const commonCard = {
-    bg: 'rgba(1, 12, 23, 0.76)',
-    border: '1px solid rgba(255,255,255,0.14)',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.65)',
+    bg: 'rgba(15, 15, 15, 0.9)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.8)',
     borderRadius: '24px',
     p: 6,
   };
@@ -125,7 +130,7 @@ function App() {
           key={item.key}
           size="sm"
           variant={selectedPanel === item.key ? 'solid' : 'ghost'}
-          colorScheme={selectedPanel === item.key ? 'red' : 'gray'}
+          colorScheme={selectedPanel === item.key ? 'white' : 'gray'}
           onClick={() => {
             navigate(item.path);
             setAuthMessage('');
@@ -142,7 +147,7 @@ function App() {
       return (
         <Stack spacing={6}>
           <Heading>About Red Team Operations Center</Heading>
-          <Text fontSize="lg" color="gray.200">
+          <Text fontSize="lg" color="white">
             Red Team Operations Center offers an all-in-one command suite for offensive security teams. Track campaigns,
             operator readiness, and mission objectives with collaborative playbooks and live attack telemetry.
           </Text>
@@ -164,7 +169,7 @@ function App() {
       return (
         <Stack spacing={6}>
           <Heading>Operators</Heading>
-          <Text fontSize="lg" color="gray.200">
+          <Text fontSize="lg" color="white">
             Manage squads, assign roles, and benchmark skill paths for SOC/Red Team integration.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
@@ -183,7 +188,7 @@ function App() {
       return (
         <Stack spacing={6}>
           <Heading>Certifications</Heading>
-          <Text fontSize="lg" color="gray.200">
+          <Text fontSize="lg" color="white">
             Accreditation matrix and milestone tracking for OSCP, CRTO, GCIA, and internal red team criteria.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
@@ -215,7 +220,7 @@ function App() {
           <CardBody>
             <Stack spacing={3} align="center">
               <Heading fontSize="3xl">{isRegister ? 'Create operator profile' : 'Welcome back'}</Heading>
-              <Text color="gray.400">{isRegister ? 'Register and join the operation.' : 'Sign in to your account.'}</Text>
+              <Text color="gray.300">{isRegister ? 'Register and join the operation.' : 'Sign in to your account.'}</Text>
             </Stack>
             <Stack as="form" spacing={3} mt={6} onSubmit={isRegister ? handleRegister : handleLogin}>
               {isRegister && (
@@ -249,7 +254,7 @@ function App() {
                 bg="rgba(255,255,255,0.08)"
                 _hover={{ bg: 'rgba(255,255,255,0.14)' }}
               />
-              <Button colorScheme="red" type="submit" size="lg">
+              <Button colorScheme="white" type="submit" size="lg">
                 {isRegister ? 'Create Account' : 'Continue'}
               </Button>
             </Stack>
@@ -292,7 +297,7 @@ function App() {
                   Active operator: <Badge colorScheme="red">{activeUser}</Badge>
                 </Text>
                 <Text color="gray.300">Mission telemetry and breach indicators are live. Maintain secure posture.</Text>
-                <Button colorScheme="red" onClick={handleLogout}>Logout</Button>
+                <Button colorScheme="white" onClick={handleLogout}>Logout</Button>
               </Stack>
             </CardBody>
           </Card>
@@ -317,7 +322,7 @@ function App() {
   if (staticPanels.includes(selectedPanel)) {
     return (
       <ChakraProvider theme={theme}>
-        <Box minH="100vh" bg="linear-gradient(145deg, #02040a 0%, #090f1e 40%, #051429 100%)" p={{ base: 6, md: 12 }}>
+        <Box minH="100vh" bg="#0f0f0f" p={{ base: 6, md: 12 }}>
           {renderNav()}
           <Box sx={commonCard} maxW="900px" mx="auto" mt={6} p={8}>
             {renderPageSection()}
@@ -340,13 +345,11 @@ function App() {
           <Box
             flex="1"
             pos="relative"
-            bg="linear-gradient(135deg, #1b1322 5%, #260d1e 45%, #100a14 100%)"
+            bg="#0f0f0f"
             p={{ base: 8, md: 12 }}
             minH={{ base: '55vh', md: '100vh' }}
             color="white"
           >
-            <Box pos="absolute" top="-30px" right="20px" w="260px" h="260px" bg="red.500" opacity="0.13" borderRadius="full" pointerEvents="none" />
-            <Box pos="absolute" bottom="40px" left="30px" w="200px" h="200px" bg="purple.500" opacity="0.12" borderRadius="full" pointerEvents="none" />
             <Stack spacing={5} pt={{ base: 8, md: 16 }}>
               <Text fontWeight="black" letterSpacing="wider" fontSize={{ base: 'sm', md: 'md' }} color="red.300">
                 RED TEAM OPS CENTER
@@ -354,7 +357,7 @@ function App() {
               <Heading fontSize={{ base: '4xl', md: '6xl' }} lineHeight="short">
                 Operations Center
               </Heading>
-              <Text fontSize={{ base: 'sm', md: 'lg' }} color="gray.200" maxW="lg">
+              <Text fontSize={{ base: 'sm', md: 'lg' }} color="white" maxW="lg">
                 A platform that helps red team operators build structure, planning, and execution workflows for
                 continuous campaign preparedness and mission excellence.
               </Text>
