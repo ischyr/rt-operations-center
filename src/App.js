@@ -368,9 +368,8 @@ function App() {
                 <Badge colorScheme="purple" variant="solid">TACTICS</Badge>
                 <Badge colorScheme="orange" variant="solid">COMMAND</Badge>
               </Stack>
-              <Text mt={{ base: 12, md: 20 }} fontSize={{ base: 'md', md: 'lg' }} color="gray.400" fontStyle="italic" textAlign="center">
-                "Aim for the moon. Even if you miss you will land among the stars..." <br />
-                @ Iulian Schifirnet
+              <Text mt={{ base: 12, md: 20 }} fontSize="sm" color="gray.400" fontStyle="italic" textAlign="center">
+                "Aim for the moon. Even if you miss you will land among the stars..." @ Iulian Schifirnet
               </Text>
             </Stack>
           </Box>
