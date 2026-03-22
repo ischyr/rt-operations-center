@@ -2,9 +2,11 @@ import { Box } from '@chakra-ui/react';
 import Navigation from '../common/Navigation';
 import AuthForm from '../auth/AuthForm';
 import LandingHero from './LandingHero';
+import LandingShapes from './LandingShapes';
 
 const LandingLayout = () => (
   <Box pos="relative" minH="100vh" overflow="hidden">
+    <LandingShapes />
     <Box
       display="flex"
       flexDir={{ base: 'column', md: 'row' }}

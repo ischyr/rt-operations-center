@@ -2,6 +2,7 @@ import { Box, Stack, SimpleGrid } from '@chakra-ui/react';
 import CertificationsIntro from './certifications/CertificationsIntro';
 import ImprovementSection from './certifications/ImprovementSection';
 import CertCard from './certifications/CertCard';
+import CertShapes from './certifications/CertShapes';
 
 // Add your certifications here.
 // Provide an `image` URL for the badge graphic, and a `fullName` for the label below.
@@ -89,7 +90,7 @@ const certifications = [
 ];
 
 const Certifications = () => (
-  <Box position="relative" w="100%" py={{ base: 8, md: 12 }} overflow="hidden">
+  <Box position="relative" w="100%" py={{ base: 8, md: 12 }}>
     <Box
       pos="absolute"
       inset="0"
@@ -97,6 +98,7 @@ const Certifications = () => (
       opacity={0.4}
       zIndex={-2}
     />
+    <CertShapes />
     <Stack spacing={12} align="center" zIndex={1}>
       <CertificationsIntro />
       <SimpleGrid

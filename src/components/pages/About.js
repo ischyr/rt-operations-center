@@ -2,9 +2,10 @@ import { Box, Stack } from '@chakra-ui/react';
 import AboutIntro from './about/AboutIntro';
 import StrategicFramework from './about/StrategicFramework';
 import FeatureGrid from './about/FeatureGrid';
+import AboutShapes from './about/AboutShapes';
 
 const About = () => (
-  <Box position="relative" w="100%" py={{ base: 8, md: 12 }} overflow="hidden">
+  <Box position="relative" w="100%" py={{ base: 8, md: 12 }}>
     <Box
       pos="absolute"
       inset="0"
@@ -12,6 +13,7 @@ const About = () => (
       opacity={0.4}
       zIndex={-2}
     />
+    <AboutShapes />
     <Stack spacing={8} align="center" zIndex={1}>
       <AboutIntro />
       <StrategicFramework />
