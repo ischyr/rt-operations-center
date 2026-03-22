@@ -15,6 +15,8 @@ import {
   Alert,
   AlertIcon,
   Divider,
+  SimpleGrid,
+  Progress,
 } from '@chakra-ui/react';
 
 const theme = extendTheme({
@@ -72,7 +74,7 @@ function App() {
     }
     setUsers((prev) => [...prev, { id: Date.now(), ...registerData }]);
     setRegisterData({ name: '', email: '', password: '' });
-    setView('login');
+    setSelectedPanel('signin');
     setAuthMessage('Operator enrolled. Login now.');
   };
 
@@ -261,40 +263,78 @@ function App() {
               transformOrigin="left"
               zIndex={1}
             />
-            <Card
-              sx={commonCard}
-              w={{ base: '100%', md: '520px' }}
-              zIndex={3}
-              mt={{ base: 0, md: 16 }}
-            >
-              <CardBody>
-                <Stack spacing={4}>
-                  <Stack justify="space-between" direction="row" align="center">
-                    <Heading size="lg">Connect</Heading>
-                    <Stack direction="row" spacing={2}>
-                      {['about', 'operators', 'certifications', 'signin', 'register'].map((item) => (
-                        <Button
-                          key={item}
-                          size="xs"
-                          variant={selectedPanel === item ? 'solid' : 'ghost'}
-                          colorScheme={selectedPanel === item ? 'red' : 'gray'}
-                          onClick={() => {
-                            setSelectedPanel(item);
-                            setAuthMessage('');
-                          }}
-                        >
-                          {item === 'signin' ? 'SIGN IN' : item === 'register' ? 'REGISTER' : item.toUpperCase()}
-                        </Button>
-                      ))}
+
+            <Box w={{ base: '100%', md: '580px' }} zIndex={3}>
+              <Stack direction="row" spacing={2} justify="center" mb={4}>
+                {['about', 'operators', 'certifications', 'signin', 'register'].map((item) => (
+                  <Button
+                    key={item}
+                    size="sm"
+                    variant={selectedPanel === item ? 'solid' : 'ghost'}
+                    colorScheme={selectedPanel === item ? 'red' : 'gray'}
+                    onClick={() => {
+                      setSelectedPanel(item);
+                      setAuthMessage('');
+                    }}
+                  >
+                    {item === 'signin' ? 'SIGN IN' : item === 'register' ? 'REGISTER' : item.toUpperCase()}
+                  </Button>
+                ))}
+              </Stack>
+
+              <Card
+                sx={{
+                  ...commonCard,
+                  w: '100%',
+                  minH: '500px',
+                  border: '1px solid rgba(255, 80, 95, 0.35)',
+                  background: 'rgba(14, 20, 36, 0.94)',
+                  pt: 4,
+                }}
+              >
+                <CardBody>
+                  <Stack spacing={4}>
+                    <Stack>
+                      <Heading size="2xl">Connect</Heading>
+                      <Text color="gray.300">
+                        {selectedPanel === 'about'
+                          ? 'Learn more about our red team accelerator.'
+                          : selectedPanel === 'operators'
+                          ? 'Manage operators and team status.'
+                          : selectedPanel === 'certifications'
+                          ? 'Track compliance and cert progress.'
+                          : selectedPanel === 'signin'
+                          ? 'Enter your credentials to start a session.'
+                          : 'Create a new operator profile to join the dev ops.'}
+                      </Text>
                     </Stack>
+
+                    {authMessage && (
+                      <Alert status={authMessage.includes('Access') || authMessage.includes('enrolled') ? 'success' : 'warning'}>
+                        <AlertIcon />
+                        {authMessage}
+                      </Alert>
+                    )}
+
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <Box>
+                        <Text fontWeight="bold" color="red.300">System telemetry</Text>
+                        <Progress value={70} colorScheme="red" size="sm" mt={2} />
+                        <Text fontSize="xs" color="gray.400" mt={1}>System integrity checks</Text>
+                        <Progress value={48} colorScheme="pink" size="sm" mt={3} />
+                        <Text fontSize="xs" color="gray.400" mt={1}>Payload readiness</Text>
+                        <Progress value={89} colorScheme="purple" size="sm" mt={3} />
+                        <Text fontSize="xs" color="gray.400" mt={1}>Comm channel stability</Text>
+                      </Box>
+
+                      <Box>
+                        {panelContent()}
+                      </Box>
+                    </SimpleGrid>
                   </Stack>
-
-                  <Text color="gray.300">{selectedPanel === 'about' ? 'Learn more about our red team accelerator.' : selectedPanel === 'operators' ? 'Manage operators and team status.' : selectedPanel === 'certifications' ? 'Track compliance and cert progress.' : selectedPanel === 'signin' ? 'Enter your credentials to start a session.' : 'Create a new operator profile to join the dev ops.'}</Text>
-
-                  {panelContent()}
-                </Stack>
-              </CardBody>
-            </Card>
+                </CardBody>
+              </Card>
+            </Box>
           </Box>
         </Box>
       </Box>
