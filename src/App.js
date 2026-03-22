@@ -130,7 +130,8 @@ function App() {
           key={item.key}
           size="sm"
           variant={selectedPanel === item.key ? 'solid' : 'ghost'}
-          colorScheme={selectedPanel === item.key ? 'white' : 'gray'}
+          colorScheme={selectedPanel === item.key ? 'red' : 'gray'}
+          _hover={{ bg: 'red.500', color: 'white' }}
           onClick={() => {
             navigate(item.path);
             setAuthMessage('');
@@ -254,7 +255,7 @@ function App() {
                 bg="rgba(255,255,255,0.08)"
                 _hover={{ bg: 'rgba(255,255,255,0.14)' }}
               />
-              <Button colorScheme="white" type="submit" size="lg">
+              <Button colorScheme="red" type="submit" size="lg">
                 {isRegister ? 'Create Account' : 'Continue'}
               </Button>
             </Stack>
@@ -367,6 +368,10 @@ function App() {
                 <Badge colorScheme="purple" variant="solid">TACTICS</Badge>
                 <Badge colorScheme="orange" variant="solid">COMMAND</Badge>
               </Stack>
+              <Text mt={{ base: 12, md: 20 }} fontSize={{ base: 'md', md: 'lg' }} color="gray.400" fontStyle="italic" textAlign="center">
+                "Aim for the moon. Even if you miss you will land among the stars..." <br />
+                @ Iulian Schifirnet
+              </Text>
             </Stack>
           </Box>
 
