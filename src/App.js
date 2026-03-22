@@ -17,6 +17,7 @@ import {
   Divider,
   SimpleGrid,
   Progress,
+  Link,
 } from '@chakra-ui/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -320,6 +321,29 @@ function App() {
 
   const staticPanels = ['about', 'operators', 'certifications'];
 
+  const renderFooter = () => (
+    <Box
+      mx="auto"
+      maxW="900px"
+      bgGradient="linear(to-r, #5f0f0f, #8f1b1b)"
+      p={3}
+      mt={8}
+      mb={24}
+      borderRadius="24px"
+      boxShadow="0 16px 36px rgba(0,0,0,0.35)"
+      border="1px solid rgba(255, 80, 95, 0.45)"
+    >
+      <Container maxW="container.lg" display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={3}>
+        <Box>
+          <Link href="#" color="white" fontWeight="semibold" mr={4} fontSize="xs">Cookies Policy</Link>
+          <Link href="#" color="white" fontWeight="semibold" mr={4} fontSize="xs">GDPR Agreement</Link>
+          <Link href="#" color="white" fontWeight="semibold" fontSize="xs">Terms and Conditions</Link>
+        </Box>
+        <Text fontWeight="semibold" fontSize="xs">© Red Team Ops Center. All rights reserved.</Text>
+      </Container>
+    </Box>
+  );
+
   if (staticPanels.includes(selectedPanel)) {
     return (
       <ChakraProvider theme={theme}>
@@ -335,7 +359,7 @@ function App() {
 
   return (
     <ChakraProvider theme={theme}>
-      <Box pos="relative" minH="100vh" overflow="hidden">
+      <Box pos="relative" minH="100vh" pb="80px" overflow="hidden">
         <Box
           display="flex"
           flexDir={{ base: 'column', md: 'row' }}
@@ -403,6 +427,7 @@ function App() {
           </Box>
         </Box>
       </Box>
+      {renderFooter()}
     </ChakraProvider>
   );
 }
