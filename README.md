@@ -21,10 +21,147 @@ npm start
 
 ---
 
+## Dashboard Preview
+
+![Dashboard Overview](docs/dashboard-preview.png)
+
+The dashboard is only accessible to authenticated operators. Unauthenticated requests to `/dashboard/*` are redirected to `/signin` automatically.
+
+---
+
+## Dashboard
+
+### Layout
+
+The dashboard uses a persistent full-screen layout with a fixed left sidebar and a scrollable content area:
+
+```
+┌─────────────┬──────────────────────────────────────────┐
+│             │  TopBar (@callsign · search · bell)       │
+│   Sidebar   ├──────────────────────────────────────────┤
+│             │                                          │
+│  OPERATIONS │           Active View                    │
+│  TEAM       │    (DashboardView / PlaceholderView)     │
+│  INTELLIGENCE│                                         │
+│  TTPs       │                                          │
+│  PILLAGING  │                                          │
+│  REPORTING  │                                          │
+│             │                                          │
+│  Settings   │                                          │
+│  Sign Out   │                                          │
+└─────────────┴──────────────────────────────────────────┘
+```
+
+### Sidebar Navigation
+
+| Section | Items |
+|---|---|
+| **OPERATIONS** | Dashboard, Engagements, Calendar, Skill Requests, TTX Planner, Campaign Builder |
+| **TEAM** | People & Skills, Resources |
+| **INTELLIGENCE** | Loot Tracker, Evidence Vault, Cleanup Tracker, C2 Infrastructure, Phishing Infrastructure |
+| **TTPs** | Initial Access, Windows, Linux, Active Directory, Network |
+| **PILLAGING** | Subdomains, Services, Leaks, Credentials, Emails, Documents |
+| **REPORTING** | Reports, Findings, Client Portal |
+
+- Active item is highlighted with a red left border + red tinted background
+- Section labels are uppercase in muted gray
+- Brand mark "Red Ops Center" with pulsing red dot at top
+- Settings + Sign Out pinned at the bottom
+
+### TopBar
+
+- **Search** — operations search input (left)
+- **Bell** — notification icon with red dot indicator (right)
+- **@callsign chip** — shows the logged-in operator's callsign with avatar initial (right)
+
+### Dashboard Overview (`/dashboard`)
+
+**Stat Cards (top row):**
+
+| Card | Value | Accent |
+|---|---|---|
+| Active Engagements | 2 | Red gradient |
+| Team Members | 3 | Teal gradient |
+| Total Findings | 45 | Orange/yellow gradient |
+| Active Beacons | 4 | Green gradient |
+
+**Active Engagements panel** — each operation card shows:
+- Operation name + client + scope
+- Started / Ends dates · Operators · Current phase
+- Overall progress bar (color varies by status)
+- Status badge: `IN PROGRESS` (orange) · `REPORTING` (purple) · `PLANNING` (blue) · `COMPLETED` (green)
+- Severity badges: `CRITICAL` · `HIGH` · `MED` · `LOW`
+- Colored left border (red = active, purple = reporting)
+
+**Findings Breakdown panel** — horizontal bars per severity (Critical / High / Medium / Low) + total count
+
+**Resource Utilization panel** — progress bars for Hardware · Virtual IPs · Domains · C2 Servers (used / total)
+
+**Recent Activity feed** — timestamped events with colored dot indicators per type (finding / beacon / milestone / report / phishing)
+
+**Team Skill Coverage** — skill bars with color thresholds (green ≥80% · yellow ≥65% · orange <65%)
+
+### Dashboard Routes
+
+All routes under `/dashboard/*` are protected — unauthenticated users are redirected to `/signin`.
+
+| Path | View | Status |
+|---|---|---|
+| `/dashboard` | Operations Overview | Built |
+| `/dashboard/engagements` | Engagements | Placeholder |
+| `/dashboard/calendar` | Calendar | Placeholder |
+| `/dashboard/skill-requests` | Skill Requests | Placeholder |
+| `/dashboard/ttx` | TTX Planner | Placeholder |
+| `/dashboard/campaign` | Campaign Builder | Placeholder |
+| `/dashboard/people` | People & Skills | Placeholder |
+| `/dashboard/resources` | Resources | Placeholder |
+| `/dashboard/loot` | Loot Tracker | Placeholder |
+| `/dashboard/evidence` | Evidence Vault | Placeholder |
+| `/dashboard/cleanup` | Cleanup Tracker | Placeholder |
+| `/dashboard/c2` | C2 Infrastructure | Placeholder |
+| `/dashboard/phishing` | Phishing Infrastructure | Placeholder |
+| `/dashboard/ttps/initial-access` | Initial Access TTPs | Placeholder |
+| `/dashboard/ttps/windows` | Windows TTPs | Placeholder |
+| `/dashboard/ttps/linux` | Linux TTPs | Placeholder |
+| `/dashboard/ttps/active-directory` | Active Directory TTPs | Placeholder |
+| `/dashboard/ttps/network` | Network TTPs | Placeholder |
+| `/dashboard/pillaging/subdomains` | Subdomains | Placeholder |
+| `/dashboard/pillaging/services` | Services | Placeholder |
+| `/dashboard/pillaging/leaks` | Leaks | Placeholder |
+| `/dashboard/pillaging/credentials` | Credentials | Placeholder |
+| `/dashboard/pillaging/emails` | Emails | Placeholder |
+| `/dashboard/pillaging/documents` | Documents | Placeholder |
+| `/dashboard/reports` | Reports | Placeholder |
+| `/dashboard/findings` | Findings | Placeholder |
+| `/dashboard/client-portal` | Client Portal | Placeholder |
+
+### Dashboard File Structure
+
+```
+src/components/dashboard/
+├── DashboardLayout.js              # Full-screen layout — sidebar + topbar + nested routes
+├── Sidebar.js                      # Left nav — 6 sections, active state, sign out
+├── TopBar.js                       # Search + notifications + @callsign chip
+├── views/
+│   ├── DashboardView.js            # Operations Overview — stat cards + all widgets
+│   └── PlaceholderView.js          # Reusable "coming soon" view for unbuilt modules
+└── widgets/
+    ├── StatCard.js                 # Colored-accent stat card (value + label + sub)
+    ├── EngagementCard.js           # Individual operation card with progress + findings
+    ├── ActiveEngagements.js        # Panel of EngagementCards
+    ├── FindingsBreakdown.js        # Severity bar chart + total
+    ├── ResourceUtilization.js      # Resource bars (hardware / IPs / domains / C2)
+    ├── RecentActivity.js           # Timestamped activity feed with colored dots
+    └── TeamSkillCoverage.js        # Skill coverage bars with color thresholds
+```
+
+---
+
 ## Project Structure
 
 ```
 red-team-operations-center/
+├── docs/                               # Documentation assets (screenshots etc.)
 ├── server/                             # Node.js + Express backend
 │   ├── index.js                        # Entry point — CORS, JSON, route mounts
 │   ├── .env                            # Environment variables (never commit)
@@ -53,55 +190,67 @@ red-team-operations-center/
     └── components/
         ├── common/
         │   ├── Navigation.js           # Frosted-glass nav bar, route-aware active state
-        │   ├── PageLayout.js           # Shared wrapper for static pages (nav + max-width container)
+        │   ├── PageLayout.js           # Shared wrapper for static pages
         │   └── SparkleQuote.js         # Hover sparkle animation component
         ├── auth/
         │   └── AuthForm.js             # Sign in / Register form with AnimatePresence transition
         ├── dashboard/
-        │   ├── Dashboard.js            # Dashboard orchestrator
-        │   ├── DashboardHeader.js      # Operator info + logout card
-        │   └── TelemetryOverview.js    # Live telemetry stats card
+        │   ├── DashboardLayout.js      # Full-screen layout — sidebar + topbar + routes
+        │   ├── Sidebar.js              # Left nav with 6 sections
+        │   ├── TopBar.js               # Search + bell + @callsign
+        │   ├── views/
+        │   │   ├── DashboardView.js    # Operations Overview page
+        │   │   └── PlaceholderView.js  # Reusable placeholder for unbuilt modules
+        │   └── widgets/
+        │       ├── StatCard.js
+        │       ├── EngagementCard.js
+        │       ├── ActiveEngagements.js
+        │       ├── FindingsBreakdown.js
+        │       ├── ResourceUtilization.js
+        │       ├── RecentActivity.js
+        │       └── TeamSkillCoverage.js
         └── pages/
             ├── LandingLayout.js        # Landing page orchestrator (hero + auth panel)
             ├── LandingHero.js          # Left-side hero — title, tags, sparkle quote
-            ├── LandingShapes.js        # 31 scattered decorative shapes across the landing page
+            ├── LandingShapes.js        # 31 scattered decorative shapes
             ├── About.js                # About page orchestrator
             ├── Operators.js            # Operators page orchestrator + team data array
             ├── Certifications.js       # Certifications page orchestrator + cert data array
             ├── about/
-            │   ├── AboutIntro.js       # Heading + intro paragraphs
-            │   ├── StrategicFramework.js # Strategic success framework highlight box
-            │   ├── FeatureGrid.js      # Numbered feature cards (01-04) + Get Started CTA
-            │   └── AboutShapes.js      # Full-height decorative side shapes (30 per side)
+            │   ├── AboutIntro.js
+            │   ├── StrategicFramework.js
+            │   ├── FeatureGrid.js
+            │   └── AboutShapes.js
             ├── operators/
-            │   ├── OperatorsIntro.js   # "Teamers" heading + description
-            │   ├── OperatorCard.js     # GROUP-IB-style APT profile card
-            │   └── OperatorShapes.js   # Full-height decorative side shapes (30 per side)
+            │   ├── OperatorsIntro.js
+            │   ├── OperatorCard.js
+            │   └── OperatorShapes.js
             └── certifications/
-                ├── CertificationsIntro.js  # Heading + description
-                ├── CertCard.js             # Badge card (image or styled placeholder)
-                ├── CertShapes.js           # Full-height decorative side shapes (30 per side)
-                └── ImprovementSection.js   # "Race for constant improvement" section + image
+                ├── CertificationsIntro.js
+                ├── CertCard.js
+                ├── CertShapes.js
+                └── ImprovementSection.js
 ```
 
 ---
 
 ## Routes
 
-### Frontend
+### Frontend (Public)
 
 | Path              | Component                        | Auth required |
 |-------------------|----------------------------------|---------------|
-| `/`               | Redirects to `/signin`           | No            |
+| `/`               | Redirects based on auth state    | —             |
 | `/signin`         | `LandingLayout` + `AuthForm`     | No            |
 | `/register`       | `LandingLayout` + `AuthForm`     | No            |
 | `/about`          | `About`                          | No            |
 | `/operators`      | `Operators`                      | No            |
 | `/certifications` | `Certifications`                 | No            |
-| `*`               | Redirects to `/signin`           | No            |
-| (logged in)       | `Dashboard`                      | Yes           |
+| `/dashboard/*`    | `DashboardLayout`                | **Yes**       |
 
-Page transitions use `AnimatePresence mode="wait"` — each route fades and slides in. Sign In and Register share the same transition key (`"auth"`) so only the card animates internally when switching between them.
+- Logged-in users visiting `/signin` or `/register` are redirected to `/dashboard`
+- Unauthenticated users visiting any `/dashboard/*` route are redirected to `/signin`
+- Page transitions use `AnimatePresence mode="wait"` on public routes only
 
 ### Backend API
 
@@ -123,7 +272,7 @@ Register
   → check email not already taken
   → hash password (bcrypt, 12 rounds)
   → save User to MongoDB
-  → return success message
+  → return success message → redirect to /signin
 
 Login
   → validate input
@@ -132,11 +281,11 @@ Login
   → sign JWT (7 day expiry)
   → return { token, user }
 
-Frontend
-  → stores JWT + user in localStorage
+Frontend session
+  → stores JWT + user object in localStorage
   → restores session on page refresh (useEffect on mount)
   → sends Authorization: Bearer <token> header on protected requests
-  → logout clears localStorage and resets state
+  → logout clears localStorage and resets auth state
 ```
 
 ---
@@ -149,14 +298,14 @@ Frontend
 
 ### User Schema
 
-| Field      | Type   | Required | Notes                        |
-|------------|--------|----------|------------------------------|
-| callsign   | String | Yes      | Operator display name        |
-| email      | String | Yes      | Unique, lowercase, trimmed   |
-| password   | String | Yes      | bcrypt hashed, never returned|
-| role       | String | No       | `operator` (default), `admin`|
-| createdAt  | Date   | Auto     | Mongoose timestamp           |
-| updatedAt  | Date   | Auto     | Mongoose timestamp           |
+| Field      | Type   | Required | Notes                         |
+|------------|--------|----------|-------------------------------|
+| callsign   | String | Yes      | Operator display name         |
+| email      | String | Yes      | Unique, lowercase, trimmed    |
+| password   | String | Yes      | bcrypt hashed, never returned |
+| role       | String | No       | `operator` (default), `admin` |
+| createdAt  | Date   | Auto     | Mongoose timestamp            |
+| updatedAt  | Date   | Auto     | Mongoose timestamp            |
 
 ---
 
@@ -176,63 +325,25 @@ JWT_EXPIRES_IN=7d
 ## Tech Stack
 
 ### Frontend
-| Package         | Version  | Purpose                              |
-|-----------------|----------|--------------------------------------|
-| React           | 18       | Component-based UI                   |
-| Chakra UI       | ^2.8     | Dark-theme component library         |
-| Framer Motion   | ^11.3    | Page + card transitions, sparkles    |
-| React Router    | v6       | Client-side routing                  |
-| @chakra-ui/icons| ^2.0     | Input icons, arrow icons             |
+| Package          | Version | Purpose                           |
+|------------------|---------|-----------------------------------|
+| React            | 18      | Component-based UI                |
+| Chakra UI        | ^2.8    | Dark-theme component library      |
+| Framer Motion    | ^11.3   | Page + card transitions, sparkles |
+| React Router     | v6      | Client-side routing               |
+| @chakra-ui/icons | ^2.0    | UI icons throughout               |
 
 ### Backend
-| Package           | Version  | Purpose                            |
-|-------------------|----------|------------------------------------|
-| Express           | ^4.19    | HTTP server + routing              |
-| Mongoose          | ^8.5     | MongoDB ODM + schema validation    |
-| bcryptjs          | ^2.4     | Password hashing (12 rounds)       |
-| jsonwebtoken      | ^9.0     | JWT sign + verify                  |
-| express-validator | ^7.1     | Input validation middleware        |
-| cors              | ^2.8     | Cross-origin requests from React   |
-| dotenv            | ^16.4    | Environment variable loading       |
-| nodemon           | ^3.1     | Auto-restart on file change (dev)  |
-
----
-
-## Pages & Features
-
-### Landing (Sign In / Register)
-- Split layout: hero panel (left) + auth panel (right)
-- Hero includes animated glowing tags: **STRUCTURE · PLANNING · TACTICS · COMMAND**
-- Quote sparkles with gold/white 4-pointed stars on hover
-- 31 decorative red geometric shapes scattered across the full page height
-- Auth card transitions smoothly between Sign In and Register with slide + fade
-- Frosted-glass navigation bar with active indicator dots and red glow on auth buttons
-
-### About
-- Intro section with team description
-- Strategic Success Framework highlight box
-- "Why choose Red Team Ops Center?" — 4 numbered feature cards with hover lift + red glow
-- Get Started CTA button with red gradient, glow, and arrow icon
-- Full-height decorative side shapes (30 per side)
-
-### Operators
-- "Teamers" intro heading + description
-- GROUP-IB-style APT profile cards per operator, each containing:
-  - Avatar (image or initial fallback on red background)
-  - Callsign, real name, aliases, first active, latest activity
-  - Tag row: Languages · Geography · Focus Area · Motivation
-  - Bottom split: Skillset + Toolset (left) | Operator Write-up + Primary Tradecraft (right)
-- Full-height decorative side shapes distributed across all cards
-
-### Certifications
-- Intro heading + description
-- Badge grid — 3 columns, 16 certifications, image or styled placeholder fallback
-- "Race for constant improvement" section with text + splash image
-- Full-height decorative side shapes
-
-### Dashboard (logged in)
-- Operator header card — active callsign + logout
-- Telemetry overview card — breach attempts, active targets, phishing vectors, alerts
+| Package           | Version | Purpose                          |
+|-------------------|---------|----------------------------------|
+| Express           | ^4.19   | HTTP server + routing            |
+| Mongoose          | ^8.5    | MongoDB ODM + schema validation  |
+| bcryptjs          | ^2.4    | Password hashing (12 rounds)     |
+| jsonwebtoken      | ^9.0    | JWT sign + verify                |
+| express-validator | ^7.1    | Input validation middleware      |
+| cors              | ^2.8    | Cross-origin requests from React |
+| dotenv            | ^16.4   | Environment variable loading     |
+| nodemon           | ^3.1    | Auto-restart on file change      |
 
 ---
 
@@ -240,58 +351,55 @@ JWT_EXPIRES_IN=7d
 
 ```
 public/
-├── badges/         # Certification badge images (e.g. oscp.png, crto.png)
-└── images/         # General images (e.g. splash.jpg)
-```
+├── badges/     # Cert badge images — oscp.png, crto.png, cadpenx.png ...
+└── images/     # General images — splash.jpg ...
 
-Badge naming convention: lowercase cert title — `oscp.png`, `crto.png`, `cadpenx.png`.
+docs/
+└── dashboard-preview.png   # Dashboard screenshot (save here manually)
+```
 
 ---
 
-## Adding New Pages
+## Developer Guides
+
+### Adding a New Dashboard Module
+
+1. Create the view in `src/components/dashboard/views/`
+2. Add a `<Route>` in [DashboardLayout.js](src/components/dashboard/DashboardLayout.js)
+3. Add a nav item in [Sidebar.js](src/components/dashboard/Sidebar.js) under the appropriate section
+
+### Adding a New Widget to the Overview
+
+1. Create the widget in `src/components/dashboard/widgets/`
+2. Import and place it in [DashboardView.js](src/components/dashboard/views/DashboardView.js)
+
+### Adding a New Public Page
 
 1. Create your page component in `src/components/pages/`
-2. Add a `<Route>` in [src/App.js](src/App.js):
-   ```jsx
-   <Route path="/your-page" element={<PageLayout><YourPage /></PageLayout>} />
-   ```
-3. Add a nav item in [src/components/common/Navigation.js](src/components/common/Navigation.js):
-   ```js
-   { key: 'your-page', label: 'YOUR PAGE', path: '/your-page' }
-   ```
+2. Add a `<Route>` in [App.js](src/App.js)
+3. Add a nav item in [Navigation.js](src/components/common/Navigation.js)
 
-## Adding New API Routes
+### Adding a New API Route
 
 1. Create a controller in `server/controllers/`
 2. Create a route file in `server/routes/`
-3. Mount it in [server/index.js](server/index.js):
-   ```js
-   app.use('/api/your-route', require('./routes/yourRoute'));
-   ```
+3. Mount it in [server/index.js](server/index.js)
 4. Use `protect` middleware for authenticated endpoints:
    ```js
    const { protect } = require('../middleware/authMiddleware');
    router.get('/me', protect, getMe);
    ```
 
-## Adding New Dashboard Sections
-
-1. Create a component in `src/components/dashboard/`
-2. Import and render it in [src/components/dashboard/Dashboard.js](src/components/dashboard/Dashboard.js)
-
-## Shared Styles
-
-`commonCard` is defined once in [src/styles/cardStyles.js](src/styles/cardStyles.js):
+### Shared Card Style
 
 ```js
 import { commonCard } from '../../styles/cardStyles';
 ```
 
-## Decorative Side Shapes
+### Decorative Side Shapes (Public Pages)
 
-Every page uses the same pattern — container stretches `top="0" bottom="0"`, shapes are positioned at `top: X%`:
-
-- Copy any existing `*Shapes.js` and adjust the `leftShapes` array
-- Right side mirrors automatically via `ml: 110 - s.ml`
+- Container: `pos="absolute" top="0" bottom="0"` — full page height automatically
+- Shapes: positioned at `top: X%` inside container
+- Right side mirrors left via `ml: 110 - s.ml`
 - Only visible on `xl` screens
-- All shapes use `rgba(252,129,129, ...)` — `red.200` at varying opacities
+- Color: `rgba(252,129,129, ...)` — `red.200` at varying opacities
