@@ -244,7 +244,7 @@ const AuthForm = () => {
 
   return (
     <>
-    <Box mt={{ base: 8, md: 14 }}>
+    <Box>
       <Box
         pos="relative"
         bg="rgba(10,10,12,0.92)"
