@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
       type:    Boolean,
       default: false,
     },
+    // Profile picture stored as a base64 data URL (resized to 150×150 on client)
+    avatar: {
+      type:    String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

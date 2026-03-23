@@ -138,6 +138,50 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ── Update profile (callsign / avatar) ────────────────────────────────────
+  const updateProfile = async (callsign, avatar, totpCode) => {
+    try {
+      const body = { totpCode };
+      if (callsign !== undefined) body.callsign = callsign;
+      if (avatar  !== undefined) body.avatar   = avatar;
+
+      const res  = await fetch(`${API}/users/me`, {
+        method:  'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:  `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+      }
+      return { ok: res.ok, message: data.message };
+    } catch {
+      return { ok: false, message: 'Network error — is the server running?' };
+    }
+  };
+
+  // ── Change password ────────────────────────────────────────────────────────
+  const changePassword = async (currentPassword, newPassword, totpCode) => {
+    try {
+      const res  = await fetch(`${API}/users/me/password`, {
+        method:  'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:  `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword, totpCode }),
+      });
+      const data = await res.json();
+      return { ok: res.ok, message: data.message };
+    } catch {
+      return { ok: false, message: 'Network error — is the server running?' };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -163,6 +207,8 @@ export const AuthProvider = ({ children }) => {
         logout,
         confirmSetup,
         verify2FA,
+        updateProfile,
+        changePassword,
         clearMessage,
       }}
     >

@@ -81,6 +81,7 @@ const confirmSetup2FA = async (req, res) => {
         callsign: user.callsign,
         email:    user.email,
         role:     user.role,
+        avatar:   user.avatar,
       },
     });
   } catch (err) {
@@ -140,6 +141,7 @@ const login = async (req, res) => {
         callsign: user.callsign,
         email:    user.email,
         role:     user.role,
+        avatar:   user.avatar,
       },
     });
   } catch (err) {
@@ -187,6 +189,7 @@ const verify2FA = async (req, res) => {
         callsign: user.callsign,
         email:    user.email,
         role:     user.role,
+        avatar:   user.avatar,
       },
     });
   } catch (err) {
