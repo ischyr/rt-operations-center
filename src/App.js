@@ -18,7 +18,9 @@ const pageVariants = {
 
 function AppRoutes() {
   const location = useLocation();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isLoading } = useAuth();
+
+  if (isLoading) return null;
 
   // signin and register share the same transition key so they
   // don't trigger a full-page swap (the card already animates internally)

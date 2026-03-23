@@ -17,22 +17,77 @@ const LandingHero = () => (
     minH={{ base: '55vh', md: '100vh' }}
     color="white"
   >
-    <Stack spacing={5} pt={{ base: 8, md: 16 }}>
-      <Text
-        fontWeight="black"
-        letterSpacing="wider"
-        fontSize={{ base: 'sm', md: 'md' }}
-        color="red.300"
-      >
-        RED TEAM OPS CENTER
-      </Text>
-      <Heading fontSize={{ base: '4xl', md: '6xl' }} lineHeight="short">
-        Operations Center
-      </Heading>
-      <Text fontSize={{ base: 'sm', md: 'lg' }} color="white" maxW="lg">
-        A platform that helps red team operators build structure, planning, and execution workflows for
-        continuous campaign preparedness and mission excellence.
-      </Text>
+    <Stack spacing={6} pt={{ base: 8, md: 16 }}>
+
+      {/* Eyebrow */}
+      <Flex align="center" gap={3}>
+        <Box w="28px" h="1.5px" bgGradient="linear(to-r, red.500, red.300)" borderRadius="full" />
+        <Text
+          fontWeight="black"
+          letterSpacing="0.2em"
+          fontSize="11px"
+          color="red.400"
+          textTransform="uppercase"
+        >
+          Red Team Ops Center
+        </Text>
+        <Box w="28px" h="1.5px" bgGradient="linear(to-l, red.500, red.300)" borderRadius="full" />
+      </Flex>
+
+      {/* Main heading */}
+      <Box pos="relative">
+        <Heading
+          fontSize={{ base: '5xl', md: '7xl' }}
+          fontWeight="black"
+          lineHeight="0.95"
+          letterSpacing="-0.02em"
+          bgGradient="linear(to-br, #ffffff 0%, #c0c0c0 50%, #8a8a8a 100%)"
+          bgClip="text"
+          sx={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+        >
+          Operations
+        </Heading>
+        <Heading
+          fontSize={{ base: '5xl', md: '7xl' }}
+          fontWeight="black"
+          lineHeight="0.95"
+          letterSpacing="-0.02em"
+          bgGradient="linear(to-br, red.300 0%, red.500 50%, red.700 100%)"
+          bgClip="text"
+          sx={{ WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+        >
+          Center
+        </Heading>
+        {/* Subtle glow behind heading */}
+        <Box
+          pos="absolute"
+          top="30%" left="-10%"
+          w="60%" h="40%"
+          bg="rgba(255,40,40,0.07)"
+          filter="blur(40px)"
+          pointerEvents="none"
+          zIndex={-1}
+        />
+      </Box>
+
+      {/* Description */}
+      <Box pos="relative" maxW="420px">
+        <Box
+          pos="absolute" left="-16px" top="0" bottom="0"
+          w="2px"
+          bgGradient="linear(to-b, red.600, transparent)"
+          borderRadius="full"
+        />
+        <Text
+          fontSize={{ base: 'sm', md: 'md' }}
+          color="gray.400"
+          lineHeight="tall"
+          pl={2}
+        >
+          A platform that helps red team operators build structure, planning, and execution workflows for
+          continuous campaign preparedness and mission excellence.
+        </Text>
+      </Box>
       <Flex direction="row" wrap="wrap" gap={3}>
         {tags.map((tag) => (
           <Box

@@ -54,17 +54,17 @@ const AuthForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isRegister) {
-      if (register(formData.name, formData.email, formData.password)) {
+      const ok = await register(formData.name, formData.email, formData.password);
+      if (ok) {
         setFormData({ name: '', email: '', password: '' });
         navigate('/signin');
       }
     } else {
-      if (login(formData.email, formData.password)) {
-        setFormData({ name: '', email: '', password: '' });
-      }
+      const ok = await login(formData.email, formData.password);
+      if (ok) setFormData({ name: '', email: '', password: '' });
     }
   };
 

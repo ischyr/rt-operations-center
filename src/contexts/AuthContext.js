@@ -1,62 +1,83 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeUser, setActiveUser] = useState('');
-  const [authMessage, setAuthMessage] = useState('');
-  const [users, setUsers] = useState([]);
+const API = 'http://localhost:5000/api';
 
-  const login = (email, password) => {
-    const user = users.find((u) => u.email === email && u.password === password);
-    if (user) {
-      setIsLoggedIn(true);
-      setActiveUser(user.name);
-      setAuthMessage('Access granted. Welcome, ' + user.name + '.');
-      return true;
+export const AuthProvider = ({ children }) => {
+  const [user, setUser]               = useState(null);
+  const [authMessage, setAuthMessage] = useState('');
+  const [isLoading, setIsLoading]     = useState(true);
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const token  = localStorage.getItem('token');
+    const stored = localStorage.getItem('user');
+    if (token && stored) {
+      try { setUser(JSON.parse(stored)); } catch { localStorage.clear(); }
     }
-    setAuthMessage('Invalid credentials. Verify and retry.');
-    return false;
+    setIsLoading(false);
+  }, []);
+
+  const register = async (callsign, email, password) => {
+    try {
+      const res  = await fetch(`${API}/auth/register`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ callsign, email, password }),
+      });
+      const data = await res.json();
+      setAuthMessage(data.message);
+      return res.ok;
+    } catch {
+      setAuthMessage('Network error — is the server running?');
+      return false;
+    }
   };
 
-  const register = (name, email, password) => {
-    if (!name || !email || !password) {
-      setAuthMessage('All fields required.');
+  const login = async (email, password) => {
+    try {
+      const res  = await fetch(`${API}/auth/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      setAuthMessage(data.message);
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user',  JSON.stringify(data.user));
+        setUser(data.user);
+        return true;
+      }
+      return false;
+    } catch {
+      setAuthMessage('Network error — is the server running?');
       return false;
     }
-    if (users.some((u) => u.email === email)) {
-      setAuthMessage('Email already registered.');
-      return false;
-    }
-    setUsers((prev) => [...prev, { id: Date.now(), name, email, password }]);
-    setAuthMessage('Operator enrolled. Login now.');
-    return true;
   };
 
   const logout = () => {
-    setIsLoggedIn(false);
-    setActiveUser('');
-    setAuthMessage('Logged out securely.');
-  };
-
-  const clearMessage = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
     setAuthMessage('');
   };
+
+  const clearMessage = () => setAuthMessage('');
 
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn,
-        activeUser,
+        user,
+        isLoggedIn: !!user,
+        isLoading,
         authMessage,
         login,
         register,
