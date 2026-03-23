@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import theme from './theme';
 import PageLayout from './components/common/PageLayout';
 import LandingLayout from './components/pages/LandingLayout';
-import Dashboard from './components/dashboard/Dashboard';
+import DashboardLayout from './components/dashboard/DashboardLayout';
 import About from './components/pages/About';
 import Operators from './components/pages/Operators';
 import Certifications from './components/pages/Certifications';
@@ -22,15 +22,20 @@ function AppRoutes() {
 
   if (isLoading) return null;
 
-  // signin and register share the same transition key so they
-  // don't trigger a full-page swap (the card already animates internally)
+  // Dashboard — protected, own full-screen layout, no page transition wrapper
+  if (location.pathname.startsWith('/dashboard')) {
+    if (!isLoggedIn) return <Navigate to="/signin" replace />;
+    return (
+      <Routes location={location}>
+        <Route path="/dashboard/*" element={<DashboardLayout />} />
+      </Routes>
+    );
+  }
+
+  // Public routes with AnimatePresence page transitions
   const transitionKey = ['/signin', '/register'].includes(location.pathname)
     ? 'auth'
     : location.pathname;
-
-  if (isLoggedIn) {
-    return <Dashboard />;
-  }
 
   return (
     <AnimatePresence mode="wait">
@@ -43,13 +48,13 @@ function AppRoutes() {
         style={{ minHeight: '100vh' }}
       >
         <Routes location={location}>
-          <Route path="/" element={<Navigate to="/signin" replace />} />
-          <Route path="/signin" element={<LandingLayout />} />
-          <Route path="/register" element={<LandingLayout />} />
-          <Route path="/about" element={<PageLayout><About /></PageLayout>} />
-          <Route path="/operators" element={<PageLayout><Operators /></PageLayout>} />
+          <Route path="/"               element={<Navigate to={isLoggedIn ? '/dashboard' : '/signin'} replace />} />
+          <Route path="/signin"         element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LandingLayout />} />
+          <Route path="/register"       element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LandingLayout />} />
+          <Route path="/about"          element={<PageLayout><About /></PageLayout>} />
+          <Route path="/operators"      element={<PageLayout><Operators /></PageLayout>} />
           <Route path="/certifications" element={<PageLayout><Certifications /></PageLayout>} />
-          <Route path="*" element={<Navigate to="/signin" replace />} />
+          <Route path="*"               element={<Navigate to={isLoggedIn ? '/dashboard' : '/signin'} replace />} />
         </Routes>
       </motion.div>
     </AnimatePresence>
