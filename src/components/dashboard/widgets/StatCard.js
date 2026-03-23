@@ -10,25 +10,21 @@ const gradients = {
 const StatCard = ({ label, value, sub, accent = 'red' }) => (
   <Box
     pos="relative"
-    bg="rgba(255,255,255,0.03)"
-    border="1px solid rgba(255,255,255,0.07)"
+    bg="var(--dash-card-bg)"
+    border="1px solid var(--dash-card-border)"
     borderRadius="12px"
     p={5}
     overflow="hidden"
   >
-    {/* Top accent line */}
-    <Box
-      pos="absolute" top="0" left="0" right="0" h="2px"
-      bgGradient={gradients[accent]}
-    />
+    <Box pos="absolute" top="0" left="0" right="0" h="2px" bgGradient={gradients[accent]} />
 
-    <Heading fontSize="4xl" fontWeight="black" color="white" lineHeight="1" mb={1}>
+    <Heading fontSize="4xl" fontWeight="black" color="var(--dash-text-primary)" lineHeight="1" mb={1}>
       {value}
     </Heading>
-    <Text fontSize="10px" fontWeight="bold" letterSpacing="widest" color="gray.500" textTransform="uppercase" mb={3}>
+    <Text fontSize="10px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase" mb={3}>
       {label}
     </Text>
-    <Text fontSize="12px" color="gray.400">{sub}</Text>
+    <Text fontSize="12px" color="var(--dash-text-secondary)">{sub}</Text>
   </Box>
 );
 

@@ -2,6 +2,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import theme from './theme';
 import PageLayout from './components/common/PageLayout';
 import LandingLayout from './components/pages/LandingLayout';
@@ -63,11 +64,13 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ChakraProvider theme={theme}>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </ChakraProvider>
+    <SettingsProvider>
+      <ChakraProvider theme={theme}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ChakraProvider>
+    </SettingsProvider>
   );
 }
 

@@ -15,8 +15,8 @@ const TopBar = () => {
         px={6}
         align="center"
         justify="space-between"
-        borderBottom="1px solid rgba(255,255,255,0.06)"
-        bg="rgba(0,0,0,0.25)"
+        borderBottom="1px solid var(--dash-card-border)"
+        bg="var(--dash-topbar-bg)"
         backdropFilter="blur(12px)"
         flexShrink={0}
       >

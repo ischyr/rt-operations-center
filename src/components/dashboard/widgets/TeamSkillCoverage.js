@@ -12,14 +12,14 @@ const skills = [
 
 const TeamSkillCoverage = () => (
   <Box
-    bg="rgba(255,255,255,0.03)"
-    border="1px solid rgba(255,255,255,0.07)"
+    bg="var(--dash-card-bg)"
+    border="1px solid var(--dash-card-border)"
     borderRadius="12px"
     p={5}
   >
     <Flex align="center" gap={2} mb={5}>
       <StarIcon boxSize={3} color="red.400" />
-      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="gray.500" textTransform="uppercase">
+      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
         Team Skill Coverage
       </Text>
     </Flex>
@@ -28,16 +28,25 @@ const TeamSkillCoverage = () => (
       {skills.map((s) => (
         <Box key={s.label}>
           <Flex justify="space-between" mb={1}>
-            <Text fontSize="12px" color="gray.400">{s.label}</Text>
-            <Text fontSize="11px" fontWeight="bold" color={s.pct >= 80 ? 'green.400' : s.pct >= 65 ? 'yellow.400' : 'orange.400'}>
+            <Text fontSize="12px" color="var(--dash-text-secondary)">{s.label}</Text>
+            <Text
+              fontSize="11px" fontWeight="bold"
+              color={s.pct >= 80 ? 'green.400' : s.pct >= 65 ? 'yellow.400' : 'orange.400'}
+            >
               {s.pct}%
             </Text>
           </Flex>
-          <Box h="4px" bg="rgba(255,255,255,0.06)" borderRadius="full" overflow="hidden">
+          <Box h="4px" bg="var(--dash-progress-track)" borderRadius="full" overflow="hidden">
             <Box
               h="100%"
               w={`${s.pct}%`}
-              bgGradient={s.pct >= 80 ? 'linear(to-r, green.700, green.400)' : s.pct >= 65 ? 'linear(to-r, yellow.700, yellow.400)' : 'linear(to-r, orange.700, orange.400)'}
+              bgGradient={
+                s.pct >= 80
+                  ? 'linear(to-r, green.700, green.400)'
+                  : s.pct >= 65
+                  ? 'linear(to-r, yellow.700, yellow.400)'
+                  : 'linear(to-r, orange.700, orange.400)'
+              }
               borderRadius="full"
               transition="width 0.6s ease"
             />

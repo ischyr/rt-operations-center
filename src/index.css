@@ -1,17 +1,64 @@
+/* ── Base reset ───────────────────────────────────────────────────────────── */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #020617;
   color: #e2e8f0;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ── CSS variables — dark (default) ─────────────────────────────────────── */
+:root {
+  --app-font:       'Inter', -apple-system, sans-serif;
+  --app-font-size:  14px;
+
+  --dash-bg:              #111111;
+  --dash-sidebar-bg:      rgba(0, 0, 0, 0.45);
+  --dash-topbar-bg:       rgba(0, 0, 0, 0.25);
+  --dash-card-bg:         rgba(255, 255, 255, 0.04);
+  --dash-card-border:     rgba(255, 255, 255, 0.06);
+  --dash-card-border-h:   rgba(255, 255, 255, 0.14);
+  --dash-text-primary:    #f0f0f2;
+  --dash-text-secondary:  #90909e;
+  --dash-text-muted:      #58586a;
+  --dash-divider:         rgba(255, 255, 255, 0.06);
+  --dash-section-label:   #484860;
+  --dash-nav-hover:       rgba(255, 255, 255, 0.05);
+  --dash-progress-track:  rgba(255, 255, 255, 0.08);
 }
 
+/* ── CSS variables — light ───────────────────────────────────────────────── */
+[data-theme="light"] {
+  --dash-bg:              #ecedf4;
+  --dash-sidebar-bg:      rgba(248, 248, 254, 0.98);
+  --dash-topbar-bg:       rgba(252, 252, 255, 0.94);
+  --dash-card-bg:         rgba(255, 255, 255, 0.88);
+  --dash-card-border:     rgba(0, 0, 0, 0.09);
+  --dash-card-border-h:   rgba(0, 0, 0, 0.18);
+  --dash-text-primary:    #16162a;
+  --dash-text-secondary:  #40406a;
+  --dash-text-muted:      #7878a0;
+  --dash-divider:         rgba(0, 0, 0, 0.08);
+  --dash-section-label:   #a0a0c0;
+  --dash-nav-hover:       rgba(0, 0, 0, 0.05);
+  --dash-progress-track:  rgba(0, 0, 0, 0.08);
+}
 
+/* ── Typography ──────────────────────────────────────────────────────────── */
+html {
+  font-family: var(--app-font);
+  font-size:   var(--app-font-size);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration:   0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration:  0.01ms !important;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}

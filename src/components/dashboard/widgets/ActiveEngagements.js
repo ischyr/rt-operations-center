@@ -41,15 +41,15 @@ const engagements = [
 
 const ActiveEngagements = () => (
   <Box
-    bg="rgba(255,255,255,0.03)"
-    border="1px solid rgba(255,255,255,0.07)"
+    bg="var(--dash-card-bg)"
+    border="1px solid var(--dash-card-border)"
     borderRadius="12px"
     p={5}
     h="100%"
   >
     <Flex align="center" gap={2} mb={5}>
       <WarningIcon boxSize={3} color="red.500" />
-      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="gray.500" textTransform="uppercase">
+      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
         Active Engagements
       </Text>
     </Flex>

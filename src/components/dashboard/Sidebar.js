@@ -8,107 +8,115 @@ import {
 } from '@chakra-ui/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSettings } from '../../contexts/SettingsContext';
 
 const nav = [
   {
     section: 'OPERATIONS',
     items: [
-      { key: '',                label: 'Dashboard',         icon: ViewIcon         },
-      { key: 'engagements',     label: 'Engagements',       icon: WarningTwoIcon   },
-      { key: 'calendar',        label: 'Calendar',          icon: CalendarIcon     },
-      { key: 'skill-requests',  label: 'Skill Requests',    icon: StarIcon         },
-      { key: 'ttx',             label: 'TTX Planner',       icon: EditIcon         },
-      { key: 'campaign',        label: 'Campaign Builder',  icon: AddIcon          },
+      { key: '',                label: 'Dashboard',          icon: ViewIcon         },
+      { key: 'engagements',     label: 'Engagements',        icon: WarningTwoIcon   },
+      { key: 'calendar',        label: 'Calendar',           icon: CalendarIcon     },
+      { key: 'skill-requests',  label: 'Skill Requests',     icon: StarIcon         },
+      { key: 'ttx',             label: 'TTX Planner',        icon: EditIcon         },
+      { key: 'campaign',        label: 'Campaign Builder',   icon: AddIcon          },
     ],
   },
   {
     section: 'TEAM',
     items: [
-      { key: 'people',     label: 'People & Skills', icon: AtSignIcon     },
-      { key: 'resources',  label: 'Resources',       icon: AttachmentIcon },
+      { key: 'people',    label: 'People & Skills', icon: AtSignIcon     },
+      { key: 'resources', label: 'Resources',       icon: AttachmentIcon },
     ],
   },
   {
     section: 'INTELLIGENCE',
     items: [
-      { key: 'loot',     label: 'Loot Tracker',          icon: UnlockIcon },
-      { key: 'evidence', label: 'Evidence Vault',         icon: LockIcon   },
-      { key: 'cleanup',  label: 'Cleanup Tracker',        icon: RepeatIcon },
-      { key: 'c2',       label: 'C2 Infrastructure',      icon: LinkIcon   },
-      { key: 'phishing', label: 'Phishing Infrastructure',icon: EmailIcon  },
+      { key: 'loot',     label: 'Loot Tracker',           icon: UnlockIcon },
+      { key: 'evidence', label: 'Evidence Vault',          icon: LockIcon   },
+      { key: 'cleanup',  label: 'Cleanup Tracker',         icon: RepeatIcon },
+      { key: 'c2',       label: 'C2 Infrastructure',       icon: LinkIcon   },
+      { key: 'phishing', label: 'Phishing Infrastructure', icon: EmailIcon  },
     ],
   },
   {
     section: 'TTPs',
     items: [
-      { key: 'ttps/initial-access',    label: 'Initial Access',    icon: ChevronRightIcon },
-      { key: 'ttps/windows',           label: 'Windows',           icon: ChevronRightIcon },
-      { key: 'ttps/linux',             label: 'Linux',             icon: ChevronRightIcon },
-      { key: 'ttps/active-directory',  label: 'Active Directory',  icon: ChevronRightIcon },
-      { key: 'ttps/network',           label: 'Network',           icon: ChevronRightIcon },
+      { key: 'ttps/initial-access',   label: 'Initial Access',   icon: ChevronRightIcon },
+      { key: 'ttps/windows',          label: 'Windows',          icon: ChevronRightIcon },
+      { key: 'ttps/linux',            label: 'Linux',            icon: ChevronRightIcon },
+      { key: 'ttps/active-directory', label: 'Active Directory', icon: ChevronRightIcon },
+      { key: 'ttps/network',          label: 'Network',          icon: ChevronRightIcon },
     ],
   },
   {
     section: 'PILLAGING',
     items: [
-      { key: 'pillaging/subdomains', label: 'Subdomains',  icon: SearchIcon     },
-      { key: 'pillaging/services',   label: 'Services',    icon: InfoIcon       },
-      { key: 'pillaging/leaks',      label: 'Leaks',       icon: UnlockIcon     },
-      { key: 'pillaging/credentials',label: 'Credentials', icon: LockIcon       },
-      { key: 'pillaging/emails',     label: 'Emails',      icon: EmailIcon      },
-      { key: 'pillaging/documents',  label: 'Documents',   icon: AttachmentIcon },
+      { key: 'pillaging/subdomains',  label: 'Subdomains',  icon: SearchIcon     },
+      { key: 'pillaging/services',    label: 'Services',    icon: InfoIcon       },
+      { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
+      { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
+      { key: 'pillaging/emails',      label: 'Emails',      icon: EmailIcon      },
+      { key: 'pillaging/documents',   label: 'Documents',   icon: AttachmentIcon },
     ],
   },
   {
     section: 'REPORTING',
     items: [
-      { key: 'reports',        label: 'Reports',        icon: CopyIcon          },
-      { key: 'findings',       label: 'Findings',       icon: WarningTwoIcon    },
-      { key: 'client-portal',  label: 'Client Portal',  icon: ExternalLinkIcon  },
+      { key: 'reports',       label: 'Reports',       icon: CopyIcon         },
+      { key: 'findings',      label: 'Findings',      icon: WarningTwoIcon   },
+      { key: 'client-portal', label: 'Client Portal', icon: ExternalLinkIcon },
     ],
   },
 ];
 
 const Sidebar = () => {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  const { logout } = useAuth();
+  const navigate          = useNavigate();
+  const location          = useLocation();
+  const { logout }        = useAuth();
+  const { settings }      = useSettings();
+  const compact           = settings.compactMode;
 
   const activeKey = location.pathname.replace('/dashboard', '').replace(/^\//, '');
+
+  const itemPy  = compact ? '5px' : '8px';
+  const groupGap = compact ? 3 : 5;
 
   return (
     <Flex
       direction="column"
-      w="220px"
+      w={compact ? '190px' : '220px'}
       flexShrink={0}
-      bg="rgba(0,0,0,0.45)"
-      borderRight="1px solid rgba(255,255,255,0.06)"
+      bg="var(--dash-sidebar-bg)"
+      borderRight="1px solid var(--dash-card-border)"
       backdropFilter="blur(20px)"
       h="100vh"
       pos="sticky"
       top="0"
       overflowY="auto"
-      py={5}
+      py={compact ? 3 : 5}
+      transition="width 0.2s ease"
       css={{
         '&::-webkit-scrollbar': { width: '3px' },
         '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '3px' },
       }}
     >
       {/* Brand */}
-      <Flex align="center" gap={2} px={5} mb={7}>
+      <Flex align="center" gap={2} px={5} mb={compact ? 4 : 7}>
         <Box w="8px" h="8px" borderRadius="full" bg="red.500" boxShadow="0 0 8px rgba(255,55,55,0.8)" />
-        <Text fontSize="11px" fontWeight="black" letterSpacing="widest" color="white" textTransform="uppercase">
+        <Text fontSize="11px" fontWeight="black" letterSpacing="widest" color="var(--dash-text-primary)" textTransform="uppercase">
           Red Ops Center
         </Text>
       </Flex>
 
       {/* Nav sections */}
-      <Flex direction="column" flex="1" gap={5} px={3}>
+      <Flex direction="column" flex="1" gap={groupGap} px={3}>
         {nav.map((group) => (
           <Box key={group.section}>
             <Text
               fontSize="9px" fontWeight="bold" letterSpacing="widest"
-              color="gray.700" textTransform="uppercase" px={2} mb={1}
+              color="var(--dash-section-label)" textTransform="uppercase"
+              px={2} mb={1}
             >
               {group.section}
             </Text>
@@ -120,15 +128,15 @@ const Sidebar = () => {
                   align="center"
                   gap={3}
                   px={3}
-                  py="8px"
+                  py={itemPy}
                   borderRadius="8px"
                   cursor="pointer"
                   pos="relative"
                   bg={isActive ? 'rgba(255,80,95,0.12)' : 'transparent'}
-                  color={isActive ? 'white' : 'gray.500'}
+                  color={isActive ? 'white' : 'var(--dash-text-secondary)'}
                   transition="all 0.18s ease"
                   onClick={() => navigate(`/dashboard${item.key ? `/${item.key}` : ''}`)}
-                  _hover={{ bg: 'rgba(255,255,255,0.05)', color: 'gray.200' }}
+                  _hover={{ bg: 'var(--dash-nav-hover)', color: 'var(--dash-text-primary)' }}
                 >
                   {isActive && (
                     <Box pos="absolute" left="0" top="20%" bottom="20%" w="2px" bg="red.500" borderRadius="full" />
@@ -143,19 +151,26 @@ const Sidebar = () => {
       </Flex>
 
       {/* Bottom — settings + logout */}
-      <Box px={3} pt={4} borderTop="1px solid rgba(255,255,255,0.06)" mt={4}>
+      <Box px={3} pt={4} borderTop="1px solid var(--dash-divider)" mt={4}>
         <Flex
-          align="center" gap={3} px={3} py="8px" borderRadius="8px"
-          cursor="pointer" color="gray.500"
-          _hover={{ bg: 'rgba(255,255,255,0.05)', color: 'gray.200' }}
+          align="center" gap={3} px={3} py={itemPy} borderRadius="8px"
+          cursor="pointer"
+          bg={activeKey === 'settings' ? 'rgba(255,80,95,0.12)' : 'transparent'}
+          color={activeKey === 'settings' ? 'white' : 'var(--dash-text-secondary)'}
+          pos="relative"
+          _hover={{ bg: 'var(--dash-nav-hover)', color: 'var(--dash-text-primary)' }}
           transition="all 0.18s"
+          onClick={() => navigate('/dashboard/settings')}
         >
+          {activeKey === 'settings' && (
+            <Box pos="absolute" left="0" top="20%" bottom="20%" w="2px" bg="red.500" borderRadius="full" />
+          )}
           <SettingsIcon boxSize={3.5} />
-          <Text fontSize="12px">Settings</Text>
+          <Text fontSize="12px" fontWeight={activeKey === 'settings' ? 'semibold' : 'normal'}>Settings</Text>
         </Flex>
         <Flex
-          align="center" gap={3} px={3} py="8px" borderRadius="8px"
-          cursor="pointer" color="gray.600"
+          align="center" gap={3} px={3} py={itemPy} borderRadius="8px"
+          cursor="pointer" color="var(--dash-text-muted)"
           _hover={{ bg: 'rgba(255,55,55,0.08)', color: 'red.400' }}
           transition="all 0.18s"
           onClick={logout}

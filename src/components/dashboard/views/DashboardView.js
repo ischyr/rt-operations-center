@@ -20,15 +20,15 @@ const DashboardView = () => (
     {/* Page header */}
     <Flex justify="space-between" align="center" mb={6}>
       <Box>
-        <Heading fontSize="2xl" fontWeight="bold" color="white">
+        <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)">
           Operations{' '}
           <Text as="span" color="red.400">Overview</Text>
         </Heading>
         <Flex align="center" gap={3} mt={1}>
-          <Text fontSize="12px" color="gray.500">{now}</Text>
-          <Text fontSize="12px" color="gray.700">·</Text>
-          <Text fontSize="12px" color="gray.500">2 active engagements</Text>
-          <Text fontSize="12px" color="gray.700">·</Text>
+          <Text fontSize="12px" color="var(--dash-text-secondary)">{now}</Text>
+          <Text fontSize="12px" color="var(--dash-text-muted)">·</Text>
+          <Text fontSize="12px" color="var(--dash-text-secondary)">2 active engagements</Text>
+          <Text fontSize="12px" color="var(--dash-text-muted)">·</Text>
           <Text fontSize="12px" color="green.400">All systems nominal</Text>
         </Flex>
       </Box>
@@ -52,7 +52,7 @@ const DashboardView = () => (
       {stats.map((s) => <StatCard key={s.label} {...s} />)}
     </SimpleGrid>
 
-    {/* Main grid — engagements left, findings + resources right */}
+    {/* Main grid */}
     <Grid templateColumns={{ base: '1fr', xl: '1fr 320px' }} gap={4} mb={4}>
       <ActiveEngagements />
       <Flex direction="column" gap={4}>

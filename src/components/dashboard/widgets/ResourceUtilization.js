@@ -10,14 +10,14 @@ const resources = [
 
 const ResourceUtilization = () => (
   <Box
-    bg="rgba(255,255,255,0.03)"
-    border="1px solid rgba(255,255,255,0.07)"
+    bg="var(--dash-card-bg)"
+    border="1px solid var(--dash-card-border)"
     borderRadius="12px"
     p={5}
   >
     <Flex align="center" gap={2} mb={5}>
       <LinkIcon boxSize={3} color="red.400" />
-      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="gray.500" textTransform="uppercase">
+      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
         Resource Utilization
       </Text>
     </Flex>
@@ -26,10 +26,10 @@ const ResourceUtilization = () => (
       {resources.map((r) => (
         <Box key={r.label}>
           <Flex justify="space-between" mb={1}>
-            <Text fontSize="12px" color="gray.400">{r.label}</Text>
-            <Text fontSize="11px" color="gray.500">{r.used} / {r.total} in use</Text>
+            <Text fontSize="12px" color="var(--dash-text-secondary)">{r.label}</Text>
+            <Text fontSize="11px" color="var(--dash-text-muted)">{r.used} / {r.total} in use</Text>
           </Flex>
-          <Box h="4px" bg="rgba(255,255,255,0.06)" borderRadius="full" overflow="hidden">
+          <Box h="4px" bg="var(--dash-progress-track)" borderRadius="full" overflow="hidden">
             <Box
               h="100%"
               w={`${(r.used / r.total) * 100}%`}

@@ -5,12 +5,13 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import DashboardView from './views/DashboardView';
 import PlaceholderView from './views/PlaceholderView';
+import SettingsView from './views/SettingsView';
 
 const MotionFlex = motion(Flex);
 
 const DashboardLayout = () => (
   <MotionFlex
-    h="100vh" overflow="hidden" bg="#111111"
+    h="100vh" overflow="hidden" bg="var(--dash-bg)"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.45, ease: 'easeOut' }}
@@ -52,6 +53,7 @@ const DashboardLayout = () => (
           <Route path="reports"               element={<PlaceholderView title="Reports" />} />
           <Route path="findings"              element={<PlaceholderView title="Findings" />} />
           <Route path="client-portal"         element={<PlaceholderView title="Client Portal" />} />
+          <Route path="settings"             element={<SettingsView />} />
         </Routes>
       </Box>
     </Flex>

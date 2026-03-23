@@ -11,8 +11,8 @@ const PlaceholderView = ({ title, description }) => (
       >
         <TimeIcon boxSize={5} color="red.400" />
       </Flex>
-      <Heading fontSize="xl" fontWeight="bold" color="white" mb={2}>{title}</Heading>
-      <Text fontSize="sm" color="gray.500" maxW="300px">
+      <Heading fontSize="xl" fontWeight="bold" color="var(--dash-text-primary)" mb={2}>{title}</Heading>
+      <Text fontSize="sm" color="var(--dash-text-secondary)" maxW="300px">
         {description || 'This module is under construction. Check back soon.'}
       </Text>
     </Box>
