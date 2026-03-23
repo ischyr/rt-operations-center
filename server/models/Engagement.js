@@ -2,9 +2,12 @@ const mongoose = require('mongoose');
 
 const findingSchema = new mongoose.Schema(
   {
-    title:       { type: String, required: true, trim: true },
-    severity:    { type: String, enum: ['Critical', 'High', 'Medium', 'Low', 'Info'], default: 'High' },
-    description: { type: String, default: '' },
+    title:          { type: String, required: true, trim: true },
+    severity:       { type: String, enum: ['Critical', 'High', 'Medium', 'Low', 'Info'], default: 'High' },
+    description:    { type: String, default: '' },
+    observation:    { type: String, default: '' },
+    proofOfConcept: { type: String, default: '' },
+    remediation:    { type: String, default: '' },
   },
   { timestamps: true, _id: true }
 );

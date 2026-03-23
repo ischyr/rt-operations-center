@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Flex, Box, Text, Input, InputGroup, InputLeftElement, Image, Portal } from '@chakra-ui/react';
 import { SearchIcon, BellIcon, RepeatIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEngagements } from '../../contexts/EngagementContext';
 import ProfileModal from './ProfileModal';
@@ -120,6 +120,30 @@ const TopBar = () => {
   const { user } = useAuth();
   const { dashboardStats } = useEngagements();
   const { activityLogs } = dashboardStats;
+  const navigate   = useNavigate();
+  const location   = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const isEngagementsPage = location.pathname === '/dashboard/engagements';
+  const [searchVal, setSearchVal] = useState(() => searchParams.get('q') || '');
+
+  // Keep input in sync when navigating away and back
+  useEffect(() => {
+    if (isEngagementsPage) {
+      setSearchVal(searchParams.get('q') || '');
+    } else {
+      setSearchVal('');
+    }
+  }, [location.pathname]); // eslint-disable-line
+
+  const handleSearch = (val) => {
+    setSearchVal(val);
+    if (isEngagementsPage) {
+      setSearchParams(val ? { q: val } : {}, { replace: true });
+    } else if (val) {
+      navigate(`/dashboard/engagements?q=${encodeURIComponent(val)}`);
+    }
+  };
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen,   setIsNotifOpen]   = useState(false);
@@ -179,6 +203,8 @@ const TopBar = () => {
             border="1px solid rgba(255,255,255,0.08)"
             borderRadius="8px"
             color="gray.300"
+            value={searchVal}
+            onChange={(e) => handleSearch(e.target.value)}
             _placeholder={{ color: 'gray.700' }}
             _hover={{ border: '1px solid rgba(255,255,255,0.14)' }}
             _focus={{ border: '1px solid rgba(255,80,95,0.5)', boxShadow: 'none', bg: 'rgba(255,255,255,0.05)' }}

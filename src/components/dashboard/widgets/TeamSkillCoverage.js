@@ -32,7 +32,7 @@ const TeamSkillCoverage = () => {
         </Flex>
       ) : (
         <Flex direction="column" gap={3}>
-          {teamSkills.map((s) => (
+          {teamSkills.slice(0, 5).map((s) => (
             <Box key={s.label}>
               <Flex justify="space-between" mb={1}>
                 <Text fontSize="12px" color="var(--dash-text-secondary)">{s.label}</Text>
@@ -59,6 +59,15 @@ const TeamSkillCoverage = () => {
             </Box>
           ))}
         </Flex>
+      )}
+      {teamSkills.length > 5 && (
+        <Text
+          fontSize="11px" color="var(--dash-text-muted)" textAlign="center" mt={2}
+          cursor="pointer" _hover={{ color: 'red.400' }} transition="color 0.15s"
+          onClick={() => navigate('/dashboard/engagements')}
+        >
+          +{teamSkills.length - 5} more skills — view in People & Skills
+        </Text>
       )}
     </Box>
   );

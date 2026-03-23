@@ -207,11 +207,19 @@ const PeopleSkillsView = () => {
           <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider" mb={5}>
             Skill Coverage — {teamSkills.length} tracked
           </Text>
-          <Stack spacing={5}>
+          <AnimatePresence initial={false}>
             {teamSkills.map((s) => {
               const color = s.pct >= 80 ? '#68D391' : s.pct >= 60 ? '#F6E05E' : '#F6AD55';
               return (
-                <Box key={s.label}>
+                <MotionBox
+                  key={s.label}
+                  layout
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                  transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                  mb={5}
+                >
                   <Flex justify="space-between" align="center" mb={2}>
                     <Text fontSize="13px" fontWeight="semibold" color="var(--dash-text-primary)">{s.label}</Text>
                     <Flex align="center" gap={2}>
@@ -232,10 +240,10 @@ const PeopleSkillsView = () => {
                     </SliderTrack>
                     <SliderThumb boxSize={4} bg={color} boxShadow={`0 0 8px ${color}80`} />
                   </Slider>
-                </Box>
+                </MotionBox>
               );
             })}
-          </Stack>
+          </AnimatePresence>
         </Box>
       )}
     </Box>

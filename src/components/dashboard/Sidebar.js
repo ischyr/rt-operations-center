@@ -22,6 +22,7 @@ const engagementNav = [
   {
     section: 'OPERATIONS',
     items: [
+      { key: 'operations/activity',       label: 'Activity Log',       icon: RepeatIcon       },
       { key: 'operations/calendar',       label: 'Calendar',           icon: CalendarIcon     },
       { key: 'operations/skill-requests', label: 'Skill Requests',     icon: StarIcon         },
       { key: 'operations/ttx',            label: 'TTX Planner',        icon: EditIcon         },
@@ -72,6 +73,14 @@ const engagementNav = [
       { key: 'reporting/reports',       label: 'Reports',       icon: CopyIcon         },
       { key: 'reporting/findings',      label: 'Findings',      icon: WarningTwoIcon   },
       { key: 'reporting/client-portal', label: 'Client Portal', icon: ExternalLinkIcon },
+    ],
+  },
+  {
+    section: 'CHEATSHEET',
+    items: [
+      { key: 'cheatsheet/red-team-map', label: 'Red Team Ops Map',     icon: StarIcon      },
+      { key: 'cheatsheet/ad-map',       label: 'AD Attack Map',         icon: UnlockIcon    },
+      { key: 'cheatsheet/payload-map',  label: 'Payload & Evasion Map', icon: AttachmentIcon },
     ],
   },
 ];
@@ -230,7 +239,7 @@ const Sidebar = () => {
                   {group.section}
                 </Text>
                 {group.items.map((item) => {
-                  const isActive = activeSubPath === item.key;
+                  const isActive = activeSubPath === item.key || activeSubPath.startsWith(item.key + '/');
                   return (
                     <NavItem
                       key={item.key}

@@ -1,7 +1,12 @@
-import { Box, Flex, Text } from '@chakra-ui/react';
-import { WarningIcon } from '@chakra-ui/icons';
+import { useState } from 'react';
+import { Box, Flex, Text, IconButton } from '@chakra-ui/react';
+import { WarningIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
+
+const PAGE_SIZE = 3;
+const MotionFlex = motion(Flex);
 
 const STATUS_COLORS = {
   'PREPARING':   { text: '#a5b4fc', bg: 'rgba(99,102,241,0.12)',  border: 'rgba(99,102,241,0.28)'  },
@@ -116,6 +121,12 @@ const EngCard = ({ eng, getUserById }) => {
 const ActiveEngagements = () => {
   const { dashboardStats, loading, getUserById } = useEngagements();
   const { activeEngagements } = dashboardStats;
+  const [page, setPage] = useState(0);
+
+  const totalPages = Math.ceil(activeEngagements.length / PAGE_SIZE);
+  const visible    = activeEngagements.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
+  const goTo = (newPage) => setPage(newPage);
 
   return (
     <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5} h="100%">
@@ -141,9 +152,57 @@ const ActiveEngagements = () => {
           <Text fontSize="11px">Create one from the Engagements page.</Text>
         </Flex>
       ) : (
-        <Flex direction="column" gap={3}>
-          {activeEngagements.map((e) => <EngCard key={e.id} eng={e} getUserById={getUserById} />)}
-        </Flex>
+        <>
+          <AnimatePresence mode="wait">
+            <MotionFlex
+              key={page}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              direction="column"
+              gap={3}
+            >
+              {visible.map((e) => <EngCard key={e.id} eng={e} getUserById={getUserById} />)}
+            </MotionFlex>
+          </AnimatePresence>
+
+          {totalPages > 1 && (
+            <Flex align="center" justify="center" gap={3} mt={4}>
+              <IconButton
+                icon={<ChevronLeftIcon boxSize={4} />}
+                size="xs" variant="ghost" borderRadius="full"
+                color={page === 0 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
+                isDisabled={page === 0}
+                onClick={() => goTo(page - 1)}
+                _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
+                aria-label="Previous"
+              />
+              <Flex gap={1.5} align="center">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <Box
+                    key={i}
+                    w={i === page ? '16px' : '5px'} h="5px"
+                    borderRadius="full"
+                    bg={i === page ? 'red.500' : 'rgba(255,255,255,0.15)'}
+                    transition="all 0.22s ease"
+                    cursor="pointer"
+                    onClick={() => goTo(i)}
+                  />
+                ))}
+              </Flex>
+              <IconButton
+                icon={<ChevronRightIcon boxSize={4} />}
+                size="xs" variant="ghost" borderRadius="full"
+                color={page === totalPages - 1 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
+                isDisabled={page === totalPages - 1}
+                onClick={() => goTo(page + 1)}
+                _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
+                aria-label="Next"
+              />
+            </Flex>
+          )}
+        </>
       )}
     </Box>
   );

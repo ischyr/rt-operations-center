@@ -1,4 +1,5 @@
 const Engagement = require('../models/Engagement');
+const User       = require('../models/User');
 
 const slugify = (name) =>
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -10,7 +11,12 @@ const logEntry = (action, description, type = 'engagement') => ({
 // GET /api/engagements
 exports.getEngagements = async (req, res) => {
   try {
-    const engagements = await Engagement.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const engagements = await Engagement.find({
+      $or: [
+        { user: req.user._id },
+        { operators: String(req.user._id) },
+      ],
+    }).sort({ createdAt: -1 });
     res.json(engagements);
   } catch {
     res.status(500).json({ message: 'Server error' });
@@ -52,7 +58,13 @@ exports.createEngagement = async (req, res) => {
 // PUT /api/engagements/:id
 exports.updateEngagement = async (req, res) => {
   try {
-    const eng = await Engagement.findOne({ _id: req.params.id, user: req.user._id });
+    const eng = await Engagement.findOne({
+      _id: req.params.id,
+      $or: [
+        { user: req.user._id },
+        { operators: String(req.user._id) },
+      ],
+    });
     if (!eng) return res.status(404).json({ message: 'Engagement not found.' });
 
     const newLogs = [];
@@ -85,13 +97,16 @@ exports.updateEngagement = async (req, res) => {
 
     // Detect operator changes
     if (req.body.operators !== undefined) {
-      const prev = new Set(eng.operators || []);
-      const next = new Set(req.body.operators || []);
-      for (const op of next) {
-        if (!prev.has(op)) newLogs.push(logEntry('team_updated', `${op.split(' ')[0]} added to team`, 'team'));
-      }
-      for (const op of prev) {
-        if (!next.has(op)) newLogs.push(logEntry('team_updated', `${op.split(' ')[0]} removed from team`, 'team'));
+      const prev = new Set((eng.operators || []).map(String));
+      const next = new Set((req.body.operators || []).map(String));
+      const addedIds   = [...next].filter(id => !prev.has(id));
+      const removedIds = [...prev].filter(id => !next.has(id));
+      if (addedIds.length || removedIds.length) {
+        const users = await User.find({ _id: { $in: [...addedIds, ...removedIds] } }).select('callsign');
+        const nameMap = {};
+        users.forEach(u => { nameMap[String(u._id)] = u.callsign; });
+        for (const id of addedIds)   newLogs.push(logEntry('team_updated', `${nameMap[id] || id.slice(-6)} added to team`,   'team'));
+        for (const id of removedIds) newLogs.push(logEntry('team_updated', `${nameMap[id] || id.slice(-6)} removed from team`, 'team'));
       }
     }
 
@@ -114,7 +129,7 @@ exports.updateEngagement = async (req, res) => {
 
     if (req.body.name) {
       const newSlug = slugify(req.body.name);
-      const conflict = await Engagement.findOne({ user: req.user._id, slug: newSlug, _id: { $ne: eng._id } });
+      const conflict = await Engagement.findOne({ user: eng.user, slug: newSlug, _id: { $ne: eng._id } });
       eng.slug = conflict ? `${newSlug}-${Date.now()}` : newSlug;
     }
 

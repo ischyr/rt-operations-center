@@ -4,7 +4,7 @@ import {
   Progress, Divider, Input, Select,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
 import NewEngagementModal from '../engagements/NewEngagementModal';
@@ -187,11 +187,18 @@ const EmptyState = ({ onNew }) => (
 const EngagementsView = () => {
   const { engagements, loading, getUserById } = useEngagements();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filterStatus, setFilterStatus] = useState('');
 
+  const search = searchParams.get('q') || '';
+
   const filtered = engagements.filter((e) => {
-    const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.company.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const matchSearch = !q
+      || e.name.toLowerCase().includes(q)
+      || (e.company || '').toLowerCase().includes(q)
+      || (e.type || '').toLowerCase().includes(q)
+      || (e.status || '').toLowerCase().includes(q);
     const matchStatus = !filterStatus || e.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -239,7 +246,7 @@ const EngagementsView = () => {
             <Input
               variant="unstyled" fontSize="sm" color="var(--dash-text-primary)"
               placeholder="Search operations..." value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => setSearchParams(e.target.value ? { q: e.target.value } : {}, { replace: true })}
               _placeholder={{ color: 'var(--dash-text-muted)' }}
             />
           </Flex>

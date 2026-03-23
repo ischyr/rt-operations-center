@@ -21,6 +21,15 @@ const STATUS_COLORS = {
 
 const STATUS_ORDER = ['PREPARING', 'IN PROGRESS', 'REPORTING', 'COMPLETED', 'PAUSED'];
 
+const PHASES = [
+  { label: 'Preparing',    progress: 0   },
+  { label: 'Recon',        progress: 20  },
+  { label: 'Access',       progress: 40  },
+  { label: 'Post-Exploit', progress: 60  },
+  { label: 'Reporting',    progress: 80  },
+  { label: 'Done',         progress: 100 },
+];
+
 const TYPE_COLORS = {
   'External':            '#fc8181',
   'Internal':            '#4fd1c5',
@@ -45,8 +54,15 @@ const inputStyles = {
 };
 
 const selectStyles = {
-  ...inputStyles,
+  bg: 'rgba(255,255,255,0.05)',
+  borderColor: 'rgba(255,255,255,0.1)',
+  borderRadius: '10px',
+  h: '40px',
+  fontSize: 'sm',
+  color: 'var(--dash-text-primary)',
   cursor: 'pointer',
+  focusBorderColor: 'rgba(255,80,95,0.7)',
+  _hover: { borderColor: 'rgba(255,80,95,0.4)' },
   sx: { option: { bg: '#1a1a1f', color: 'white' }, '& option': { background: '#1a1a1f !important' } },
 };
 
@@ -74,10 +90,19 @@ const EngagementDetailView = () => {
   // All hooks must be declared unconditionally before any early return
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
+  const resolvePhase = (eng) => {
+    // Match eng.stage to a known phase label, else pick closest by progress
+    if (PHASES.find(p => p.label === eng.stage)) return eng.stage;
+    const closest = [...PHASES].sort((a, b) =>
+      Math.abs(a.progress - eng.progress) - Math.abs(b.progress - eng.progress)
+    )[0];
+    return closest?.label || 'Preparing';
+  };
+
   const [form, setForm] = useState(() =>
     eng ? {
       status:    eng.status,
-      stage:     eng.stage,
+      stage:     resolvePhase(eng),
       progress:  eng.progress,
       operators: eng.operators || [],
       startDate: eng.startDate,
@@ -94,7 +119,7 @@ const EngagementDetailView = () => {
     if (eng && !form) {
       setForm({
         status:    eng.status,
-        stage:     eng.stage,
+        stage:     resolvePhase(eng),
         progress:  eng.progress,
         operators: eng.operators || [],
         startDate: eng.startDate,
@@ -151,7 +176,7 @@ const EngagementDetailView = () => {
   };
 
   const removeFinding = (id) =>
-    updateEngagement(eng.id, { findings: (eng.findings || []).filter((f) => f.id !== id || f._id !== id) });
+    updateEngagement(eng.id, { findings: (eng.findings || []).filter((f) => (f._id || f.id) !== id) });
 
   return (
     <Box pb={8}>
@@ -219,21 +244,28 @@ const EngagementDetailView = () => {
                   </Select>
                 </Box>
                 <Box>
-                  <Label>Progress (%)</Label>
-                  <Input
-                    type="number" min={0} max={100} value={form.progress}
-                    onChange={(e) => setForm((p) => ({ ...p, progress: Math.min(100, Math.max(0, +e.target.value)) }))}
-                    {...inputStyles}
-                  />
-                </Box>
-                <Box>
-                  <Label>Current Stage</Label>
-                  <Input
+                  <Label>Current Phase</Label>
+                  <Select
                     value={form.stage}
-                    onChange={(e) => setForm((p) => ({ ...p, stage: e.target.value }))}
-                    placeholder="e.g. Lateral Movement"
-                    {...inputStyles}
-                  />
+                    onChange={(e) => {
+                      const phase = PHASES.find(p => p.label === e.target.value);
+                      setForm(p => ({
+                        ...p,
+                        stage:    e.target.value,
+                        progress: phase ? phase.progress : p.progress,
+                      }));
+                    }}
+                    {...selectStyles}
+                  >
+                    {PHASES.map(p => (
+                      <option key={p.label} value={p.label}>
+                        {p.label} — {p.progress}%
+                      </option>
+                    ))}
+                  </Select>
+                  <Text fontSize="10px" color="var(--dash-text-muted)" mt={1}>
+                    Progress auto-fills to {PHASES.find(p => p.label === form.stage)?.progress ?? form.progress}%
+                  </Text>
                 </Box>
                 <Box>
                   <Label>Type</Label>
@@ -374,7 +406,7 @@ const EngagementDetailView = () => {
       <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px" p={5}>
         <Flex justify="space-between" align="center" mb={4}>
           <Text fontSize="14px" fontWeight="semibold" color="var(--dash-text-primary)">
-            Recent Findings
+            Quick Findings
             {eng.findings?.length > 0 && (
               <Text as="span" ml={2} fontSize="11px" color="var(--dash-text-muted)" fontWeight="normal">
                 ({eng.findings.length} total)
@@ -430,33 +462,46 @@ const EngagementDetailView = () => {
             No findings yet. Use the sidebar → Reporting → Findings for full management.
           </Text>
         ) : (
-          <Stack spacing={2}>
+          <>
+          <AnimatePresence initial={false}>
             {(eng.findings || []).slice(0, 5).map((f) => {
-              const fc = SEVERITY_COLORS[f.severity] || SEVERITY_COLORS['Info'];
+              const fid = f._id || f.id;
+              const fc  = SEVERITY_COLORS[f.severity] || SEVERITY_COLORS['Info'];
               return (
-                <Flex key={f._id || f.id} align="center" gap={3}
-                  bg="rgba(255,255,255,0.02)" border="1px solid rgba(255,255,255,0.05)"
-                  borderRadius="8px" px={3} py={2}>
-                  <Flex px="6px" py="1px" borderRadius="4px" fontSize="10px" fontWeight="bold"
-                    letterSpacing="wider" flexShrink={0}
-                    bg={fc.bg} border={`1px solid ${fc.border}`} color={fc.text}>
-                    {f.severity}
+                <motion.div
+                  key={fid}
+                  layout
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  style={{ marginBottom: '8px' }}
+                >
+                  <Flex align="center" gap={3}
+                    bg="rgba(255,255,255,0.02)" border="1px solid rgba(255,255,255,0.05)"
+                    borderRadius="8px" px={3} py={2}>
+                    <Flex px="6px" py="1px" borderRadius="4px" fontSize="10px" fontWeight="bold"
+                      letterSpacing="wider" flexShrink={0}
+                      bg={fc.bg} border={`1px solid ${fc.border}`} color={fc.text}>
+                      {f.severity}
+                    </Flex>
+                    <Text fontSize="12px" color="var(--dash-text-primary)" flex="1" noOfLines={1}>{f.title}</Text>
+                    <IconButton
+                      icon={<DeleteIcon />} size="xs" variant="ghost"
+                      color="var(--dash-text-muted)" _hover={{ color: 'red.400' }}
+                      onClick={() => removeFinding(fid)} aria-label="Remove"
+                    />
                   </Flex>
-                  <Text fontSize="12px" color="var(--dash-text-primary)" flex="1" noOfLines={1}>{f.title}</Text>
-                  <IconButton
-                    icon={<DeleteIcon />} size="xs" variant="ghost"
-                    color="var(--dash-text-muted)" _hover={{ color: 'red.400' }}
-                    onClick={() => removeFinding(f._id || f.id)} aria-label="Remove"
-                  />
-                </Flex>
+                </motion.div>
               );
             })}
-            {eng.findings.length > 5 && (
-              <Text fontSize="11px" color="var(--dash-text-muted)" textAlign="center" pt={1}>
-                +{eng.findings.length - 5} more — view all in Reporting → Findings
-              </Text>
-            )}
-          </Stack>
+          </AnimatePresence>
+          {eng.findings.length > 5 && (
+            <Text fontSize="11px" color="var(--dash-text-muted)" textAlign="center" pt={1}>
+              +{eng.findings.length - 5} more — view all in Reporting → Findings
+            </Text>
+          )}
+          </>
         )}
       </Box>
     </Box>

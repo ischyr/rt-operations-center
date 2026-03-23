@@ -6,6 +6,9 @@ import { useEngagements } from '../../contexts/EngagementContext';
 import EngagementDetailView from './views/EngagementDetailView';
 import ResourcesView from './views/ResourcesView';
 import PeopleSkillsView from './views/PeopleSkillsView';
+import FindingsView from './views/FindingsView';
+import FindingDetailView from './views/FindingDetailView';
+import ActivityView from './views/ActivityView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -41,6 +44,7 @@ const EngagementLayout = () => {
       <Route index element={<EngagementDetailView />} />
 
       {/* Operations */}
+      <Route path="operations/activity"       element={<ActivityView />} />
       <Route path="operations/calendar"       element={<PlaceholderView title="Calendar" />} />
       <Route path="operations/skill-requests" element={<PlaceholderView title="Skill Requests" />} />
       <Route path="operations/ttx"            element={<PlaceholderView title="TTX Planner" />} />
@@ -73,9 +77,10 @@ const EngagementLayout = () => {
       <Route path="pillaging/documents"   element={<PlaceholderView title="Documents" />} />
 
       {/* Reporting */}
-      <Route path="reporting/reports"       element={<PlaceholderView title="Reports" />} />
-      <Route path="reporting/findings"      element={<PlaceholderView title="Findings" />} />
-      <Route path="reporting/client-portal" element={<PlaceholderView title="Client Portal" />} />
+      <Route path="reporting/reports"                  element={<PlaceholderView title="Reports" />} />
+      <Route path="reporting/findings"                 element={<FindingsView />} />
+      <Route path="reporting/findings/:findingId"      element={<FindingDetailView />} />
+      <Route path="reporting/client-portal"            element={<PlaceholderView title="Client Portal" />} />
     </Routes>
   );
 };

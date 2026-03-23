@@ -35,9 +35,15 @@ const inputStyles = {
 };
 
 const selectStyles = {
-  ...inputStyles,
+  bg: 'rgba(255,255,255,0.05)',
+  borderColor: 'rgba(255,255,255,0.1)',
+  borderRadius: '10px',
   h: '44px',
+  fontSize: 'sm',
+  color: 'white',
   cursor: 'pointer',
+  focusBorderColor: 'rgba(255,80,95,0.7)',
+  _hover: { borderColor: 'rgba(255,80,95,0.4)' },
 };
 
 const Label = ({ children }) => (

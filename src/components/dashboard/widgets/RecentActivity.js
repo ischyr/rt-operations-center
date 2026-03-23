@@ -44,7 +44,7 @@ const RecentActivity = () => {
         </Text>
       ) : (
         <Flex direction="column" gap={3}>
-          {activityLogs.map((a, i) => (
+          {activityLogs.slice(0, 5).map((a, i) => (
             <Flex key={i} align="flex-start" gap={3}>
               <Box
                 w="6px" h="6px" borderRadius="full" mt="5px" flexShrink={0}
@@ -71,6 +71,11 @@ const RecentActivity = () => {
             </Flex>
           ))}
         </Flex>
+      )}
+      {activityLogs.length > 5 && (
+        <Text fontSize="11px" color="var(--dash-text-muted)" textAlign="center" mt={2}>
+          +{activityLogs.length - 5} more — go to an engagement → Operations → Activity Log
+        </Text>
       )}
     </Box>
   );
