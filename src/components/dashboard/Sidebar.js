@@ -1,4 +1,4 @@
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, Text, Divider } from '@chakra-ui/react';
 import {
   ViewIcon, CalendarIcon, StarIcon, EditIcon, AddIcon,
   AtSignIcon, AttachmentIcon, UnlockIcon, LockIcon,
@@ -9,34 +9,40 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
+import { useEngagements } from '../../contexts/EngagementContext';
 
-const nav = [
+// ── Global nav (always visible) ───────────────────────────────────────────────
+const globalNav = [
+  { key: '',            label: 'Dashboard',   icon: ViewIcon       },
+  { key: 'engagements', label: 'Engagements', icon: WarningTwoIcon },
+];
+
+// ── Per-engagement nav (shown when inside an engagement) ─────────────────────
+const engagementNav = [
   {
     section: 'OPERATIONS',
     items: [
-      { key: '',                label: 'Dashboard',          icon: ViewIcon         },
-      { key: 'engagements',     label: 'Engagements',        icon: WarningTwoIcon   },
-      { key: 'calendar',        label: 'Calendar',           icon: CalendarIcon     },
-      { key: 'skill-requests',  label: 'Skill Requests',     icon: StarIcon         },
-      { key: 'ttx',             label: 'TTX Planner',        icon: EditIcon         },
-      { key: 'campaign',        label: 'Campaign Builder',   icon: AddIcon          },
+      { key: 'operations/calendar',       label: 'Calendar',           icon: CalendarIcon     },
+      { key: 'operations/skill-requests', label: 'Skill Requests',     icon: StarIcon         },
+      { key: 'operations/ttx',            label: 'TTX Planner',        icon: EditIcon         },
+      { key: 'operations/campaign',       label: 'Campaign Builder',   icon: AddIcon          },
     ],
   },
   {
     section: 'TEAM',
     items: [
-      { key: 'people',    label: 'People & Skills', icon: AtSignIcon     },
-      { key: 'resources', label: 'Resources',       icon: AttachmentIcon },
+      { key: 'team/people',    label: 'People & Skills', icon: AtSignIcon     },
+      { key: 'team/resources', label: 'Resources',       icon: AttachmentIcon },
     ],
   },
   {
     section: 'INTELLIGENCE',
     items: [
-      { key: 'loot',     label: 'Loot Tracker',           icon: UnlockIcon },
-      { key: 'evidence', label: 'Evidence Vault',          icon: LockIcon   },
-      { key: 'cleanup',  label: 'Cleanup Tracker',         icon: RepeatIcon },
-      { key: 'c2',       label: 'C2 Infrastructure',       icon: LinkIcon   },
-      { key: 'phishing', label: 'Phishing Infrastructure', icon: EmailIcon  },
+      { key: 'intelligence/loot-tracker',    label: 'Loot Tracker',           icon: UnlockIcon },
+      { key: 'intelligence/evidence-vault',  label: 'Evidence Vault',          icon: LockIcon   },
+      { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
+      { key: 'intelligence/c2',              label: 'C2 Infrastructure',       icon: LinkIcon   },
+      { key: 'intelligence/phishing',        label: 'Phishing Infrastructure', icon: EmailIcon  },
     ],
   },
   {
@@ -63,24 +69,63 @@ const nav = [
   {
     section: 'REPORTING',
     items: [
-      { key: 'reports',       label: 'Reports',       icon: CopyIcon         },
-      { key: 'findings',      label: 'Findings',      icon: WarningTwoIcon   },
-      { key: 'client-portal', label: 'Client Portal', icon: ExternalLinkIcon },
+      { key: 'reporting/reports',       label: 'Reports',       icon: CopyIcon         },
+      { key: 'reporting/findings',      label: 'Findings',      icon: WarningTwoIcon   },
+      { key: 'reporting/client-portal', label: 'Client Portal', icon: ExternalLinkIcon },
     ],
   },
 ];
 
+const STATUS_COLORS = {
+  'PREPARING':   '#a5b4fc',
+  'IN PROGRESS': '#fcd34d',
+  'REPORTING':   '#93c5fd',
+  'COMPLETED':   '#6ee7b7',
+  'PAUSED':      '#9ca3af',
+};
+
+const NavItem = ({ icon: Icon, label, isActive, onClick, itemPy }) => (
+  <Flex
+    align="center" gap={3} px={3} py={itemPy} borderRadius="8px"
+    cursor="pointer" pos="relative"
+    bg={isActive ? 'rgba(255,80,95,0.12)' : 'transparent'}
+    color={isActive ? 'white' : 'var(--dash-text-secondary)'}
+    transition="all 0.18s ease"
+    onClick={onClick}
+    _hover={{ bg: 'var(--dash-nav-hover)', color: 'var(--dash-text-primary)' }}
+  >
+    {isActive && (
+      <Box pos="absolute" left="0" top="20%" bottom="20%" w="2px" bg="red.500" borderRadius="full" />
+    )}
+    <Icon boxSize={3.5} />
+    <Text fontSize="12px" fontWeight={isActive ? 'semibold' : 'normal'}>{label}</Text>
+  </Flex>
+);
+
 const Sidebar = () => {
-  const navigate          = useNavigate();
-  const location          = useLocation();
-  const { logout }        = useAuth();
-  const { settings }      = useSettings();
-  const compact           = settings.compactMode;
+  const navigate     = useNavigate();
+  const location     = useLocation();
+  const { logout }   = useAuth();
+  const { settings } = useSettings();
+  const { getBySlug } = useEngagements();
+  const compact      = settings.compactMode;
 
-  const activeKey = location.pathname.replace('/dashboard', '').replace(/^\//, '');
+  const itemPy   = compact ? '5px' : '8px';
+  const groupGap = compact ? 3 : 4;
 
-  const itemPy  = compact ? '5px' : '8px';
-  const groupGap = compact ? 3 : 5;
+  // Parse active location
+  const afterDash = location.pathname.replace('/dashboard', '').replace(/^\//, '');
+  const segments  = afterDash ? afterDash.split('/') : [];
+  const firstSeg  = segments[0] || '';
+
+  const GLOBAL_KEYS = ['', 'engagements', 'settings'];
+  const isInEngagement = firstSeg && !GLOBAL_KEYS.includes(firstSeg);
+  const engagementSlug = isInEngagement ? firstSeg : null;
+  const activeSubPath  = isInEngagement ? segments.slice(1).join('/') : '';
+
+  const activeEngagement = engagementSlug ? getBySlug(engagementSlug) : null;
+
+  const goTo = (path) => navigate(path);
 
   return (
     <Flex
@@ -102,72 +147,119 @@ const Sidebar = () => {
       }}
     >
       {/* Brand */}
-      <Flex align="center" gap={2} px={5} mb={compact ? 4 : 7}>
+      <Flex align="center" gap={2} px={5} mb={compact ? 3 : 5}>
         <Box w="8px" h="8px" borderRadius="full" bg="red.500" boxShadow="0 0 8px rgba(255,55,55,0.8)" />
         <Text fontSize="11px" fontWeight="black" letterSpacing="widest" color="var(--dash-text-primary)" textTransform="uppercase">
           Red Ops Center
         </Text>
       </Flex>
 
-      {/* Nav sections */}
-      <Flex direction="column" flex="1" gap={groupGap} px={3}>
-        {nav.map((group) => (
-          <Box key={group.section}>
+      {/* Global nav — Dashboard + Engagements */}
+      <Box px={3} mb={groupGap}>
+        {globalNav.map((item) => {
+          const isActive = !isInEngagement && firstSeg === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard${item.key ? `/${item.key}` : ''}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Engagement context — shown when inside an engagement */}
+      {isInEngagement && activeEngagement && (
+        <>
+          <Divider borderColor="var(--dash-divider)" mx={3} w="auto" mb={groupGap} />
+
+          {/* Active engagement chip */}
+          <Box px={3} mb={groupGap}>
             <Text
               fontSize="9px" fontWeight="bold" letterSpacing="widest"
               color="var(--dash-section-label)" textTransform="uppercase"
               px={2} mb={1}
             >
-              {group.section}
+              Active Operation
             </Text>
-            {group.items.map((item) => {
-              const isActive = activeKey === item.key;
-              return (
-                <Flex
-                  key={item.key}
-                  align="center"
-                  gap={3}
-                  px={3}
-                  py={itemPy}
-                  borderRadius="8px"
-                  cursor="pointer"
-                  pos="relative"
-                  bg={isActive ? 'rgba(255,80,95,0.12)' : 'transparent'}
-                  color={isActive ? 'white' : 'var(--dash-text-secondary)'}
-                  transition="all 0.18s ease"
-                  onClick={() => navigate(`/dashboard${item.key ? `/${item.key}` : ''}`)}
-                  _hover={{ bg: 'var(--dash-nav-hover)', color: 'var(--dash-text-primary)' }}
-                >
-                  {isActive && (
-                    <Box pos="absolute" left="0" top="20%" bottom="20%" w="2px" bg="red.500" borderRadius="full" />
-                  )}
-                  <item.icon boxSize={3.5} />
-                  <Text fontSize="12px" fontWeight={isActive ? 'semibold' : 'normal'}>{item.label}</Text>
-                </Flex>
-              );
-            })}
+            <Box
+              px={3} py="8px" borderRadius="10px"
+              bg="rgba(255,80,95,0.08)" border="1px solid rgba(255,80,95,0.2)"
+              cursor="pointer"
+              onClick={() => goTo(`/dashboard/${engagementSlug}`)}
+              _hover={{ bg: 'rgba(255,80,95,0.13)', borderColor: 'rgba(255,80,95,0.35)' }}
+              transition="all 0.18s"
+            >
+              <Flex align="center" justify="space-between">
+                <Text fontSize="12px" fontWeight="semibold" color="white" noOfLines={1}>
+                  {activeEngagement.name}
+                </Text>
+                <Box
+                  w="6px" h="6px" borderRadius="full" flexShrink={0}
+                  bg={STATUS_COLORS[activeEngagement.status] || '#9ca3af'}
+                  boxShadow={`0 0 6px ${STATUS_COLORS[activeEngagement.status] || '#9ca3af'}`}
+                />
+              </Flex>
+              <Text fontSize="10px" color="var(--dash-text-muted)" mt="2px">{activeEngagement.company}</Text>
+            </Box>
+
+            {/* Switch engagement link */}
+            <Text
+              fontSize="10px" color="var(--dash-text-muted)" px={2} mt={2} cursor="pointer"
+              _hover={{ color: 'var(--dash-text-secondary)' }} transition="color 0.15s"
+              onClick={() => goTo('/dashboard/engagements')}
+            >
+              ↩ Switch engagement
+            </Text>
           </Box>
-        ))}
-      </Flex>
+
+          <Divider borderColor="var(--dash-divider)" mx={3} w="auto" mb={groupGap} />
+
+          {/* Per-engagement nav sections */}
+          <Flex direction="column" flex="1" gap={groupGap} px={3}>
+            {engagementNav.map((group) => (
+              <Box key={group.section}>
+                <Text
+                  fontSize="9px" fontWeight="bold" letterSpacing="widest"
+                  color="var(--dash-section-label)" textTransform="uppercase"
+                  px={2} mb={1}
+                >
+                  {group.section}
+                </Text>
+                {group.items.map((item) => {
+                  const isActive = activeSubPath === item.key;
+                  return (
+                    <NavItem
+                      key={item.key}
+                      icon={item.icon}
+                      label={item.label}
+                      isActive={isActive}
+                      itemPy={itemPy}
+                      onClick={() => goTo(`/dashboard/${engagementSlug}/${item.key}`)}
+                    />
+                  );
+                })}
+              </Box>
+            ))}
+          </Flex>
+        </>
+      )}
+
+      {/* Spacer when not in engagement */}
+      {!isInEngagement && <Box flex="1" />}
 
       {/* Bottom — settings + logout */}
       <Box px={3} pt={4} borderTop="1px solid var(--dash-divider)" mt={4}>
-        <Flex
-          align="center" gap={3} px={3} py={itemPy} borderRadius="8px"
-          cursor="pointer"
-          bg={activeKey === 'settings' ? 'rgba(255,80,95,0.12)' : 'transparent'}
-          color={activeKey === 'settings' ? 'white' : 'var(--dash-text-secondary)'}
-          pos="relative"
-          _hover={{ bg: 'var(--dash-nav-hover)', color: 'var(--dash-text-primary)' }}
-          transition="all 0.18s"
-          onClick={() => navigate('/dashboard/settings')}
-        >
-          {activeKey === 'settings' && (
-            <Box pos="absolute" left="0" top="20%" bottom="20%" w="2px" bg="red.500" borderRadius="full" />
-          )}
-          <SettingsIcon boxSize={3.5} />
-          <Text fontSize="12px" fontWeight={activeKey === 'settings' ? 'semibold' : 'normal'}>Settings</Text>
-        </Flex>
+        <NavItem
+          icon={SettingsIcon}
+          label="Settings"
+          isActive={firstSeg === 'settings'}
+          itemPy={itemPy}
+          onClick={() => goTo('/dashboard/settings')}
+        />
         <Flex
           align="center" gap={3} px={3} py={itemPy} borderRadius="8px"
           cursor="pointer" color="var(--dash-text-muted)"

@@ -95,4 +95,21 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getMe, updateProfile, changePassword };
+// ── GET /api/users/all ────────────────────────────────────────────────────────
+// Returns all users' public info — used for operator assignment pickers.
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select('callsign email role avatar').sort({ callsign: 1 });
+    res.json(users.map((u) => ({
+      id:       u._id,
+      callsign: u.callsign,
+      email:    u.email,
+      role:     u.role,
+      avatar:   u.avatar,
+    })));
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
+};
+
+module.exports = { getMe, updateProfile, changePassword, getAllUsers };

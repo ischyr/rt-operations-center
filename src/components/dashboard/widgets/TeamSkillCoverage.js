@@ -1,60 +1,67 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
 import { StarIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
+import { useEngagements } from '../../../contexts/EngagementContext';
 
-const skills = [
-  { label: 'Active Directory',   pct: 90 },
-  { label: 'Web App Testing',    pct: 85 },
-  { label: 'OSINT',              pct: 80 },
-  { label: 'Network Pentesting', pct: 70 },
-  { label: 'Cloud Security',     pct: 65 },
-  { label: 'Malware Dev',        pct: 55 },
-];
+const TeamSkillCoverage = () => {
+  const { dashboardStats } = useEngagements();
+  const navigate = useNavigate();
+  const { teamSkills } = dashboardStats;
 
-const TeamSkillCoverage = () => (
-  <Box
-    bg="var(--dash-card-bg)"
-    border="1px solid var(--dash-card-border)"
-    borderRadius="12px"
-    p={5}
-  >
-    <Flex align="center" gap={2} mb={5}>
-      <StarIcon boxSize={3} color="red.400" />
-      <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
-        Team Skill Coverage
-      </Text>
-    </Flex>
+  return (
+    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}>
+      <Flex align="center" gap={2} mb={5}>
+        <StarIcon boxSize={3} color="red.400" />
+        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
+          Team Skill Coverage
+        </Text>
+      </Flex>
 
-    <Flex direction="column" gap={3}>
-      {skills.map((s) => (
-        <Box key={s.label}>
-          <Flex justify="space-between" mb={1}>
-            <Text fontSize="12px" color="var(--dash-text-secondary)">{s.label}</Text>
-            <Text
-              fontSize="11px" fontWeight="bold"
-              color={s.pct >= 80 ? 'green.400' : s.pct >= 65 ? 'yellow.400' : 'orange.400'}
-            >
-              {s.pct}%
-            </Text>
-          </Flex>
-          <Box h="4px" bg="var(--dash-progress-track)" borderRadius="full" overflow="hidden">
-            <Box
-              h="100%"
-              w={`${s.pct}%`}
-              bgGradient={
-                s.pct >= 80
-                  ? 'linear(to-r, green.700, green.400)'
-                  : s.pct >= 65
-                  ? 'linear(to-r, yellow.700, yellow.400)'
-                  : 'linear(to-r, orange.700, orange.400)'
-              }
-              borderRadius="full"
-              transition="width 0.6s ease"
-            />
-          </Box>
-        </Box>
-      ))}
-    </Flex>
-  </Box>
-);
+      {teamSkills.length === 0 ? (
+        <Flex direction="column" align="center" py={4} gap={1}>
+          <Text fontSize="sm" color="var(--dash-text-muted)" textAlign="center">
+            No skills tracked yet.
+          </Text>
+          <Text
+            fontSize="11px" color="red.400" cursor="pointer" mt={1}
+            _hover={{ textDecoration: 'underline' }}
+            onClick={() => navigate('/dashboard/engagements')}
+          >
+            Add via an engagement → Team → People & Skills
+          </Text>
+        </Flex>
+      ) : (
+        <Flex direction="column" gap={3}>
+          {teamSkills.map((s) => (
+            <Box key={s.label}>
+              <Flex justify="space-between" mb={1}>
+                <Text fontSize="12px" color="var(--dash-text-secondary)">{s.label}</Text>
+                <Text
+                  fontSize="11px" fontWeight="bold"
+                  color={s.pct >= 80 ? 'green.400' : s.pct >= 60 ? 'yellow.400' : 'orange.400'}
+                >
+                  {s.pct}%
+                </Text>
+              </Flex>
+              <Box h="4px" bg="var(--dash-progress-track)" borderRadius="full" overflow="hidden">
+                <Box
+                  h="100%" w={`${s.pct}%`}
+                  bgGradient={
+                    s.pct >= 80
+                      ? 'linear(to-r, green.700, green.400)'
+                      : s.pct >= 60
+                      ? 'linear(to-r, yellow.700, yellow.400)'
+                      : 'linear(to-r, orange.700, orange.400)'
+                  }
+                  borderRadius="full" transition="width 0.6s ease"
+                />
+              </Box>
+            </Box>
+          ))}
+        </Flex>
+      )}
+    </Box>
+  );
+};
 
 export default TeamSkillCoverage;

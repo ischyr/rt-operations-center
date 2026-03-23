@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { EngagementProvider } from './contexts/EngagementContext';
 import theme from './theme';
 import PageLayout from './components/common/PageLayout';
 import LandingLayout from './components/pages/LandingLayout';
@@ -67,7 +68,9 @@ function App() {
     <SettingsProvider>
       <ChakraProvider theme={theme}>
         <AuthProvider>
-          <AppRoutes />
+          <EngagementProvider>
+            <AppRoutes />
+          </EngagementProvider>
         </AuthProvider>
       </ChakraProvider>
     </SettingsProvider>

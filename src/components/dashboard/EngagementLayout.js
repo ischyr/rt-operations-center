@@ -1,0 +1,83 @@
+import { Box, Flex, Text, Button } from '@chakra-ui/react';
+import { Routes, Route } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronLeftIcon } from '@chakra-ui/icons';
+import { useEngagements } from '../../contexts/EngagementContext';
+import EngagementDetailView from './views/EngagementDetailView';
+import ResourcesView from './views/ResourcesView';
+import PeopleSkillsView from './views/PeopleSkillsView';
+import PlaceholderView from './views/PlaceholderView';
+
+const NotFound = ({ slug }) => {
+  const navigate = useNavigate();
+  return (
+    <Flex direction="column" align="center" justify="center" h="60vh" gap={4}>
+      <Text fontSize="4xl">🔍</Text>
+      <Text fontWeight="bold" color="var(--dash-text-primary)">Engagement not found</Text>
+      <Text fontSize="sm" color="var(--dash-text-muted)">The operation "{slug}" does not exist.</Text>
+      <Button size="sm" leftIcon={<ChevronLeftIcon />}
+        variant="ghost" color="var(--dash-text-secondary)"
+        _hover={{ color: 'white' }} onClick={() => navigate('/dashboard/engagements')}>
+        Back to Engagements
+      </Button>
+    </Flex>
+  );
+};
+
+const EngagementLayout = () => {
+  const { slug } = useParams();
+  const { getBySlug, loading } = useEngagements();
+  const eng = getBySlug(slug);
+
+  if (loading) return (
+    <Flex align="center" justify="center" h="60vh">
+      <Text fontSize="sm" color="var(--dash-text-muted)">Loading...</Text>
+    </Flex>
+  );
+  if (!eng) return <NotFound slug={slug} />;
+
+  return (
+    <Routes>
+      <Route index element={<EngagementDetailView />} />
+
+      {/* Operations */}
+      <Route path="operations/calendar"       element={<PlaceholderView title="Calendar" />} />
+      <Route path="operations/skill-requests" element={<PlaceholderView title="Skill Requests" />} />
+      <Route path="operations/ttx"            element={<PlaceholderView title="TTX Planner" />} />
+      <Route path="operations/campaign"       element={<PlaceholderView title="Campaign Builder" />} />
+
+      {/* Team */}
+      <Route path="team/people"    element={<PeopleSkillsView />} />
+      <Route path="team/resources" element={<ResourcesView />} />
+
+      {/* Intelligence */}
+      <Route path="intelligence/loot-tracker"    element={<PlaceholderView title="Loot Tracker" />} />
+      <Route path="intelligence/evidence-vault"  element={<PlaceholderView title="Evidence Vault" />} />
+      <Route path="intelligence/cleanup-tracker" element={<PlaceholderView title="Cleanup Tracker" />} />
+      <Route path="intelligence/c2"              element={<PlaceholderView title="C2 Infrastructure" />} />
+      <Route path="intelligence/phishing"        element={<PlaceholderView title="Phishing Infrastructure" />} />
+
+      {/* TTPs */}
+      <Route path="ttps/initial-access"   element={<PlaceholderView title="Initial Access" />} />
+      <Route path="ttps/windows"          element={<PlaceholderView title="Windows" />} />
+      <Route path="ttps/linux"            element={<PlaceholderView title="Linux" />} />
+      <Route path="ttps/active-directory" element={<PlaceholderView title="Active Directory" />} />
+      <Route path="ttps/network"          element={<PlaceholderView title="Network" />} />
+
+      {/* Pillaging */}
+      <Route path="pillaging/subdomains"  element={<PlaceholderView title="Subdomains" />} />
+      <Route path="pillaging/services"    element={<PlaceholderView title="Services" />} />
+      <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
+      <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
+      <Route path="pillaging/emails"      element={<PlaceholderView title="Emails" />} />
+      <Route path="pillaging/documents"   element={<PlaceholderView title="Documents" />} />
+
+      {/* Reporting */}
+      <Route path="reporting/reports"       element={<PlaceholderView title="Reports" />} />
+      <Route path="reporting/findings"      element={<PlaceholderView title="Findings" />} />
+      <Route path="reporting/client-portal" element={<PlaceholderView title="Client Portal" />} />
+    </Routes>
+  );
+};
+
+export default EngagementLayout;

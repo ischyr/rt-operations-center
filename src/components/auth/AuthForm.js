@@ -9,6 +9,7 @@ import { EmailIcon, LockIcon, AtSignIcon, ArrowForwardIcon, CheckIcon } from '@c
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEngagements } from '../../contexts/EngagementContext';
 
 const MotionBox = motion(Box);
 
@@ -202,6 +203,7 @@ const AuthForm = () => {
     pendingQrData, pendingTempToken,
     confirmSetup, verify2FA,
   } = useAuth();
+  const { fetchEngagements } = useEngagements();
 
   const isRegister = location.pathname === '/register';
   const showQr     = !!pendingQrData;
@@ -224,6 +226,11 @@ const AuthForm = () => {
       if (result === true || result === '2fa' || result === 'qr') {
         setFormData({ name: '', email: '', password: '' });
       }
+      // Direct login (no 2FA) — fetch data then transition
+      if (result === true) {
+        await fetchEngagements();
+        setIsTransitioning(true);
+      }
     }
   };
 
@@ -231,12 +238,18 @@ const AuthForm = () => {
 
   const handleConfirmSetup = async (email, code) => {
     const ok = await confirmSetup(email, code);
-    if (ok) setIsTransitioning(true);
+    if (ok) {
+      await fetchEngagements();
+      setIsTransitioning(true);
+    }
   };
 
   const handleVerify2FA = async (code) => {
     const ok = await verify2FA(code);
-    if (ok) setIsTransitioning(true);
+    if (ok) {
+      await fetchEngagements();
+      setIsTransitioning(true);
+    }
   };
 
   // Determine which step key to animate on
