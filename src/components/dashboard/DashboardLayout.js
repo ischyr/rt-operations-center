@@ -1,12 +1,20 @@
 import { Flex, Box } from '@chakra-ui/react';
 import { Routes, Route } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import DashboardView from './views/DashboardView';
 import PlaceholderView from './views/PlaceholderView';
 
+const MotionFlex = motion(Flex);
+
 const DashboardLayout = () => (
-  <Flex h="100vh" overflow="hidden" bg="#111111">
+  <MotionFlex
+    h="100vh" overflow="hidden" bg="#111111"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.45, ease: 'easeOut' }}
+  >
     <Sidebar />
     <Flex direction="column" flex="1" overflow="hidden">
       <TopBar />
@@ -47,7 +55,7 @@ const DashboardLayout = () => (
         </Routes>
       </Box>
     </Flex>
-  </Flex>
+  </MotionFlex>
 );
 
 export default DashboardLayout;

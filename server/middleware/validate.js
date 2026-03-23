@@ -21,4 +21,16 @@ const validateLogin = [
   handle,
 ];
 
-module.exports = { validateRegister, validateLogin };
+const validateConfirmSetup = [
+  body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
+  body('token').trim().isLength({ min: 6, max: 6 }).withMessage('Enter the 6-digit authenticator code'),
+  handle,
+];
+
+const validateVerify2FA = [
+  body('tempToken').notEmpty().withMessage('Temporary token is required'),
+  body('token').trim().isLength({ min: 6, max: 6 }).withMessage('Enter the 6-digit authenticator code'),
+  handle,
+];
+
+module.exports = { validateRegister, validateLogin, validateConfirmSetup, validateVerify2FA };

@@ -1,31 +1,46 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt   = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
     callsign: {
-      type: String,
-      required: [true, 'Call-sign is required'],
-      trim: true,
+      type:      String,
+      required:  [true, 'Call-sign is required'],
+      trim:      true,
       maxlength: [50, 'Call-sign cannot exceed 50 characters'],
     },
     email: {
-      type: String,
-      required: [true, 'Email is required'],
-      unique: true,
+      type:      String,
+      required:  [true, 'Email is required'],
+      unique:    true,
       lowercase: true,
-      trim: true,
+      trim:      true,
     },
     password: {
-      type: String,
-      required: [true, 'Password is required'],
+      type:      String,
+      required:  [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
-      select: false,
+      select:    false,
     },
     role: {
-      type: String,
-      enum: ['operator', 'admin'],
+      type:    String,
+      enum:    ['operator', 'admin'],
       default: 'operator',
+    },
+    // 2FA — confirmed live secret (set after user verifies setup)
+    twoFactorSecret: {
+      type:   String,
+      select: false,
+    },
+    // 2FA — temporary secret held until user confirms first OTP
+    twoFactorTempSecret: {
+      type:   String,
+      select: false,
+    },
+    // True once the user has successfully confirmed their first OTP
+    twoFactorEnabled: {
+      type:    Boolean,
+      default: false,
     },
   },
   { timestamps: true }
