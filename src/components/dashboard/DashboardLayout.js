@@ -14,6 +14,8 @@ import LabConfigsView from './views/LabConfigsView';
 import LabConnectivityView from './views/LabConnectivityView';
 import PlaceholderView from './views/PlaceholderView';
 import CVEFeedView from './views/CVEFeedView';
+import DiagramEditorView from './views/DiagramEditorView';
+import DiagramLibraryView from './views/DiagramLibraryView';
 
 const MotionFlex = motion(Flex);
 
@@ -51,8 +53,8 @@ const DashboardLayout = () => (
           <Route path="malware/scanner" element={<PlaceholderView title="Malware Scanner" />} />
           <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />
           {/* Diagram Drawing routes */}
-          <Route path="diagrams/editor"  element={<PlaceholderView title="Diagram Editor" />} />
-          <Route path="diagrams/library" element={<PlaceholderView title="My Diagrams" />} />
+          <Route path="diagrams/editor"  element={<DiagramEditorView />} />
+          <Route path="diagrams/library" element={<DiagramLibraryView />} />
           {/* All per-engagement routes live under /:slug/* */}
           <Route path=":slug/*"     element={<EngagementLayout />} />
         </Routes>
