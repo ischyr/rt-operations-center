@@ -12,6 +12,7 @@ import OAuthCallback from './components/auth/OAuthCallback';
 import About from './components/pages/About';
 import Operators from './components/pages/Operators';
 import Certifications from './components/pages/Certifications';
+import Pricing from './components/pages/Pricing';
 
 const pageVariants = {
   initial: { opacity: 0, y: 14 },
@@ -58,6 +59,7 @@ function AppRoutes() {
           <Route path="/about"          element={<PageLayout><About /></PageLayout>} />
           <Route path="/operators"      element={<PageLayout><Operators /></PageLayout>} />
           <Route path="/certifications" element={<PageLayout><Certifications /></PageLayout>} />
+          <Route path="/pricing"        element={<PageLayout><Pricing /></PageLayout>} />
           <Route path="*"               element={<Navigate to={isLoggedIn ? '/dashboard' : '/signin'} replace />} />
         </Routes>
       </motion.div>

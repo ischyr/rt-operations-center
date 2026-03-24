@@ -553,6 +553,14 @@ import { commonCard } from '../../styles/cardStyles';
 
 ## TODO
 
+### Lab Configs — Auto-Deploy
+
+The Lab Configs page (`/dashboard/lab/configs`) is currently **static** — the 8 Ludus lab templates and their deploy commands are hardcoded in the frontend. The "Show Commands" modal displays the manual CLI steps needed to deploy each lab via Ludus.
+
+**Planned:** Full Ludus API integration so operators can trigger deploys directly from the UI — selecting a template, clicking deploy, and monitoring range status in real time without touching the CLI.
+
+---
+
 ### Resources & Materials — Tools Page
 
 Curated red team tooling reference at `/dashboard/resources/tools`.
