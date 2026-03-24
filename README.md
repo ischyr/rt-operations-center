@@ -396,6 +396,57 @@ docs/
 import { commonCard } from '../../styles/cardStyles';
 ```
 
+---
+
+## TODO
+
+### Resources & Materials (Global Sidebar Section)
+
+New global sidebar section `RESOURCES & MATERIALS` — currently placeholder (under construction).
+
+| Page | Route | Notes |
+|---|---|---|
+| **Tools** | `/dashboard/resources/tools` | Curated red team tooling reference — categories, install commands, links |
+| **CVE Feed** | `/dashboard/resources/cve-feed` | Live CVE feed integration — reference: https://cvefeed.io/vuln/latest/ |
+
+**Implementation notes:**
+- CVE Feed: fetch from cvefeed.io or NVD API, display severity badges (CRITICAL/HIGH/MEDIUM/LOW), filter by keyword/severity, link to full CVE detail
+- Tools: static or DB-backed list of tools per category (recon, exploitation, post-exploitation, C2, reporting) with copy-to-clipboard install commands
+
+---
+
+### Malware Analysis (Global Sidebar Section)
+
+Dedicated `MALWARE ANALYSIS` section — VirusTotal API integration — currently placeholder (under construction).
+
+| Page | Route | Notes |
+|---|---|---|
+| **Scanner** | `/dashboard/malware/scanner` | Submit file, hash (MD5/SHA1/SHA256), or URL for analysis |
+| **Reports** | `/dashboard/malware/reports` | History of past scans with detection ratios and threat labels |
+
+**Implementation notes:**
+- VirusTotal API key stored in Settings
+- Scanner: file upload + hash/URL input, show detection ratio, AV engine results table, threat category, tags
+- Reports: DB-backed history of scan results per operator, filterable by type/verdict
+
+---
+
+### Diagram Drawing (Global Sidebar Section)
+
+Dedicated `DIAGRAM DRAWING` section — embedded draw.io integration — currently placeholder (under construction).
+
+| Page | Route | Notes |
+|---|---|---|
+| **Editor** | `/dashboard/diagrams/editor` | Embedded diagram editor (draw.io / diagrams.net) |
+| **My Diagrams** | `/dashboard/diagrams/library` | Saved diagrams library — network maps, attack paths, infra diagrams |
+
+**Implementation notes:**
+- Embed diagrams.net via iframe or integrate the draw.io JS SDK for in-app editing
+- Use cases: network topology maps, AD attack path diagrams, infrastructure layout, red team campaign flow diagrams
+- Save diagrams to DB per operator/engagement
+
+---
+
 ### Decorative Side Shapes (Public Pages)
 
 - Container: `pos="absolute" top="0" bottom="0"` — full page height automatically

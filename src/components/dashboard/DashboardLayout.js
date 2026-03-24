@@ -10,6 +10,9 @@ import EngagementLayout from './EngagementLayout';
 import RedTeamMapView from './views/RedTeamMapView';
 import ADAttackMapView from './views/ADAttackMapView';
 import PayloadMapView from './views/PayloadMapView';
+import LabConfigsView from './views/LabConfigsView';
+import LabConnectivityView from './views/LabConnectivityView';
+import PlaceholderView from './views/PlaceholderView';
 
 const MotionFlex = motion(Flex);
 
@@ -37,6 +40,18 @@ const DashboardLayout = () => (
           <Route path="cheatsheet/red-team-map" element={<RedTeamMapView />} />
           <Route path="cheatsheet/ad-map"       element={<ADAttackMapView />} />
           <Route path="cheatsheet/payload-map"  element={<PayloadMapView />} />
+          {/* Red Lab routes */}
+          <Route path="lab/configs"      element={<LabConfigsView />} />
+          <Route path="lab/connectivity" element={<LabConnectivityView />} />
+          {/* Resources & Materials routes */}
+          <Route path="resources/tools"    element={<PlaceholderView title="Tools" />} />
+          <Route path="resources/cve-feed" element={<PlaceholderView title="CVE Feed" />} />
+          {/* Malware Analysis routes */}
+          <Route path="malware/scanner" element={<PlaceholderView title="Malware Scanner" />} />
+          <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />
+          {/* Diagram Drawing routes */}
+          <Route path="diagrams/editor"  element={<PlaceholderView title="Diagram Editor" />} />
+          <Route path="diagrams/library" element={<PlaceholderView title="My Diagrams" />} />
           {/* All per-engagement routes live under /:slug/* */}
           <Route path=":slug/*"     element={<EngagementLayout />} />
         </Routes>

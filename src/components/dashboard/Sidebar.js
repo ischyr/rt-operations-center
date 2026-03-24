@@ -24,6 +24,30 @@ const cheatsheetNav = [
   { key: 'cheatsheet/payload-map',  label: 'Payload & Evasion Map', icon: AttachmentIcon },
 ];
 
+// ── Red Lab nav (always visible, global) ──────────────────────────────────────
+const redLabNav = [
+  { key: 'lab/configs',      label: 'Lab Configs',      icon: SettingsIcon    },
+  { key: 'lab/connectivity', label: 'Lab Connectivity', icon: LinkIcon        },
+];
+
+// ── Resources & Materials nav (always visible, global) ────────────────────────
+const resourcesNav = [
+  { key: 'resources/tools',    label: 'Tools',    icon: StarIcon       },
+  { key: 'resources/cve-feed', label: 'CVE Feed', icon: WarningTwoIcon },
+];
+
+// ── Malware Analysis nav (always visible, global) ─────────────────────────────
+const malwareNav = [
+  { key: 'malware/scanner', label: 'Scanner',  icon: SearchIcon   },
+  { key: 'malware/reports', label: 'Reports',  icon: CopyIcon     },
+];
+
+// ── Diagram Drawing nav (always visible, global) ──────────────────────────────
+const diagramsNav = [
+  { key: 'diagrams/editor',  label: 'Editor',       icon: EditIcon       },
+  { key: 'diagrams/library', label: 'My Diagrams',  icon: AttachmentIcon },
+];
+
 // ── Per-engagement nav (shown when inside an engagement) ─────────────────────
 const engagementNav = [
   {
@@ -133,7 +157,7 @@ const Sidebar = () => {
   const segments  = afterDash ? afterDash.split('/') : [];
   const firstSeg  = segments[0] || '';
 
-  const GLOBAL_KEYS = ['', 'engagements', 'settings', 'cheatsheet'];
+  const GLOBAL_KEYS = ['', 'engagements', 'settings', 'cheatsheet', 'lab', 'resources', 'malware', 'diagrams'];
   const isInEngagement = firstSeg && !GLOBAL_KEYS.includes(firstSeg);
   const engagementSlug = isInEngagement ? firstSeg : null;
   const activeSubPath  = isInEngagement ? segments.slice(1).join('/') : '';
@@ -197,6 +221,106 @@ const Sidebar = () => {
           Cheatsheet
         </Text>
         {cheatsheetNav.map((item) => {
+          const isActive = afterDash === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard/${item.key}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Red Lab section — always visible */}
+      <Box px={3} mb={groupGap}>
+        <Divider borderColor="var(--dash-divider)" mb={groupGap} />
+        <Text
+          fontSize="9px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-section-label)" textTransform="uppercase"
+          px={2} mb={1}
+        >
+          Red Lab
+        </Text>
+        {redLabNav.map((item) => {
+          const isActive = afterDash === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard/${item.key}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Resources & Materials section — always visible */}
+      <Box px={3} mb={groupGap}>
+        <Divider borderColor="var(--dash-divider)" mb={groupGap} />
+        <Text
+          fontSize="9px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-section-label)" textTransform="uppercase"
+          px={2} mb={1}
+        >
+          Resources &amp; Materials
+        </Text>
+        {resourcesNav.map((item) => {
+          const isActive = afterDash === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard/${item.key}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Malware Analysis section — always visible */}
+      <Box px={3} mb={groupGap}>
+        <Divider borderColor="var(--dash-divider)" mb={groupGap} />
+        <Text
+          fontSize="9px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-section-label)" textTransform="uppercase"
+          px={2} mb={1}
+        >
+          Malware Analysis
+        </Text>
+        {malwareNav.map((item) => {
+          const isActive = afterDash === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard/${item.key}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Diagram Drawing section — always visible */}
+      <Box px={3} mb={groupGap}>
+        <Divider borderColor="var(--dash-divider)" mb={groupGap} />
+        <Text
+          fontSize="9px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-section-label)" textTransform="uppercase"
+          px={2} mb={1}
+        >
+          Diagram Drawing
+        </Text>
+        {diagramsNav.map((item) => {
           const isActive = afterDash === item.key;
           return (
             <NavItem
