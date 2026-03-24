@@ -255,7 +255,12 @@ const TopBar = () => {
               flexShrink={0}
             >
               {user?.avatar ? (
-                <Image src={user.avatar} w="22px" h="22px" objectFit="cover" />
+                <img
+                  src={user.avatar}
+                  alt="avatar"
+                  referrerPolicy="no-referrer"
+                  style={{ width: '22px', height: '22px', objectFit: 'cover', display: 'block' }}
+                />
               ) : (
                 <Flex w="22px" h="22px" bg="red.700" align="center" justify="center">
                   <Text fontSize="9px" fontWeight="black" color="white">

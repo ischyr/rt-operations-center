@@ -3,7 +3,7 @@ import {
   Modal, ModalOverlay, ModalContent, ModalBody,
   Box, Flex, Text, Stack, Input, InputGroup, InputLeftElement,
   Button, Divider, Alert, AlertIcon, HStack,
-  PinInput, PinInputField, Image,
+  PinInput, PinInputField,
 } from '@chakra-ui/react';
 import { AtSignIcon, LockIcon, CheckIcon } from '@chakra-ui/icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -210,7 +210,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   _groupHover={{ borderColor: 'rgba(255,80,95,0.65)', boxShadow: '0 0 24px rgba(255,50,50,0.22)' }}
                 >
                   {avatarPreview ? (
-                    <Image src={avatarPreview} w="84px" h="84px" objectFit="cover" />
+                    <img
+                      src={avatarPreview}
+                      alt="avatar"
+                      referrerPolicy="no-referrer"
+                      style={{ width: '84px', height: '84px', objectFit: 'cover', display: 'block' }}
+                    />
                   ) : (
                     <Flex w="84px" h="84px" bg="rgba(185,28,28,0.35)" align="center" justify="center">
                       <Text fontSize="2xl" fontWeight="black" color="white">

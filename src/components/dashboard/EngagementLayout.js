@@ -10,6 +10,9 @@ import FindingsView from './views/FindingsView';
 import FindingDetailView from './views/FindingDetailView';
 import ActivityView from './views/ActivityView';
 import CalendarView from './views/CalendarView';
+import SkillRequestsView from './views/SkillRequestsView';
+import TTXPlannerView from './views/TTXPlannerView';
+import PersonasView from './views/PersonasView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -47,9 +50,8 @@ const EngagementLayout = () => {
       {/* Operations */}
       <Route path="operations/activity"       element={<ActivityView />} />
       <Route path="operations/calendar"       element={<CalendarView />} />
-      <Route path="operations/skill-requests" element={<PlaceholderView title="Skill Requests" />} />
-      <Route path="operations/ttx"            element={<PlaceholderView title="TTX Planner" />} />
-      <Route path="operations/campaign"       element={<PlaceholderView title="Campaign Builder" />} />
+      <Route path="operations/skill-requests" element={<SkillRequestsView />} />
+      <Route path="operations/ttx"            element={<TTXPlannerView />} />
 
       {/* Team */}
       <Route path="team/people"    element={<PeopleSkillsView />} />
@@ -63,7 +65,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/phishing"        element={<PlaceholderView title="Phishing Infrastructure" />} />
 
       {/* Sock Puppets */}
-      <Route path="sockpuppets/personas"     element={<PlaceholderView title="Personas" />} />
+      <Route path="sockpuppets/personas"     element={<PersonasView />} />
       <Route path="sockpuppets/social-media" element={<PlaceholderView title="Social Media" />} />
 
       {/* TTPs */}

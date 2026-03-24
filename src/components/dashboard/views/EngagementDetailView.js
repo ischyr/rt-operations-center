@@ -632,7 +632,10 @@ const EngagementDetailView = () => {
           ) : (
             <>
               <AnimatePresence initial={false}>
-                {findings.slice(0, 6).map(f => {
+                {[...findings]
+                  .sort((a, b) => SORDER.indexOf(a.severity) - SORDER.indexOf(b.severity))
+                  .slice(0, 5)
+                  .map(f => {
                   const fid = f._id || f.id;
                   const fm  = SEVERITY_META[f.severity] || SEVERITY_META['Info'];
                   return (
@@ -665,10 +668,19 @@ const EngagementDetailView = () => {
                   );
                 })}
               </AnimatePresence>
-              {findings.length > 6 && (
-                <Text fontSize="11px" color="var(--dash-text-muted)" textAlign="center" pt={2}>
-                  +{findings.length - 6} more — view all in Reporting → Findings
-                </Text>
+              {findings.length > 5 && (
+                <Flex
+                  as="button" w="full" justify="center" align="center" gap={2}
+                  pt={2} pb={1} borderRadius="8px" mt={1}
+                  color="var(--dash-text-muted)" fontSize="11px"
+                  transition="color 0.15s"
+                  _hover={{ color: '#fcd34d' }}
+                  onClick={() => navigate(`/dashboard/${slug}/reporting/findings`)}
+                >
+                  <Text>+{findings.length - 5} more</Text>
+                  <Text opacity={0.5}>·</Text>
+                  <Text>View all findings →</Text>
+                </Flex>
               )}
             </>
           )}

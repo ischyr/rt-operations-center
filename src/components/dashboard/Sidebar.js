@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Box, Flex, Text, Divider } from '@chakra-ui/react';
 import {
   ViewIcon, CalendarIcon, StarIcon, EditIcon, AddIcon,
@@ -57,7 +58,6 @@ const engagementNav = [
       { key: 'operations/calendar',       label: 'Calendar',           icon: CalendarIcon     },
       { key: 'operations/skill-requests', label: 'Skill Requests',     icon: StarIcon         },
       { key: 'operations/ttx',            label: 'TTX Planner',        icon: EditIcon         },
-      { key: 'operations/campaign',       label: 'Campaign Builder',   icon: AddIcon          },
     ],
   },
   {
@@ -164,10 +164,21 @@ const Sidebar = () => {
 
   const activeEngagement = engagementSlug ? getBySlug(engagementSlug) : null;
 
+  const sidebarRef  = useRef(null);
+  const activeOpRef = useRef(null);
+
+  // Smooth-scroll sidebar to the Active Operation section when entering an engagement
+  useEffect(() => {
+    if (!isInEngagement || !activeOpRef.current || !sidebarRef.current) return;
+    const offset = activeOpRef.current.offsetTop - sidebarRef.current.offsetTop - 16;
+    sidebarRef.current.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
+  }, [engagementSlug, isInEngagement]);
+
   const goTo = (path) => navigate(path);
 
   return (
     <Flex
+      ref={sidebarRef}
       direction="column"
       w={compact ? '190px' : '220px'}
       flexShrink={0}
@@ -341,7 +352,7 @@ const Sidebar = () => {
           <Divider borderColor="var(--dash-divider)" mx={3} w="auto" mb={groupGap} />
 
           {/* Active engagement chip */}
-          <Box px={3} mb={groupGap}>
+          <Box ref={activeOpRef} px={3} mb={groupGap}>
             <Text
               fontSize="9px" fontWeight="bold" letterSpacing="widest"
               color="var(--dash-section-label)" textTransform="uppercase"

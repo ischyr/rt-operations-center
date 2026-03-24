@@ -58,6 +58,64 @@ const teamSkillSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const personaSchema = new mongoose.Schema(
+  {
+    fullName:          { type: String, default: '' },
+    gender:            { type: String, default: '' },
+    birthday:          { type: String, default: '' },
+    age:               { type: Number, default: 0  },
+    nationality:       { type: String, default: '' },
+    email:             { type: String, default: '' },
+    username:          { type: String, default: '' },
+    password:          { type: String, default: '' },
+    phone:             { type: String, default: '' },
+    address:           { type: String, default: '' },
+    city:              { type: String, default: '' },
+    state:             { type: String, default: '' },
+    zipCode:           { type: String, default: '' },
+    country:           { type: String, default: '' },
+    height:            { type: String, default: '' },
+    weight:            { type: String, default: '' },
+    eyeColor:          { type: String, default: '' },
+    hairColor:         { type: String, default: '' },
+    bloodType:         { type: String, default: '' },
+    occupation:        { type: String, default: '' },
+    company:           { type: String, default: '' },
+    website:           { type: String, default: '' },
+    notes:             { type: String, default: '' },
+    createdBy:         { type: String, default: '' },
+    createdByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
+const ttxPhaseSchema = new mongoose.Schema(
+  {
+    title:       { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    tactics:     { type: String, default: '' },
+    tools:       { type: String, default: '' },
+    assignedTo:  [{ type: String }],
+    status:      { type: String, enum: ['Pending', 'In Progress', 'Done', 'Blocked'], default: 'Pending' },
+    order:       { type: Number, default: 0 },
+  },
+  { timestamps: true, _id: true }
+);
+
+const skillRequestSchema = new mongoose.Schema(
+  {
+    skill:               { type: String, required: true, trim: true },
+    category:            { type: String, default: 'Other' },
+    priority:            { type: String, enum: ['Low', 'Medium', 'High', 'Critical'], default: 'Medium' },
+    description:         { type: String, default: '' },
+    status:              { type: String, enum: ['Open', 'Learning', 'Resolved'], default: 'Open' },
+    assignedTo:          [{ type: String }],
+    requestedBy:         { type: String, default: '' },
+    requestedByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const engagementSchema = new mongoose.Schema(
   {
     user: {
@@ -91,6 +149,11 @@ const engagementSchema = new mongoose.Schema(
     teamSkills:     [teamSkillSchema],
     operatorSkills:  { type: mongoose.Schema.Types.Mixed, default: {} },
     calendarEvents:  [calendarEventSchema],
+    skillRequests:   [skillRequestSchema],
+    personas:        [personaSchema],
+    ttxObjective:    { type: String, default: '' },
+    ttxNotes:        { type: String, default: '' },
+    ttxPhases:       [ttxPhaseSchema],
   },
   { timestamps: true }
 );
