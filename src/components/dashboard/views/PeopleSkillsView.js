@@ -4,8 +4,9 @@ import {
   Stack, SimpleGrid, IconButton, Slider,
   SliderTrack, SliderFilledTrack, SliderThumb, Tag, TagLabel, TagCloseButton, Wrap, WrapItem,
   InputGroup, InputLeftElement,
+  Modal, ModalOverlay, ModalContent, ModalBody,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, CloseIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -50,12 +51,27 @@ const PeopleSkillsView = () => {
   const [opSearch, setOpSearch] = useState('');
   const [opPage, setOpPage] = useState(0);
   const OP_PAGE_SIZE = 5;
+  // Confirmation modal
+  const [opModal, setOpModal] = useState(null); // { user, action: 'add' | 'remove' }
 
   if (!eng) return null;
 
   const teamSkills     = eng.teamSkills     || [];
   const operators      = eng.operators      || [];
   const operatorSkills = eng.operatorSkills || {};
+
+  const confirmOp = () => {
+    if (!opModal) return;
+    const { user, action } = opModal;
+    const uid = String(user.id);
+    if (action === 'add') {
+      updateEngagement(eng.id, { operators: [...operators, uid] });
+    } else {
+      updateEngagement(eng.id, { operators: operators.filter(o => String(o) !== uid) });
+      if (expandedOp === uid) setExpandedOp(null);
+    }
+    setOpModal(null);
+  };
 
   const addOpSkill = (uid) => {
     const trimmed = newOpSkill.trim();
@@ -122,10 +138,20 @@ const PeopleSkillsView = () => {
 
       {/* Assigned operators */}
       {(() => {
-        const filteredUsers = allUsers.filter((u) =>
-          u.callsign.toLowerCase().includes(opSearch.toLowerCase()) ||
-          u.email.toLowerCase().includes(opSearch.toLowerCase())
-        );
+        const assignedIds = operators.map(String);
+        const filteredUsers = allUsers
+          .filter((u) =>
+            u.callsign.toLowerCase().includes(opSearch.toLowerCase()) ||
+            u.email.toLowerCase().includes(opSearch.toLowerCase())
+          )
+          // Assigned operators first, then unassigned alphabetically
+          .sort((a, b) => {
+            const aA = assignedIds.includes(String(a.id));
+            const bA = assignedIds.includes(String(b.id));
+            if (aA && !bA) return -1;
+            if (!aA && bA)  return 1;
+            return a.callsign.localeCompare(b.callsign);
+          });
         const totalOpPages = Math.ceil(filteredUsers.length / OP_PAGE_SIZE);
         const pagedUsers   = filteredUsers.slice(opPage * OP_PAGE_SIZE, opPage * OP_PAGE_SIZE + OP_PAGE_SIZE);
 
@@ -176,7 +202,7 @@ const PeopleSkillsView = () => {
                           </Text>
                         ) : pagedUsers.map((user) => {
                           const uid        = String(user.id);
-                          const assigned   = operators.map(String).includes(uid);
+                          const assigned   = assignedIds.includes(uid);
                           const initials   = user.callsign.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
                           const opSkills   = operatorSkills[uid] || [];
                           const isExpanded = expandedOp === uid;
@@ -185,13 +211,17 @@ const PeopleSkillsView = () => {
                               borderRadius="10px"
                               bg={assigned ? 'rgba(255,80,95,0.08)' : 'rgba(255,255,255,0.02)'}
                               border={assigned ? '1px solid rgba(255,80,95,0.2)' : '1px solid rgba(255,255,255,0.06)'}
-                              opacity={assigned ? 1 : 0.45}
                               overflow="hidden"
+                              transition="border-color 0.15s, background 0.15s"
+                              sx={!assigned ? { '&:hover': { borderColor: 'rgba(79,209,197,0.3)', background: 'rgba(79,209,197,0.04)' } } : {}}
                             >
                               <Flex
                                 align="center" gap={2} px={4} py="10px"
-                                cursor={assigned ? 'pointer' : 'default'}
-                                onClick={() => assigned && setExpandedOp(isExpanded ? null : uid)}
+                                cursor="pointer"
+                                onClick={() => assigned
+                                  ? setExpandedOp(isExpanded ? null : uid)
+                                  : setOpModal({ user, action: 'add' })
+                                }
                                 _hover={assigned ? { bg: 'rgba(255,80,95,0.04)' } : {}}
                                 transition="background 0.15s"
                               >
@@ -207,17 +237,41 @@ const PeopleSkillsView = () => {
                                 </Box>
                                 <Box flex="1">
                                   <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)">{user.callsign}</Text>
-                                  <Text fontSize="10px" color="var(--dash-text-muted)">
-                                    {assigned ? user.email : 'Not assigned'}
+                                  <Text fontSize="10px" color={assigned ? 'var(--dash-text-muted)' : 'rgba(79,209,197,0.6)'}>
+                                    {assigned ? user.email : 'Click to assign to this engagement'}
                                   </Text>
                                 </Box>
-                                {assigned && (
+                                {assigned ? (
                                   <Flex align="center" gap={2}>
                                     {opSkills.length > 0 && (
                                       <Text fontSize="10px" color="var(--dash-text-muted)">{opSkills.length} skill{opSkills.length !== 1 ? 's' : ''}</Text>
                                     )}
-                                    {isExpanded ? <ChevronUpIcon boxSize={3} color="var(--dash-text-muted)" /> : <ChevronDownIcon boxSize={3} color="var(--dash-text-muted)" />}
+                                    {isExpanded
+                                      ? <ChevronUpIcon boxSize={3} color="var(--dash-text-muted)" />
+                                      : <ChevronDownIcon boxSize={3} color="var(--dash-text-muted)" />}
+                                    {/* Remove button */}
+                                    <Box
+                                      as="button"
+                                      onClick={(e) => { e.stopPropagation(); setOpModal({ user, action: 'remove' }); }}
+                                      w="20px" h="20px" borderRadius="5px" flexShrink={0}
+                                      bg="rgba(255,80,95,0.08)" border="1px solid rgba(255,80,95,0.2)"
+                                      display="flex" alignItems="center" justifyContent="center"
+                                      color="rgba(255,100,100,0.7)"
+                                      transition="all 0.15s"
+                                      _hover={{ bg: 'rgba(255,80,95,0.2)', color: '#fc8181', borderColor: 'rgba(255,80,95,0.5)' }}
+                                    >
+                                      <CloseIcon boxSize="7px" />
+                                    </Box>
                                   </Flex>
+                                ) : (
+                                  <Box
+                                    w="22px" h="22px" borderRadius="6px" flexShrink={0}
+                                    bg="rgba(79,209,197,0.1)" border="1px solid rgba(79,209,197,0.25)"
+                                    display="flex" alignItems="center" justifyContent="center"
+                                    color="#4fd1c5"
+                                  >
+                                    <AddIcon boxSize={2.5} />
+                                  </Box>
                                 )}
                               </Flex>
 
@@ -490,6 +544,79 @@ const PeopleSkillsView = () => {
           </AnimatePresence>
         </Box>
       )}
+      {/* ── Operator confirm modal ── */}
+      <Modal isOpen={!!opModal} onClose={() => setOpModal(null)} isCentered size="sm">
+        <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(4px)" />
+        <ModalContent
+          bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+          borderRadius="16px" p={0} overflow="hidden"
+        >
+          <ModalBody p={0}>
+            {opModal && (() => {
+              const isAdd = opModal.action === 'add';
+              const name  = opModal.user.callsign;
+              const initials = name.slice(0, 2).toUpperCase();
+              return (
+                <Box p={6}>
+                  {/* Top accent */}
+                  <Box h="2px" pos="absolute" top="0" left="0" right="0"
+                    style={{ background: isAdd
+                      ? 'linear-gradient(to right, transparent, rgba(79,209,197,0.7), transparent)'
+                      : 'linear-gradient(to right, transparent, rgba(255,80,95,0.7), transparent)'
+                    }} />
+
+                  {/* Avatar */}
+                  <Flex direction="column" align="center" mb={5}>
+                    <Flex
+                      w="56px" h="56px" borderRadius="14px" align="center" justify="center"
+                      fontSize="18px" fontWeight="bold" fontFamily="mono" mb={3}
+                      bg={isAdd ? 'rgba(79,209,197,0.12)' : 'rgba(255,80,95,0.12)'}
+                      border={`1px solid ${isAdd ? 'rgba(79,209,197,0.35)' : 'rgba(255,80,95,0.35)'}`}
+                      color={isAdd ? '#4fd1c5' : '#fc8181'}
+                    >
+                      {initials}
+                    </Flex>
+                    <Text fontSize="16px" fontWeight="bold" color="var(--dash-text-primary)" mb={1}>
+                      {name}
+                    </Text>
+                    <Text fontSize="11px" color="var(--dash-text-muted)" textAlign="center" maxW="260px">
+                      {isAdd
+                        ? `Assign this operator to the engagement?`
+                        : `Remove this operator from the engagement?`}
+                    </Text>
+                    {!isAdd && (
+                      <Text fontSize="10px" color="rgba(255,130,130,0.6)" mt={1} textAlign="center">
+                        Their skills and data will remain saved.
+                      </Text>
+                    )}
+                  </Flex>
+
+                  {/* Actions */}
+                  <Flex gap={3}>
+                    <Button flex="1" size="sm" variant="ghost"
+                      color="var(--dash-text-muted)" borderRadius="10px"
+                      border="1px solid rgba(255,255,255,0.08)"
+                      _hover={{ bg: 'rgba(255,255,255,0.05)', color: 'white' }}
+                      onClick={() => setOpModal(null)}>
+                      Cancel
+                    </Button>
+                    <Button flex="1" size="sm" borderRadius="10px"
+                      bg={isAdd ? 'rgba(79,209,197,0.15)' : 'rgba(255,80,95,0.15)'}
+                      border={`1px solid ${isAdd ? 'rgba(79,209,197,0.4)' : 'rgba(255,80,95,0.4)'}`}
+                      color={isAdd ? '#4fd1c5' : '#fc8181'}
+                      fontWeight="semibold"
+                      _hover={{ bg: isAdd ? 'rgba(79,209,197,0.25)' : 'rgba(255,80,95,0.25)' }}
+                      onClick={confirmOp}>
+                      {isAdd ? '+ Assign' : '− Remove'}
+                    </Button>
+                  </Flex>
+                </Box>
+              );
+            })()}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
     </Box>
   );
 };
