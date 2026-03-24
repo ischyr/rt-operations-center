@@ -9,6 +9,7 @@ import PeopleSkillsView from './views/PeopleSkillsView';
 import FindingsView from './views/FindingsView';
 import FindingDetailView from './views/FindingDetailView';
 import ActivityView from './views/ActivityView';
+import CalendarView from './views/CalendarView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -45,7 +46,7 @@ const EngagementLayout = () => {
 
       {/* Operations */}
       <Route path="operations/activity"       element={<ActivityView />} />
-      <Route path="operations/calendar"       element={<PlaceholderView title="Calendar" />} />
+      <Route path="operations/calendar"       element={<CalendarView />} />
       <Route path="operations/skill-requests" element={<PlaceholderView title="Skill Requests" />} />
       <Route path="operations/ttx"            element={<PlaceholderView title="TTX Planner" />} />
       <Route path="operations/campaign"       element={<PlaceholderView title="Campaign Builder" />} />

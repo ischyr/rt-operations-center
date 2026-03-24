@@ -36,6 +36,20 @@ const resourceSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const calendarEventSchema = new mongoose.Schema(
+  {
+    type:              { type: String, enum: ['task', 'blocker'], default: 'task' },
+    title:             { type: String, required: true, trim: true },
+    date:              { type: String, required: true },   // YYYY-MM-DD
+    startTime:         { type: String, default: '' },      // HH:MM
+    endTime:           { type: String, default: '' },      // HH:MM
+    operatorId:        { type: String, default: '' },
+    createdBy:         { type: String, default: '' },      // user _id
+    createdByCallsign: { type: String, default: '' },      // display name
+  },
+  { timestamps: true, _id: true }
+);
+
 const teamSkillSchema = new mongoose.Schema(
   {
     label: { type: String, required: true, trim: true },
@@ -75,7 +89,8 @@ const engagementSchema = new mongoose.Schema(
     activityLog: [activityLogSchema],
     resources:      [resourceSchema],
     teamSkills:     [teamSkillSchema],
-    operatorSkills: { type: mongoose.Schema.Types.Mixed, default: {} },
+    operatorSkills:  { type: mongoose.Schema.Types.Mixed, default: {} },
+    calendarEvents:  [calendarEventSchema],
   },
   { timestamps: true }
 );
