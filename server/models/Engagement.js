@@ -89,6 +89,24 @@ const personaSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const c2DeploymentSchema = new mongoose.Schema(
+  {
+    template:          { type: String, default: 'digitalocean-droplet' },
+    name:              { type: String, default: '' },
+    status: {
+      type:    String,
+      enum:    ['pending', 'deploying', 'running', 'destroying', 'destroyed', 'failed'],
+      default: 'pending',
+    },
+    config:            { type: mongoose.Schema.Types.Mixed, default: {} },
+    output:            { type: String, default: '' },
+    ipAddress:         { type: String, default: '' },
+    createdBy:         { type: String, default: '' },
+    createdByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const ttxPhaseSchema = new mongoose.Schema(
   {
     title:       { type: String, required: true, trim: true },
@@ -154,6 +172,8 @@ const engagementSchema = new mongoose.Schema(
     ttxObjective:    { type: String, default: '' },
     ttxNotes:        { type: String, default: '' },
     ttxPhases:       [ttxPhaseSchema],
+    c2Deployments:   [c2DeploymentSchema],
+    c2Config:        { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );

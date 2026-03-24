@@ -13,6 +13,7 @@ import CalendarView from './views/CalendarView';
 import SkillRequestsView from './views/SkillRequestsView';
 import TTXPlannerView from './views/TTXPlannerView';
 import PersonasView from './views/PersonasView';
+import C2View from './views/C2View';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -61,7 +62,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/loot-tracker"    element={<PlaceholderView title="Loot Tracker" />} />
       <Route path="intelligence/evidence-vault"  element={<PlaceholderView title="Evidence Vault" />} />
       <Route path="intelligence/cleanup-tracker" element={<PlaceholderView title="Cleanup Tracker" />} />
-      <Route path="intelligence/c2"              element={<PlaceholderView title="C2 Infrastructure" />} />
+      <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PlaceholderView title="Phishing Infrastructure" />} />
 
       {/* Sock Puppets */}

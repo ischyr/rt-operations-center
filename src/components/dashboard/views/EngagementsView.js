@@ -171,13 +171,12 @@ const EmptyState = ({ onNew }) => (
       <Text fontSize="sm" color="var(--dash-text-muted)">Start your first operation to track your red team campaigns.</Text>
     </Box>
     <Button
-      leftIcon={<AddIcon boxSize={3} />}
-      bgGradient="linear(to-r, red.700, red.500)"
-      color="white" fontWeight="semibold" fontSize="sm"
-      borderRadius="10px" h="40px" px={5}
+      leftIcon={<AddIcon boxSize={2.5} />}
+      fontSize="sm" borderRadius="8px" h="40px" px={5}
+      bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
+      color="rgba(255,130,130,0.9)"
+      _hover={{ bg: 'rgba(255,80,95,0.18)' }}
       onClick={onNew}
-      _hover={{ bgGradient: 'linear(to-r, red.600, red.400)', boxShadow: '0 0 20px rgba(255,55,55,0.3)' }}
-      transition="all 0.2s"
     >
       New Engagement
     </Button>
@@ -219,14 +218,12 @@ const EngagementsView = () => {
           </Text>
         </Box>
         <Button
-          leftIcon={<AddIcon boxSize={3} />}
-          bgGradient="linear(to-r, red.700, red.500)"
-          color="white" fontWeight="semibold" fontSize="sm" letterSpacing="wide"
-          borderRadius="10px" h="40px" px={5}
+          leftIcon={<AddIcon boxSize={2.5} />}
+          fontSize="sm" borderRadius="8px" h="40px" px={5}
+          bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
+          color="rgba(255,130,130,0.9)"
+          _hover={{ bg: 'rgba(255,80,95,0.18)' }}
           onClick={() => setIsModalOpen(true)}
-          _hover={{ bgGradient: 'linear(to-r, red.600, red.400)', boxShadow: '0 0 24px rgba(255,55,55,0.35)', transform: 'translateY(-1px)' }}
-          _active={{ transform: 'translateY(0)' }}
-          transition="all 0.2s"
         >
           New Engagement
         </Button>

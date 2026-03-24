@@ -123,7 +123,7 @@ exports.updateEngagement = async (req, res) => {
     const allowed = ['name', 'company', 'type', 'startDate', 'endDate', 'operators',
                      'stage', 'status', 'progress', 'findings', 'notes',
                      'resources', 'teamSkills', 'operatorSkills', 'calendarEvents', 'skillRequests',
-                     'ttxObjective', 'ttxNotes', 'ttxPhases', 'personas'];
+                     'ttxObjective', 'ttxNotes', 'ttxPhases', 'personas', 'c2Config'];
     for (const key of allowed) {
       if (req.body[key] !== undefined) eng[key] = req.body[key];
     }
