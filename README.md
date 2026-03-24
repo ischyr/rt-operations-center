@@ -40,12 +40,13 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 │             │  TopBar (@callsign · search · bell)       │
 │   Sidebar   ├──────────────────────────────────────────┤
 │             │                                          │
-│  OPERATIONS │           Active View                    │
-│  TEAM       │    (DashboardView / PlaceholderView)     │
-│  INTELLIGENCE│                                         │
-│  TTPs       │                                          │
-│  PILLAGING  │                                          │
-│  REPORTING  │                                          │
+│  CHEATSHEET │           Active View                    │
+│  RED LAB    │    (DashboardView / PlaceholderView)     │
+│  RESOURCES  │                                          │
+│  MALWARE    │                                          │
+│  DIAGRAMS   │                                          │
+│  ─────────  │                                          │
+│  [per-eng]  │                                          │
 │             │                                          │
 │  Settings   │                                          │
 │  Sign Out   │                                          │
@@ -54,11 +55,25 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 
 ### Sidebar Navigation
 
+**Global sections (always visible):**
+
 | Section | Items |
 |---|---|
-| **OPERATIONS** | Dashboard, Engagements, Calendar, Skill Requests, TTX Planner, Campaign Builder |
+| *(top)* | Dashboard, Engagements |
+| **CHEATSHEET** | Red Team Ops Map, AD Attack Map, Payload & Evasion Map |
+| **RED LAB** | Lab Configs, Lab Connectivity |
+| **RESOURCES & MATERIALS** | Tools, CVE Feed |
+| **MALWARE ANALYSIS** | Scanner, Reports |
+| **DIAGRAM DRAWING** | Editor, My Diagrams |
+
+**Per-engagement sections (shown when inside an engagement):**
+
+| Section | Items |
+|---|---|
+| **OPERATIONS** | Activity Log, Calendar, Skill Requests, TTX Planner, Campaign Builder |
 | **TEAM** | People & Skills, Resources |
 | **INTELLIGENCE** | Loot Tracker, Evidence Vault, Cleanup Tracker, C2 Infrastructure, Phishing Infrastructure |
+| **SOCK PUPPETS** | Personas, Social Media |
 | **TTPs** | Initial Access, Windows, Linux, Active Directory, Network |
 | **PILLAGING** | Subdomains, Services, Leaks, Credentials, Emails, Documents |
 | **REPORTING** | Reports, Findings, Client Portal |
@@ -66,7 +81,7 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 - Active item is highlighted with a red left border + red tinted background
 - Section labels are uppercase in muted gray
 - Brand mark "Red Ops Center" with pulsing red dot at top
-- Settings + Sign Out pinned at the bottom
+- Settings + Sign Out always pinned at the bottom
 
 ### TopBar
 
@@ -80,24 +95,23 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 
 | Card | Value | Accent |
 |---|---|---|
-| Active Engagements | 2 | Red gradient |
-| Team Members | 3 | Teal gradient |
-| Total Findings | 45 | Orange/yellow gradient |
-| Active Beacons | 4 | Green gradient |
+| Active Engagements | Live count | Red gradient |
+| Team Members | Live count | Teal gradient |
+| Total Findings | Live count | Orange/yellow gradient |
+| Active Beacons | Live count | Green gradient |
 
-**Active Engagements panel** — each operation card shows:
+**Active Engagements panel** — shows up to 3 cards at a time (fixed 504px height), paginated:
 - Operation name + client + scope
 - Started / Ends dates · Operators · Current phase
 - Overall progress bar (color varies by status)
-- Status badge: `IN PROGRESS` (orange) · `REPORTING` (purple) · `PLANNING` (blue) · `COMPLETED` (green)
+- Status badge: `IN PROGRESS` · `REPORTING` · `PLANNING` · `COMPLETED`
 - Severity badges: `CRITICAL` · `HIGH` · `MED` · `LOW`
-- Colored left border (red = active, purple = reporting)
 
 **Findings Breakdown panel** — horizontal bars per severity (Critical / High / Medium / Low) + total count
 
-**Resource Utilization panel** — progress bars for Hardware · Virtual IPs · Domains · C2 Servers (used / total)
+**Resource Utilization panel** — top 5 by usage ratio, progress bars with footer total count
 
-**Recent Activity feed** — timestamped events with colored dot indicators per type (finding / beacon / milestone / report / phishing)
+**Recent Activity feed** — timestamped events with colored dot indicators per type
 
 **Team Skill Coverage** — skill bars with color thresholds (green ≥80% · yellow ≥65% · orange <65%)
 
@@ -105,52 +119,84 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 
 All routes under `/dashboard/*` are protected — unauthenticated users are redirected to `/signin`.
 
+**Global routes:**
+
 | Path | View | Status |
 |---|---|---|
 | `/dashboard` | Operations Overview | Built |
-| `/dashboard/engagements` | Engagements | Placeholder |
-| `/dashboard/calendar` | Calendar | Placeholder |
-| `/dashboard/skill-requests` | Skill Requests | Placeholder |
-| `/dashboard/ttx` | TTX Planner | Placeholder |
-| `/dashboard/campaign` | Campaign Builder | Placeholder |
-| `/dashboard/people` | People & Skills | Placeholder |
-| `/dashboard/resources` | Resources | Placeholder |
-| `/dashboard/loot` | Loot Tracker | Placeholder |
-| `/dashboard/evidence` | Evidence Vault | Placeholder |
-| `/dashboard/cleanup` | Cleanup Tracker | Placeholder |
-| `/dashboard/c2` | C2 Infrastructure | Placeholder |
-| `/dashboard/phishing` | Phishing Infrastructure | Placeholder |
-| `/dashboard/ttps/initial-access` | Initial Access TTPs | Placeholder |
-| `/dashboard/ttps/windows` | Windows TTPs | Placeholder |
-| `/dashboard/ttps/linux` | Linux TTPs | Placeholder |
-| `/dashboard/ttps/active-directory` | Active Directory TTPs | Placeholder |
-| `/dashboard/ttps/network` | Network TTPs | Placeholder |
-| `/dashboard/pillaging/subdomains` | Subdomains | Placeholder |
-| `/dashboard/pillaging/services` | Services | Placeholder |
-| `/dashboard/pillaging/leaks` | Leaks | Placeholder |
-| `/dashboard/pillaging/credentials` | Credentials | Placeholder |
-| `/dashboard/pillaging/emails` | Emails | Placeholder |
-| `/dashboard/pillaging/documents` | Documents | Placeholder |
-| `/dashboard/reports` | Reports | Placeholder |
-| `/dashboard/findings` | Findings | Placeholder |
-| `/dashboard/client-portal` | Client Portal | Placeholder |
+| `/dashboard/engagements` | Engagements List | Built |
+| `/dashboard/settings` | Settings | Built |
+| `/dashboard/cheatsheet/red-team-map` | Red Team Ops Map | Built |
+| `/dashboard/cheatsheet/ad-map` | AD Attack Map | Built |
+| `/dashboard/cheatsheet/payload-map` | Payload & Evasion Map | Built |
+| `/dashboard/lab/configs` | Lab Configs | Built |
+| `/dashboard/lab/connectivity` | Lab Connectivity (Twingate) | Built |
+| `/dashboard/resources/tools` | Tools | Placeholder |
+| `/dashboard/resources/cve-feed` | CVE Feed | Built |
+| `/dashboard/malware/scanner` | Malware Scanner | Placeholder |
+| `/dashboard/malware/reports` | Analysis Reports | Placeholder |
+| `/dashboard/diagrams/editor` | Diagram Editor (draw.io embed) | Built |
+| `/dashboard/diagrams/library` | My Diagrams | Built |
+
+**Per-engagement routes (under `/:slug/*`):**
+
+| Path | View | Status |
+|---|---|---|
+| `/:slug` | Engagement Detail | Built |
+| `/:slug/operations/activity` | Activity Log | Built |
+| `/:slug/operations/calendar` | Calendar | Placeholder |
+| `/:slug/operations/skill-requests` | Skill Requests | Placeholder |
+| `/:slug/operations/ttx` | TTX Planner | Placeholder |
+| `/:slug/operations/campaign` | Campaign Builder | Placeholder |
+| `/:slug/team/people` | People & Skills | Built |
+| `/:slug/team/resources` | Resources | Built |
+| `/:slug/intelligence/loot-tracker` | Loot Tracker | Placeholder |
+| `/:slug/intelligence/evidence-vault` | Evidence Vault | Placeholder |
+| `/:slug/intelligence/cleanup-tracker` | Cleanup Tracker | Placeholder |
+| `/:slug/intelligence/c2` | C2 Infrastructure | Placeholder |
+| `/:slug/intelligence/phishing` | Phishing Infrastructure | Placeholder |
+| `/:slug/sockpuppets/personas` | Personas | Placeholder |
+| `/:slug/sockpuppets/social-media` | Social Media | Placeholder |
+| `/:slug/ttps/*` | TTPs (5 pages) | Placeholder |
+| `/:slug/pillaging/*` | Pillaging (6 pages) | Placeholder |
+| `/:slug/reporting/reports` | Reports | Placeholder |
+| `/:slug/reporting/findings` | Findings | Built |
+| `/:slug/reporting/findings/:id` | Finding Detail | Built |
+| `/:slug/reporting/client-portal` | Client Portal | Placeholder |
 
 ### Dashboard File Structure
 
 ```
 src/components/dashboard/
 ├── DashboardLayout.js              # Full-screen layout — sidebar + topbar + nested routes
-├── Sidebar.js                      # Left nav — 6 sections, active state, sign out
+├── EngagementLayout.js             # Per-engagement route wrapper
+├── Sidebar.js                      # Left nav — global + per-engagement sections
 ├── TopBar.js                       # Search + notifications + @callsign chip
 ├── views/
 │   ├── DashboardView.js            # Operations Overview — stat cards + all widgets
-│   └── PlaceholderView.js          # Reusable "coming soon" view for unbuilt modules
+│   ├── PlaceholderView.js          # Reusable "under construction" view
+│   ├── EngagementsView.js          # Engagements list + create
+│   ├── EngagementDetailView.js     # Single engagement overview
+│   ├── SettingsView.js             # User settings (profile, password, compact mode)
+│   ├── RedTeamMapView.js           # Cheatsheet — Red Team Ops Map
+│   ├── ADAttackMapView.js          # Cheatsheet — AD Attack Map
+│   ├── PayloadMapView.js           # Cheatsheet — Payload & Evasion Map
+│   ├── LabConfigsView.js           # Red Lab — Ludus template cards + deploy modal
+│   ├── LabConnectivityView.js      # Red Lab — Twingate VPN walkthrough
+│   ├── CVEFeedView.js              # Resources — live CVE feed + CVE ID search
+│   ├── DiagramEditorView.js        # Diagrams — draw.io embed with save to DB
+│   ├── DiagramLibraryView.js       # Diagrams — grid of saved diagrams
+│   ├── PeopleSkillsView.js         # Team — operator list + skill assignment
+│   ├── ResourcesView.js            # Team — resource tracking
+│   ├── ActivityView.js             # Operations — activity log
+│   ├── FindingsView.js             # Reporting — findings list
+│   └── FindingDetailView.js        # Reporting — single finding detail
 └── widgets/
-    ├── StatCard.js                 # Colored-accent stat card (value + label + sub)
+    ├── StatCard.js                 # Colored-accent stat card
     ├── EngagementCard.js           # Individual operation card with progress + findings
-    ├── ActiveEngagements.js        # Panel of EngagementCards
-    ├── FindingsBreakdown.js        # Severity bar chart + total
-    ├── ResourceUtilization.js      # Resource bars (hardware / IPs / domains / C2)
+    ├── ActiveEngagements.js        # Fixed-height paginated panel of EngagementCards
+    ├── FindingsBreakdown.js        # Severity bar chart + total count
+    ├── ResourceUtilization.js      # Top-5 resource bars by usage ratio
     ├── RecentActivity.js           # Timestamped activity feed with colored dots
     └── TeamSkillCoverage.js        # Skill coverage bars with color thresholds
 ```
@@ -163,21 +209,31 @@ src/components/dashboard/
 red-team-operations-center/
 ├── docs/                               # Documentation assets (screenshots etc.)
 ├── server/                             # Node.js + Express backend
-│   ├── index.js                        # Entry point — CORS, JSON, route mounts
+│   ├── index.js                        # Entry point — CORS, session, passport, route mounts
 │   ├── .env                            # Environment variables (never commit)
 │   ├── config/
-│   │   └── db.js                       # Mongoose connection to MongoDB
+│   │   ├── db.js                       # Mongoose connection to MongoDB
+│   │   └── passport.js                 # Passport Google + GitHub OAuth strategies
 │   ├── models/
-│   │   └── User.js                     # User schema — callsign, email, password (hashed), role
+│   │   ├── User.js                     # User schema — callsign, email, password, OAuth fields
+│   │   ├── Engagement.js               # Engagement schema — full op data + operator skills
+│   │   └── Diagram.js                  # Diagram schema — name, XML, thumbnail, owner
 │   ├── controllers/
-│   │   └── authController.js           # register(), login() business logic
+│   │   ├── authController.js           # register(), login(), 2FA business logic
+│   │   ├── engagementController.js     # Engagement CRUD
+│   │   └── userController.js           # Profile + password update
 │   ├── routes/
-│   │   └── auth.js                     # POST /api/auth/register, POST /api/auth/login
+│   │   ├── auth.js                     # /api/auth/* — register, login, 2FA
+│   │   ├── oauth.js                    # /api/oauth/* — Google + GitHub OAuth
+│   │   ├── engagements.js              # /api/engagements/* — CRUD
+│   │   ├── users.js                    # /api/users/* — profile
+│   │   ├── cve.js                      # /api/cve/* — Shodan CVE DB proxy
+│   │   └── diagrams.js                 # /api/diagrams/* — diagram CRUD
 │   ├── middleware/
 │   │   ├── validate.js                 # express-validator input rules per route
-│   │   └── authMiddleware.js           # protect() — JWT verification for protected routes
+│   │   └── authMiddleware.js           # protect() — JWT verification
 │   └── utils/
-│       └── token.js                    # signToken(), verifyToken() helpers
+│       └── token.js                    # signToken(), verifyToken(), temp token helpers
 │
 └── src/                                # React frontend
     ├── App.js                          # ChakraProvider + AnimatePresence + Routes
@@ -186,50 +242,34 @@ red-team-operations-center/
     ├── styles/
     │   └── cardStyles.js               # Shared commonCard style object
     ├── contexts/
-    │   └── AuthContext.js              # Auth state — fetch-based login/register, JWT, session restore
+    │   ├── AuthContext.js              # Auth state — login, register, 2FA, OAuth, JWT
+    │   ├── SettingsContext.js          # User settings (compact mode etc.)
+    │   └── EngagementContext.js        # Engagement state + dashboard stats
     └── components/
         ├── common/
         │   ├── Navigation.js           # Frosted-glass nav bar, route-aware active state
         │   ├── PageLayout.js           # Shared wrapper for static pages
         │   └── SparkleQuote.js         # Hover sparkle animation component
         ├── auth/
-        │   └── AuthForm.js             # Sign in / Register form with AnimatePresence transition
+        │   ├── AuthForm.js             # Sign in / Register form + Google/GitHub OAuth buttons
+        │   └── OAuthCallback.js        # Handles OAuth redirect — stores token, enters dashboard
         ├── dashboard/
-        │   ├── DashboardLayout.js      # Full-screen layout — sidebar + topbar + routes
-        │   ├── Sidebar.js              # Left nav with 6 sections
-        │   ├── TopBar.js               # Search + bell + @callsign
-        │   ├── views/
-        │   │   ├── DashboardView.js    # Operations Overview page
-        │   │   └── PlaceholderView.js  # Reusable placeholder for unbuilt modules
+        │   ├── DashboardLayout.js
+        │   ├── EngagementLayout.js
+        │   ├── Sidebar.js
+        │   ├── TopBar.js
+        │   ├── views/                  # (see Dashboard File Structure above)
         │   └── widgets/
-        │       ├── StatCard.js
-        │       ├── EngagementCard.js
-        │       ├── ActiveEngagements.js
-        │       ├── FindingsBreakdown.js
-        │       ├── ResourceUtilization.js
-        │       ├── RecentActivity.js
-        │       └── TeamSkillCoverage.js
         └── pages/
-            ├── LandingLayout.js        # Landing page orchestrator (hero + auth panel)
-            ├── LandingHero.js          # Left-side hero — title, tags, sparkle quote
-            ├── LandingShapes.js        # 31 scattered decorative shapes
-            ├── About.js                # About page orchestrator
-            ├── Operators.js            # Operators page orchestrator + team data array
-            ├── Certifications.js       # Certifications page orchestrator + cert data array
+            ├── LandingLayout.js
+            ├── LandingHero.js
+            ├── LandingShapes.js
+            ├── About.js
+            ├── Operators.js
+            ├── Certifications.js
             ├── about/
-            │   ├── AboutIntro.js
-            │   ├── StrategicFramework.js
-            │   ├── FeatureGrid.js
-            │   └── AboutShapes.js
             ├── operators/
-            │   ├── OperatorsIntro.js
-            │   ├── OperatorCard.js
-            │   └── OperatorShapes.js
             └── certifications/
-                ├── CertificationsIntro.js
-                ├── CertCard.js
-                ├── CertShapes.js
-                └── ImprovementSection.js
 ```
 
 ---
@@ -238,48 +278,109 @@ red-team-operations-center/
 
 ### Frontend (Public)
 
-| Path              | Component                        | Auth required |
-|-------------------|----------------------------------|---------------|
-| `/`               | Redirects based on auth state    | —             |
-| `/signin`         | `LandingLayout` + `AuthForm`     | No            |
-| `/register`       | `LandingLayout` + `AuthForm`     | No            |
-| `/about`          | `About`                          | No            |
-| `/operators`      | `Operators`                      | No            |
-| `/certifications` | `Certifications`                 | No            |
-| `/dashboard/*`    | `DashboardLayout`                | **Yes**       |
+| Path | Component | Auth required |
+|---|---|---|
+| `/` | Redirects based on auth state | — |
+| `/signin` | `LandingLayout` + `AuthForm` | No |
+| `/register` | `LandingLayout` + `AuthForm` | No |
+| `/oauth/callback` | `OAuthCallback` | No |
+| `/about` | `About` | No |
+| `/operators` | `Operators` | No |
+| `/certifications` | `Certifications` | No |
+| `/dashboard/*` | `DashboardLayout` | **Yes** |
 
 - Logged-in users visiting `/signin` or `/register` are redirected to `/dashboard`
 - Unauthenticated users visiting any `/dashboard/*` route are redirected to `/signin`
-- Page transitions use `AnimatePresence mode="wait"` on public routes only
+- OAuth callback (`/oauth/callback`) reads `?token=&user=` params, stores in localStorage, enters dashboard
 
 ### Backend API
 
-| Method | Endpoint              | Body                             | Description              |
-|--------|-----------------------|----------------------------------|--------------------------|
-| POST   | `/api/auth/register`  | `callsign, email, password`      | Create a new operator    |
-| POST   | `/api/auth/login`     | `email, password`                | Login, returns JWT       |
-| GET    | `/api/health`         | —                                | Server health check      |
+**Auth**
 
-All responses return `{ message }`. Login also returns `{ token, user }`.
+| Method | Endpoint | Body | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | `callsign, email, password` | Create operator, returns QR for 2FA setup |
+| POST | `/api/auth/confirm-2fa-setup` | `email, token` | Confirm first OTP, activates 2FA, returns JWT |
+| POST | `/api/auth/login` | `email, password` | Login — returns `tempToken` if 2FA enabled |
+| POST | `/api/auth/verify-2fa` | `tempToken, token` | Verify TOTP, returns full JWT |
+
+**OAuth (no 2FA required)**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/oauth/google` | Redirect to Google OAuth |
+| GET | `/api/oauth/google/callback` | Google callback — returns JWT via frontend redirect |
+| GET | `/api/oauth/github` | Redirect to GitHub OAuth |
+| GET | `/api/oauth/github/callback` | GitHub callback — returns JWT via frontend redirect |
+
+**Users**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/users/me` | Yes | Get current user profile |
+| PUT | `/api/users/me` | Yes | Update callsign / avatar |
+| PUT | `/api/users/me/password` | Yes | Change password |
+
+**Engagements**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/engagements` | Yes | List all engagements |
+| POST | `/api/engagements` | Yes | Create engagement |
+| PUT | `/api/engagements/:id` | Yes | Update engagement |
+| DELETE | `/api/engagements/:id` | Yes | Delete engagement |
+
+**CVE Proxy**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/cve/feed` | No | Latest CVEs from Shodan CVE DB |
+| GET | `/api/cve/:id` | No | Single CVE detail (e.g. `CVE-2024-12345`) |
+
+**Diagrams**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/diagrams` | Yes | List all diagrams for current user |
+| GET | `/api/diagrams/:id` | Yes | Get single diagram (full XML) |
+| POST | `/api/diagrams` | Yes | Create diagram |
+| PUT | `/api/diagrams/:id` | Yes | Update diagram (name, XML, thumbnail) |
+| DELETE | `/api/diagrams/:id` | Yes | Delete diagram |
+
+**Health**
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health` | Server health check |
 
 ---
 
 ## Auth Flow
 
 ```
-Register
+Local Register
   → validate input (express-validator)
   → check email not already taken
   → hash password (bcrypt, 12 rounds)
-  → save User to MongoDB
-  → return success message → redirect to /signin
+  → generate TOTP secret, return QR code
+  → user scans QR + enters first 6-digit code
+  → twoFactorSecret confirmed, JWT issued
 
-Login
+Local Login
   → validate input
   → find user by email (with password field)
   → compare password (bcrypt)
-  → sign JWT (7 day expiry)
-  → return { token, user }
+  → if 2FA enabled → return tempToken (10 min)
+  → user enters TOTP code
+  → verify TOTP, issue full JWT (7 day)
+
+OAuth Login (Google / GitHub) — no 2FA required
+  → user clicks provider button → redirect to /api/oauth/<provider>
+  → Passport redirects to provider OAuth page
+  → provider redirects to /api/oauth/<provider>/callback
+  → find or create user by oauthId (or link by email)
+  → sign JWT, redirect to /oauth/callback?token=<jwt>&user=<json>
+  → frontend stores token + user in localStorage → enter dashboard
 
 Frontend session
   → stores JWT + user object in localStorage
@@ -292,20 +393,48 @@ Frontend session
 
 ## Database
 
-- **MongoDB** — `red-team-ops-center` database, `users` collection
-- **Mongoose** schema with pre-save hook for password hashing
-- Password field is excluded from all queries by default (`select: false`)
+- **MongoDB** — `red-team-ops-center` database
+- **Mongoose** schemas with timestamps
 
 ### User Schema
 
-| Field      | Type   | Required | Notes                         |
-|------------|--------|----------|-------------------------------|
-| callsign   | String | Yes      | Operator display name         |
-| email      | String | Yes      | Unique, lowercase, trimmed    |
-| password   | String | Yes      | bcrypt hashed, never returned |
-| role       | String | No       | `operator` (default), `admin` |
-| createdAt  | Date   | Auto     | Mongoose timestamp            |
-| updatedAt  | Date   | Auto     | Mongoose timestamp            |
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| callsign | String | Yes | Operator display name, unique |
+| email | String | Yes | Unique, lowercase, trimmed |
+| password | String | No | bcrypt hashed — null for OAuth users |
+| role | String | No | `operator` (default), `admin` |
+| oauthProvider | String | No | `google`, `github`, or null |
+| oauthId | String | No | Provider user ID (hidden from queries) |
+| twoFactorSecret | String | No | Live TOTP secret (hidden from queries) |
+| twoFactorTempSecret | String | No | Temp secret during 2FA setup |
+| twoFactorEnabled | Boolean | No | True after first OTP confirmed |
+| avatar | String | No | Base64 data URL (150×150) |
+| createdAt / updatedAt | Date | Auto | Mongoose timestamps |
+
+### Engagement Schema
+
+Stores full operation data — team, resources, findings, activity, operator skills.
+
+| Key fields | Notes |
+|---|---|
+| name, slug | Operation name + URL-safe slug |
+| status | `PREPARING`, `IN PROGRESS`, `REPORTING`, `COMPLETED`, `PAUSED` |
+| operators | Array of operator objects |
+| resources | Array of resource tracking objects |
+| findings | Array of findings |
+| activity | Array of activity log entries |
+| operatorSkills | Mixed — `{ operatorId: [skill, ...] }` map |
+
+### Diagram Schema
+
+| Field | Type | Notes |
+|---|---|---|
+| name | String | Diagram title (editable in editor) |
+| xml | String | draw.io XML content |
+| thumbnail | String | Base64 PNG — captured on save |
+| owner | ObjectId | Ref to User |
+| createdAt / updatedAt | Date | Mongoose timestamps |
 
 ---
 
@@ -318,6 +447,23 @@ PORT=5000
 MONGODB_URI=mongodb://localhost:27017/red-team-ops-center
 JWT_SECRET=change_this_to_a_long_random_string_in_production
 JWT_EXPIRES_IN=7d
+
+# URLs
+FRONTEND_URL=http://localhost:3000
+BACKEND_URL=http://localhost:5000
+
+# Session secret (OAuth dance only — not used for API auth)
+SESSION_SECRET=change_this_to_a_random_string
+
+# Google OAuth — https://console.cloud.google.com/
+# Authorized redirect URI: http://localhost:5000/api/oauth/google/callback
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+
+# GitHub OAuth — https://github.com/settings/developers
+# Callback URL: http://localhost:5000/api/oauth/github/callback
+GITHUB_CLIENT_ID=your_github_client_id_here
+GITHUB_CLIENT_SECRET=your_github_client_secret_here
 ```
 
 ---
@@ -325,25 +471,31 @@ JWT_EXPIRES_IN=7d
 ## Tech Stack
 
 ### Frontend
-| Package          | Version | Purpose                           |
-|------------------|---------|-----------------------------------|
-| React            | 18      | Component-based UI                |
-| Chakra UI        | ^2.8    | Dark-theme component library      |
-| Framer Motion    | ^11.3   | Page + card transitions, sparkles |
-| React Router     | v6      | Client-side routing               |
-| @chakra-ui/icons | ^2.0    | UI icons throughout               |
+| Package | Version | Purpose |
+|---|---|---|
+| React | 18 | Component-based UI |
+| Chakra UI | ^2.8 | Dark-theme component library |
+| Framer Motion | ^11.3 | Page + card transitions, animations |
+| React Router | v6 | Client-side routing |
+| @chakra-ui/icons | ^2.0 | UI icons throughout |
 
 ### Backend
-| Package           | Version | Purpose                          |
-|-------------------|---------|----------------------------------|
-| Express           | ^4.19   | HTTP server + routing            |
-| Mongoose          | ^8.5    | MongoDB ODM + schema validation  |
-| bcryptjs          | ^2.4    | Password hashing (12 rounds)     |
-| jsonwebtoken      | ^9.0    | JWT sign + verify                |
-| express-validator | ^7.1    | Input validation middleware      |
-| cors              | ^2.8    | Cross-origin requests from React |
-| dotenv            | ^16.4   | Environment variable loading     |
-| nodemon           | ^3.1    | Auto-restart on file change      |
+| Package | Version | Purpose |
+|---|---|---|
+| Express | ^4.19 | HTTP server + routing |
+| Mongoose | ^8.5 | MongoDB ODM + schema validation |
+| bcryptjs | ^2.4 | Password hashing (12 rounds) |
+| jsonwebtoken | ^9.0 | JWT sign + verify |
+| express-validator | ^7.1 | Input validation middleware |
+| cors | ^2.8 | Cross-origin requests from React |
+| dotenv | ^16.4 | Environment variable loading |
+| nodemon | ^3.1 | Auto-restart on file change |
+| passport | ^0.7 | OAuth authentication middleware |
+| passport-google-oauth20 | ^2.0 | Google OAuth 2.0 strategy |
+| passport-github2 | ^0.1 | GitHub OAuth 2.0 strategy |
+| express-session | ^1.18 | Session store for OAuth dance |
+| speakeasy | ^2.0 | TOTP 2FA code generation + verification |
+| qrcode | ^1.5 | QR code generation for 2FA setup |
 
 ---
 
@@ -362,22 +514,23 @@ docs/
 
 ## Developer Guides
 
-### Adding a New Dashboard Module
+### Adding a New Global Dashboard Page
 
 1. Create the view in `src/components/dashboard/views/`
 2. Add a `<Route>` in [DashboardLayout.js](src/components/dashboard/DashboardLayout.js)
-3. Add a nav item in [Sidebar.js](src/components/dashboard/Sidebar.js) under the appropriate section
+3. Add a nav item to the appropriate `*Nav` array in [Sidebar.js](src/components/dashboard/Sidebar.js)
+4. Add the route prefix to `GLOBAL_KEYS` in `Sidebar.js` so Settings/Sign Out stay pinned
+
+### Adding a New Per-Engagement Page
+
+1. Create the view in `src/components/dashboard/views/`
+2. Add a `<Route>` in [EngagementLayout.js](src/components/dashboard/EngagementLayout.js)
+3. Add a nav item to the appropriate section in `engagementNav` in [Sidebar.js](src/components/dashboard/Sidebar.js)
 
 ### Adding a New Widget to the Overview
 
 1. Create the widget in `src/components/dashboard/widgets/`
 2. Import and place it in [DashboardView.js](src/components/dashboard/views/DashboardView.js)
-
-### Adding a New Public Page
-
-1. Create your page component in `src/components/pages/`
-2. Add a `<Route>` in [App.js](src/App.js)
-3. Add a nav item in [Navigation.js](src/components/common/Navigation.js)
 
 ### Adding a New API Route
 
@@ -400,52 +553,25 @@ import { commonCard } from '../../styles/cardStyles';
 
 ## TODO
 
-### Resources & Materials (Global Sidebar Section)
+### Resources & Materials — Tools Page
 
-New global sidebar section `RESOURCES & MATERIALS` — currently placeholder (under construction).
+Curated red team tooling reference at `/dashboard/resources/tools`.
 
-| Page | Route | Notes |
-|---|---|---|
-| **Tools** | `/dashboard/resources/tools` | Curated red team tooling reference — categories, install commands, links |
-| **CVE Feed** | `/dashboard/resources/cve-feed` | Live CVE feed integration — reference: https://cvefeed.io/vuln/latest/ |
-
-**Implementation notes:**
-- CVE Feed: fetch from cvefeed.io or NVD API, display severity badges (CRITICAL/HIGH/MEDIUM/LOW), filter by keyword/severity, link to full CVE detail
-- Tools: static or DB-backed list of tools per category (recon, exploitation, post-exploitation, C2, reporting) with copy-to-clipboard install commands
-
----
+- Static or DB-backed list of tools per category (recon, exploitation, post-exploitation, C2, reporting)
+- Copy-to-clipboard install commands, links to repos, brief descriptions
 
 ### Malware Analysis (Global Sidebar Section)
 
-Dedicated `MALWARE ANALYSIS` section — VirusTotal API integration — currently placeholder (under construction).
+VirusTotal integration at `/dashboard/malware/*` — both pages currently placeholder.
 
 | Page | Route | Notes |
 |---|---|---|
-| **Scanner** | `/dashboard/malware/scanner` | Submit file, hash (MD5/SHA1/SHA256), or URL for analysis |
-| **Reports** | `/dashboard/malware/reports` | History of past scans with detection ratios and threat labels |
+| **Scanner** | `/dashboard/malware/scanner` | Submit file, hash (MD5/SHA1/SHA256), or URL |
+| **Reports** | `/dashboard/malware/reports` | History of past scans per operator |
 
-**Implementation notes:**
 - VirusTotal API key stored in Settings
-- Scanner: file upload + hash/URL input, show detection ratio, AV engine results table, threat category, tags
-- Reports: DB-backed history of scan results per operator, filterable by type/verdict
-
----
-
-### Diagram Drawing (Global Sidebar Section)
-
-Dedicated `DIAGRAM DRAWING` section — embedded draw.io integration — currently placeholder (under construction).
-
-| Page | Route | Notes |
-|---|---|---|
-| **Editor** | `/dashboard/diagrams/editor` | Embedded diagram editor (draw.io / diagrams.net) |
-| **My Diagrams** | `/dashboard/diagrams/library` | Saved diagrams library — network maps, attack paths, infra diagrams |
-
-**Implementation notes:**
-- Embed diagrams.net via iframe or integrate the draw.io JS SDK for in-app editing
-- Use cases: network topology maps, AD attack path diagrams, infrastructure layout, red team campaign flow diagrams
-- Save diagrams to DB per operator/engagement
-
----
+- Scanner: detection ratio, AV engine results table, threat category + tags
+- Reports: DB-backed scan history, filterable by type/verdict
 
 ### Decorative Side Shapes (Public Pages)
 
