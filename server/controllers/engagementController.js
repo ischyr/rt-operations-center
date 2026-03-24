@@ -122,7 +122,7 @@ exports.updateEngagement = async (req, res) => {
 
     const allowed = ['name', 'company', 'type', 'startDate', 'endDate', 'operators',
                      'stage', 'status', 'progress', 'findings', 'notes',
-                     'resources', 'teamSkills'];
+                     'resources', 'teamSkills', 'operatorSkills'];
     for (const key of allowed) {
       if (req.body[key] !== undefined) eng[key] = req.body[key];
     }
@@ -135,6 +135,11 @@ exports.updateEngagement = async (req, res) => {
 
     if (newLogs.length > 0) {
       eng.activityLog = [...(eng.activityLog || []), ...newLogs].slice(-100); // keep last 100
+    }
+
+    // Mixed fields need explicit marking for Mongoose to detect changes
+    if (req.body.operatorSkills !== undefined) {
+      eng.markModified('operatorSkills');
     }
 
     await eng.save();

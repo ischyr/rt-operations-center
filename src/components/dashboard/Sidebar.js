@@ -17,6 +17,13 @@ const globalNav = [
   { key: 'engagements', label: 'Engagements', icon: WarningTwoIcon },
 ];
 
+// ── Cheatsheet nav (always visible, global) ───────────────────────────────────
+const cheatsheetNav = [
+  { key: 'cheatsheet/red-team-map', label: 'Red Team Ops Map',     icon: StarIcon       },
+  { key: 'cheatsheet/ad-map',       label: 'AD Attack Map',         icon: UnlockIcon     },
+  { key: 'cheatsheet/payload-map',  label: 'Payload & Evasion Map', icon: AttachmentIcon },
+];
+
 // ── Per-engagement nav (shown when inside an engagement) ─────────────────────
 const engagementNav = [
   {
@@ -47,6 +54,13 @@ const engagementNav = [
     ],
   },
   {
+    section: 'SOCK PUPPETS',
+    items: [
+      { key: 'sockpuppets/personas',     label: 'Personas',    icon: AtSignIcon       },
+      { key: 'sockpuppets/social-media', label: 'Social Media', icon: ExternalLinkIcon },
+    ],
+  },
+  {
     section: 'TTPs',
     items: [
       { key: 'ttps/initial-access',   label: 'Initial Access',   icon: ChevronRightIcon },
@@ -73,14 +87,6 @@ const engagementNav = [
       { key: 'reporting/reports',       label: 'Reports',       icon: CopyIcon         },
       { key: 'reporting/findings',      label: 'Findings',      icon: WarningTwoIcon   },
       { key: 'reporting/client-portal', label: 'Client Portal', icon: ExternalLinkIcon },
-    ],
-  },
-  {
-    section: 'CHEATSHEET',
-    items: [
-      { key: 'cheatsheet/red-team-map', label: 'Red Team Ops Map',     icon: StarIcon      },
-      { key: 'cheatsheet/ad-map',       label: 'AD Attack Map',         icon: UnlockIcon    },
-      { key: 'cheatsheet/payload-map',  label: 'Payload & Evasion Map', icon: AttachmentIcon },
     ],
   },
 ];
@@ -127,7 +133,7 @@ const Sidebar = () => {
   const segments  = afterDash ? afterDash.split('/') : [];
   const firstSeg  = segments[0] || '';
 
-  const GLOBAL_KEYS = ['', 'engagements', 'settings'];
+  const GLOBAL_KEYS = ['', 'engagements', 'settings', 'cheatsheet'];
   const isInEngagement = firstSeg && !GLOBAL_KEYS.includes(firstSeg);
   const engagementSlug = isInEngagement ? firstSeg : null;
   const activeSubPath  = isInEngagement ? segments.slice(1).join('/') : '';
@@ -175,6 +181,31 @@ const Sidebar = () => {
               isActive={isActive}
               itemPy={itemPy}
               onClick={() => goTo(`/dashboard${item.key ? `/${item.key}` : ''}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Cheatsheet section — always visible */}
+      <Box px={3} mb={groupGap}>
+        <Divider borderColor="var(--dash-divider)" mb={groupGap} />
+        <Text
+          fontSize="9px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-section-label)" textTransform="uppercase"
+          px={2} mb={1}
+        >
+          Cheatsheet
+        </Text>
+        {cheatsheetNav.map((item) => {
+          const isActive = afterDash === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard/${item.key}`)}
             />
           );
         })}

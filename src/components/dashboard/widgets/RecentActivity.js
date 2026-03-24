@@ -30,7 +30,10 @@ const RecentActivity = () => {
   const { activityLogs } = dashboardStats;
 
   return (
-    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}>
+    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}
+      transition="transform 0.22s ease, box-shadow 0.22s ease"
+      _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+    >
       <Flex align="center" gap={2} mb={5}>
         <RepeatIcon boxSize={3} color="red.400" />
         <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">

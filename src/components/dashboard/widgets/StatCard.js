@@ -15,6 +15,8 @@ const StatCard = ({ label, value, sub, accent = 'red' }) => (
     borderRadius="12px"
     p={5}
     overflow="hidden"
+    transition="transform 0.22s ease, box-shadow 0.22s ease"
+    _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
   >
     <Box pos="absolute" top="0" left="0" right="0" h="2px" bgGradient={gradients[accent]} />
 

@@ -182,6 +182,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const cancelSetup = () => {
+    setPendingQrData(null);
+    setPendingTempToken(null);
+    setAuthMessage('');
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -207,6 +213,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         confirmSetup,
         verify2FA,
+        cancelSetup,
         updateProfile,
         changePassword,
         clearMessage,

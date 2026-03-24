@@ -73,8 +73,9 @@ const engagementSchema = new mongoose.Schema(
     findings:    [findingSchema],
     notes:       { type: String, default: '' },
     activityLog: [activityLogSchema],
-    resources:   [resourceSchema],
-    teamSkills:  [teamSkillSchema],
+    resources:      [resourceSchema],
+    teamSkills:     [teamSkillSchema],
+    operatorSkills: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );

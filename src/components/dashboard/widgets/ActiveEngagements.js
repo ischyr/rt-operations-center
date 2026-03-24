@@ -128,8 +128,14 @@ const ActiveEngagements = () => {
 
   const goTo = (newPage) => setPage(newPage);
 
+  // Fixed slot height: 3 cards × 160px + 2 gaps × 12px = 504px
+  const CARDS_H = '504px';
+
   return (
-    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5} h="100%">
+    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}
+      transition="transform 0.22s ease, box-shadow 0.22s ease"
+      _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+    >
       <Flex align="center" gap={2} mb={5}>
         <WarningIcon boxSize={3} color="red.500" />
         <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
@@ -143,16 +149,19 @@ const ActiveEngagements = () => {
         )}
       </Flex>
 
-      {loading ? (
-        <Text fontSize="sm" color="var(--dash-text-muted)" textAlign="center" py={8}>Loading...</Text>
-      ) : activeEngagements.length === 0 ? (
-        <Flex direction="column" align="center" py={10} gap={2} color="var(--dash-text-muted)">
-          <Text fontSize="2xl">⚡</Text>
-          <Text fontSize="sm">No active engagements.</Text>
-          <Text fontSize="11px">Create one from the Engagements page.</Text>
-        </Flex>
-      ) : (
-        <>
+      {/* Fixed-height card slot — always sized for 3 cards */}
+      <Box h={CARDS_H} overflow="hidden">
+        {loading ? (
+          <Flex h="100%" align="center" justify="center">
+            <Text fontSize="sm" color="var(--dash-text-muted)">Loading...</Text>
+          </Flex>
+        ) : activeEngagements.length === 0 ? (
+          <Flex h="100%" direction="column" align="center" justify="center" gap={2} color="var(--dash-text-muted)">
+            <Text fontSize="2xl">⚡</Text>
+            <Text fontSize="sm">No active engagements.</Text>
+            <Text fontSize="11px">Create one from the Engagements page.</Text>
+          </Flex>
+        ) : (
           <AnimatePresence mode="wait">
             <MotionFlex
               key={page}
@@ -166,43 +175,44 @@ const ActiveEngagements = () => {
               {visible.map((e) => <EngCard key={e.id} eng={e} getUserById={getUserById} />)}
             </MotionFlex>
           </AnimatePresence>
+        )}
+      </Box>
 
-          {totalPages > 1 && (
-            <Flex align="center" justify="center" gap={3} mt={4}>
-              <IconButton
-                icon={<ChevronLeftIcon boxSize={4} />}
-                size="xs" variant="ghost" borderRadius="full"
-                color={page === 0 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
-                isDisabled={page === 0}
-                onClick={() => goTo(page - 1)}
-                _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
-                aria-label="Previous"
+      {/* Pagination — always directly below the card slot */}
+      {totalPages > 1 && (
+        <Flex align="center" justify="center" gap={3} mt={4}>
+          <IconButton
+            icon={<ChevronLeftIcon boxSize={4} />}
+            size="xs" variant="ghost" borderRadius="full"
+            color={page === 0 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
+            isDisabled={page === 0}
+            onClick={() => goTo(page - 1)}
+            _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
+            aria-label="Previous"
+          />
+          <Flex gap={1.5} align="center">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <Box
+                key={i}
+                w={i === page ? '16px' : '5px'} h="5px"
+                borderRadius="full"
+                bg={i === page ? 'red.500' : 'rgba(255,255,255,0.15)'}
+                transition="all 0.22s ease"
+                cursor="pointer"
+                onClick={() => goTo(i)}
               />
-              <Flex gap={1.5} align="center">
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <Box
-                    key={i}
-                    w={i === page ? '16px' : '5px'} h="5px"
-                    borderRadius="full"
-                    bg={i === page ? 'red.500' : 'rgba(255,255,255,0.15)'}
-                    transition="all 0.22s ease"
-                    cursor="pointer"
-                    onClick={() => goTo(i)}
-                  />
-                ))}
-              </Flex>
-              <IconButton
-                icon={<ChevronRightIcon boxSize={4} />}
-                size="xs" variant="ghost" borderRadius="full"
-                color={page === totalPages - 1 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
-                isDisabled={page === totalPages - 1}
-                onClick={() => goTo(page + 1)}
-                _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
-                aria-label="Next"
-              />
-            </Flex>
-          )}
-        </>
+            ))}
+          </Flex>
+          <IconButton
+            icon={<ChevronRightIcon boxSize={4} />}
+            size="xs" variant="ghost" borderRadius="full"
+            color={page === totalPages - 1 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
+            isDisabled={page === totalPages - 1}
+            onClick={() => goTo(page + 1)}
+            _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
+            aria-label="Next"
+          />
+        </Flex>
       )}
     </Box>
   );

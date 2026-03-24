@@ -61,6 +61,10 @@ const EngagementLayout = () => {
       <Route path="intelligence/c2"              element={<PlaceholderView title="C2 Infrastructure" />} />
       <Route path="intelligence/phishing"        element={<PlaceholderView title="Phishing Infrastructure" />} />
 
+      {/* Sock Puppets */}
+      <Route path="sockpuppets/personas"     element={<PlaceholderView title="Personas" />} />
+      <Route path="sockpuppets/social-media" element={<PlaceholderView title="Social Media" />} />
+
       {/* TTPs */}
       <Route path="ttps/initial-access"   element={<PlaceholderView title="Initial Access" />} />
       <Route path="ttps/windows"          element={<PlaceholderView title="Windows" />} />

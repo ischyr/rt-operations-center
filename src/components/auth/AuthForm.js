@@ -47,7 +47,7 @@ const pinFieldStyles = {
 };
 
 // ── QR Setup Step ─────────────────────────────────────────────────────────────
-const QRSetupStep = ({ qrData, onConfirm, authMessage }) => {
+const QRSetupStep = ({ qrData, onConfirm, onCancel, authMessage }) => {
   const [code, setCode] = useState('');
 
   return (
@@ -120,6 +120,13 @@ const QRSetupStep = ({ qrData, onConfirm, authMessage }) => {
           _active={{ transform: 'translateY(0)' }}
         >
           Verify & Activate
+        </Button>
+        <Button
+          size="sm" variant="ghost" color="gray.500" fontSize="sm"
+          _hover={{ color: 'gray.300', bg: 'rgba(255,255,255,0.05)' }}
+          onClick={onCancel}
+        >
+          Cancel registration
         </Button>
       </Stack>
 
@@ -201,7 +208,7 @@ const AuthForm = () => {
   const {
     authMessage, login, register,
     pendingQrData, pendingTempToken,
-    confirmSetup, verify2FA,
+    confirmSetup, verify2FA, cancelSetup,
   } = useAuth();
   const { fetchEngagements } = useEngagements();
 
@@ -284,6 +291,7 @@ const AuthForm = () => {
               key="qr"
               qrData={pendingQrData}
               onConfirm={handleConfirmSetup}
+              onCancel={cancelSetup}
               authMessage={authMessage}
             />
           )}

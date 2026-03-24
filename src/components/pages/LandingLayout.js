@@ -18,10 +18,15 @@ const LandingLayout = () => (
         flex="1"
         direction="column"
         h="100vh"
-        overflow="hidden"
+        overflowX="hidden"
+        overflowY="auto"
         pos="relative"
         borderLeft={{ base: 'none', md: '1px solid rgba(255,255,255,0.04)' }}
         bg="rgba(0,0,0,0.12)"
+        css={{
+          '&::-webkit-scrollbar': { width: '3px' },
+          '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.08)', borderRadius: '3px' },
+        }}
       >
         {/* Skew bg accent */}
         <Box
@@ -58,9 +63,9 @@ const LandingLayout = () => (
           align="center"
           justify="center"
           px={{ base: 5, md: 8, lg: 12 }}
-          pb={{ base: 6, md: 8 }}
+          py={{ base: 6, md: 8 }}
           zIndex={2}
-          overflow="hidden"
+          minH="min-content"
         >
           <Box w="100%" maxW={{ base: '100%', md: '480px', lg: '500px' }}>
             <AuthForm />

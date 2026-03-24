@@ -7,6 +7,9 @@ import DashboardView from './views/DashboardView';
 import SettingsView from './views/SettingsView';
 import EngagementsView from './views/EngagementsView';
 import EngagementLayout from './EngagementLayout';
+import RedTeamMapView from './views/RedTeamMapView';
+import ADAttackMapView from './views/ADAttackMapView';
+import PayloadMapView from './views/PayloadMapView';
 
 const MotionFlex = motion(Flex);
 
@@ -30,6 +33,10 @@ const DashboardLayout = () => (
           <Route index              element={<DashboardView />} />
           <Route path="engagements" element={<EngagementsView />} />
           <Route path="settings"    element={<SettingsView />} />
+          {/* Cheatsheet routes */}
+          <Route path="cheatsheet/red-team-map" element={<RedTeamMapView />} />
+          <Route path="cheatsheet/ad-map"       element={<ADAttackMapView />} />
+          <Route path="cheatsheet/payload-map"  element={<PayloadMapView />} />
           {/* All per-engagement routes live under /:slug/* */}
           <Route path=":slug/*"     element={<EngagementLayout />} />
         </Routes>

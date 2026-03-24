@@ -2,9 +2,10 @@ import { useState } from 'react';
 import {
   Box, Flex, Text, Button, Input, Heading,
   Stack, SimpleGrid, IconButton, Slider,
-  SliderTrack, SliderFilledTrack, SliderThumb,
+  SliderTrack, SliderFilledTrack, SliderThumb, Tag, TagLabel, TagCloseButton, Wrap, WrapItem,
+  InputGroup, InputLeftElement,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, CheckIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -44,11 +45,35 @@ const PeopleSkillsView = () => {
 
   const [showAdd, setShowAdd] = useState(false);
   const [newSkill, setNewSkill] = useState({ label: '', pct: 75 });
+  const [expandedOp, setExpandedOp] = useState(null);
+  const [newOpSkill, setNewOpSkill] = useState('');
+  const [opSearch, setOpSearch] = useState('');
+  const [opPage, setOpPage] = useState(0);
+  const OP_PAGE_SIZE = 5;
 
   if (!eng) return null;
 
-  const teamSkills = eng.teamSkills || [];
-  const operators  = eng.operators  || [];
+  const teamSkills     = eng.teamSkills     || [];
+  const operators      = eng.operators      || [];
+  const operatorSkills = eng.operatorSkills || {};
+
+  const addOpSkill = (uid) => {
+    const trimmed = newOpSkill.trim();
+    if (!trimmed) return;
+    const existing = operatorSkills[uid] || [];
+    if (existing.includes(trimmed)) return;
+    updateEngagement(eng.id, {
+      operatorSkills: { ...operatorSkills, [uid]: [...existing, trimmed] },
+    });
+    setNewOpSkill('');
+  };
+
+  const removeOpSkill = (uid, skill) => {
+    const updated = (operatorSkills[uid] || []).filter((s) => s !== skill);
+    updateEngagement(eng.id, {
+      operatorSkills: { ...operatorSkills, [uid]: updated },
+    });
+  };
 
   const saveSkill = () => {
     if (!newSkill.label.trim()) return;
@@ -96,48 +121,267 @@ const PeopleSkillsView = () => {
       </Flex>
 
       {/* Assigned operators */}
-      <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px" p={5} mb={5}>
-        <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider" mb={4}>
-          Assigned Operators
-        </Text>
-        {allUsers.length === 0 ? (
-          <Text fontSize="sm" color="var(--dash-text-muted)">No users found in the database.</Text>
-        ) : (
-          <Flex gap={3} flexWrap="wrap">
-            {allUsers.map((user) => {
-              const uid      = String(user.id);
-              const assigned = operators.map(String).includes(uid);
-              const initials = user.callsign.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-              return (
-                <Flex
-                  key={uid} align="center" gap={2}
-                  px={4} py={3} borderRadius="10px"
-                  bg={assigned ? 'rgba(255,80,95,0.08)' : 'rgba(255,255,255,0.02)'}
-                  border={assigned ? '1px solid rgba(255,80,95,0.2)' : '1px solid rgba(255,255,255,0.06)'}
-                  opacity={assigned ? 1 : 0.45}
-                >
-                  <Box
-                    w="28px" h="28px" borderRadius="full"
-                    bg={assigned ? 'rgba(255,80,95,0.2)' : 'rgba(255,255,255,0.05)'}
-                    border={assigned ? '1px solid rgba(255,80,95,0.35)' : '1px solid rgba(255,255,255,0.1)'}
-                    display="flex" alignItems="center" justifyContent="center"
-                    fontSize="11px" fontWeight="bold"
-                    color={assigned ? 'red.300' : 'var(--dash-text-muted)'}
-                  >
-                    {initials}
-                  </Box>
-                  <Box>
-                    <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)">{user.callsign}</Text>
-                    <Text fontSize="10px" color="var(--dash-text-muted)">
-                      {assigned ? user.email : 'Not assigned'}
-                    </Text>
-                  </Box>
+      {(() => {
+        const filteredUsers = allUsers.filter((u) =>
+          u.callsign.toLowerCase().includes(opSearch.toLowerCase()) ||
+          u.email.toLowerCase().includes(opSearch.toLowerCase())
+        );
+        const totalOpPages = Math.ceil(filteredUsers.length / OP_PAGE_SIZE);
+        const pagedUsers   = filteredUsers.slice(opPage * OP_PAGE_SIZE, opPage * OP_PAGE_SIZE + OP_PAGE_SIZE);
+
+        return (
+          <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px" p={5} mb={5}>
+            <Flex justify="space-between" align="center" mb={4}>
+              <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider">
+                Assigned Operators
+                {operators.length > 0 && (
+                  <Text as="span" ml={2} px="6px" py="1px" borderRadius="20px"
+                    bg="rgba(255,80,95,0.12)" border="1px solid rgba(255,80,95,0.25)"
+                    color="red.400" fontSize="9px">{operators.length} assigned</Text>
+                )}
+              </Text>
+            </Flex>
+
+            {allUsers.length === 0 ? (
+              <Text fontSize="sm" color="var(--dash-text-muted)">No users found in the database.</Text>
+            ) : (
+              <>
+                {/* Search */}
+                <InputGroup mb={3}>
+                  <InputLeftElement h="36px" pl={3} pointerEvents="none">
+                    <SearchIcon boxSize={3} color="var(--dash-text-muted)" />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="Search operators..."
+                    value={opSearch}
+                    onChange={(e) => { setOpSearch(e.target.value); setOpPage(0); }}
+                    {...inputStyles}
+                    h="36px"
+                    pl={9}
+                    fontSize="12px"
+                  />
+                </InputGroup>
+
+                <Flex direction="column" gap={2}>
+                  <AnimatePresence mode="wait">
+                    <MotionBox
+                      key={`${opPage}-${opSearch}`}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Flex direction="column" gap={2}>
+                        {pagedUsers.length === 0 ? (
+                          <Text fontSize="12px" color="var(--dash-text-muted)" textAlign="center" py={4}>
+                            No operators match "{opSearch}"
+                          </Text>
+                        ) : pagedUsers.map((user) => {
+                          const uid        = String(user.id);
+                          const assigned   = operators.map(String).includes(uid);
+                          const initials   = user.callsign.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+                          const opSkills   = operatorSkills[uid] || [];
+                          const isExpanded = expandedOp === uid;
+                          return (
+                            <Box key={uid}
+                              borderRadius="10px"
+                              bg={assigned ? 'rgba(255,80,95,0.08)' : 'rgba(255,255,255,0.02)'}
+                              border={assigned ? '1px solid rgba(255,80,95,0.2)' : '1px solid rgba(255,255,255,0.06)'}
+                              opacity={assigned ? 1 : 0.45}
+                              overflow="hidden"
+                            >
+                              <Flex
+                                align="center" gap={2} px={4} py="10px"
+                                cursor={assigned ? 'pointer' : 'default'}
+                                onClick={() => assigned && setExpandedOp(isExpanded ? null : uid)}
+                                _hover={assigned ? { bg: 'rgba(255,80,95,0.04)' } : {}}
+                                transition="background 0.15s"
+                              >
+                                <Box
+                                  w="28px" h="28px" borderRadius="full" flexShrink={0}
+                                  bg={assigned ? 'rgba(255,80,95,0.2)' : 'rgba(255,255,255,0.05)'}
+                                  border={assigned ? '1px solid rgba(255,80,95,0.35)' : '1px solid rgba(255,255,255,0.1)'}
+                                  display="flex" alignItems="center" justifyContent="center"
+                                  fontSize="11px" fontWeight="bold"
+                                  color={assigned ? 'red.300' : 'var(--dash-text-muted)'}
+                                >
+                                  {initials}
+                                </Box>
+                                <Box flex="1">
+                                  <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)">{user.callsign}</Text>
+                                  <Text fontSize="10px" color="var(--dash-text-muted)">
+                                    {assigned ? user.email : 'Not assigned'}
+                                  </Text>
+                                </Box>
+                                {assigned && (
+                                  <Flex align="center" gap={2}>
+                                    {opSkills.length > 0 && (
+                                      <Text fontSize="10px" color="var(--dash-text-muted)">{opSkills.length} skill{opSkills.length !== 1 ? 's' : ''}</Text>
+                                    )}
+                                    {isExpanded ? <ChevronUpIcon boxSize={3} color="var(--dash-text-muted)" /> : <ChevronDownIcon boxSize={3} color="var(--dash-text-muted)" />}
+                                  </Flex>
+                                )}
+                              </Flex>
+
+                              <AnimatePresence>
+                                {isExpanded && assigned && (
+                                  <MotionBox
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    overflow="hidden"
+                                  >
+                                    <Box px={4} pb={4} borderTop="1px solid rgba(255,80,95,0.1)">
+                                      <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider" mb={2} mt={3} fontWeight="semibold">
+                                        Operator Skills
+                                      </Text>
+                                      <Wrap spacing={2} mb={3}>
+                                        {opSkills.map((skill) => (
+                                          <WrapItem key={skill}>
+                                            <Tag size="sm" borderRadius="6px"
+                                              bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.25)"
+                                              color="rgba(255,130,130,0.9)"
+                                            >
+                                              <TagLabel fontSize="11px">{skill}</TagLabel>
+                                              <TagCloseButton onClick={() => removeOpSkill(uid, skill)} />
+                                            </Tag>
+                                          </WrapItem>
+                                        ))}
+                                        {opSkills.length === 0 && (
+                                          <Text fontSize="11px" color="var(--dash-text-muted)">No skills added yet.</Text>
+                                        )}
+                                      </Wrap>
+                                      <Flex gap={2}>
+                                        <Input
+                                          value={newOpSkill}
+                                          onChange={(e) => setNewOpSkill(e.target.value)}
+                                          onKeyDown={(e) => e.key === 'Enter' && addOpSkill(uid)}
+                                          placeholder="Add skill (e.g. OSINT)"
+                                          list="op-skill-suggestions"
+                                          size="sm"
+                                          {...inputStyles}
+                                          h="32px"
+                                        />
+                                        <datalist id="op-skill-suggestions">
+                                          {SUGGESTED_SKILLS.map((s) => <option key={s} value={s} />)}
+                                        </datalist>
+                                        <IconButton
+                                          icon={<AddIcon boxSize={2.5} />}
+                                          size="sm" h="32px" w="32px" minW="32px"
+                                          bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
+                                          color="rgba(255,130,130,0.9)" borderRadius="8px"
+                                          _hover={{ bg: 'rgba(255,80,95,0.2)' }}
+                                          onClick={() => addOpSkill(uid)}
+                                          aria-label="Add skill"
+                                        />
+                                      </Flex>
+                                    </Box>
+                                  </MotionBox>
+                                )}
+                              </AnimatePresence>
+                            </Box>
+                          );
+                        })}
+                      </Flex>
+                    </MotionBox>
+                  </AnimatePresence>
                 </Flex>
-              );
-            })}
-          </Flex>
-        )}
-      </Box>
+
+                {/* Pagination */}
+                {totalOpPages > 1 && (
+                  <Flex align="center" justify="center" gap={3} mt={4}>
+                    <IconButton
+                      icon={<ChevronLeftIcon boxSize={4} />}
+                      size="xs" variant="ghost" borderRadius="full"
+                      color={opPage === 0 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
+                      isDisabled={opPage === 0}
+                      onClick={() => setOpPage((p) => p - 1)}
+                      _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
+                      aria-label="Previous"
+                    />
+                    <Flex gap={1.5} align="center">
+                      {Array.from({ length: totalOpPages }).map((_, i) => (
+                        <Box
+                          key={i}
+                          w={i === opPage ? '16px' : '5px'} h="5px"
+                          borderRadius="full"
+                          bg={i === opPage ? 'red.500' : 'rgba(255,255,255,0.15)'}
+                          transition="all 0.22s ease"
+                          cursor="pointer"
+                          onClick={() => setOpPage(i)}
+                        />
+                      ))}
+                    </Flex>
+                    <IconButton
+                      icon={<ChevronRightIcon boxSize={4} />}
+                      size="xs" variant="ghost" borderRadius="full"
+                      color={opPage === totalOpPages - 1 ? 'var(--dash-text-muted)' : 'var(--dash-text-secondary)'}
+                      isDisabled={opPage === totalOpPages - 1}
+                      onClick={() => setOpPage((p) => p + 1)}
+                      _hover={{ bg: 'rgba(255,255,255,0.07)', color: 'white' }}
+                      aria-label="Next"
+                    />
+                  </Flex>
+                )}
+              </>
+            )}
+          </Box>
+        );
+      })()}
+
+      {/* Operator Skills Summary */}
+      {(() => {
+        const withSkills = operators
+          .map((id) => {
+            const uid  = String(id);
+            const user = allUsers.find((u) => String(u.id) === uid);
+            const skills = operatorSkills[uid] || [];
+            return user && skills.length > 0 ? { user, uid, skills } : null;
+          })
+          .filter(Boolean);
+
+        if (withSkills.length === 0) return null;
+
+        return (
+          <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px" p={5} mb={5}>
+            <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider" mb={4}>
+              Operator Skills Overview
+            </Text>
+            <Flex direction="column" gap={4}>
+              {withSkills.map(({ user, uid, skills }) => {
+                const initials = user.callsign.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+                return (
+                  <Box key={uid}>
+                    <Flex align="center" gap={2} mb={2}>
+                      <Box
+                        w="24px" h="24px" borderRadius="full" flexShrink={0}
+                        bg="rgba(255,80,95,0.2)" border="1px solid rgba(255,80,95,0.35)"
+                        display="flex" alignItems="center" justifyContent="center"
+                        fontSize="10px" fontWeight="bold" color="red.300"
+                      >
+                        {initials}
+                      </Box>
+                      <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)">{user.callsign}</Text>
+                      <Text fontSize="10px" color="var(--dash-text-muted)" ml={1}>{skills.length} skill{skills.length !== 1 ? 's' : ''}</Text>
+                    </Flex>
+                    <Wrap spacing={2} pl="32px">
+                      {skills.map((skill) => (
+                        <WrapItem key={skill}>
+                          <Tag size="sm" borderRadius="6px"
+                            bg="rgba(255,80,95,0.08)" border="1px solid rgba(255,80,95,0.2)"
+                            color="rgba(255,130,130,0.85)"
+                          >
+                            <TagLabel fontSize="11px">{skill}</TagLabel>
+                          </Tag>
+                        </WrapItem>
+                      ))}
+                    </Wrap>
+                  </Box>
+                );
+              })}
+            </Flex>
+          </Box>
+        );
+      })()}
 
       {/* Add skill form */}
       <AnimatePresence>

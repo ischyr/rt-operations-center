@@ -355,6 +355,8 @@ const EngagementDetailView = () => {
             key={stat.label}
             bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
             borderRadius="12px" p={4}
+            transition="transform 0.22s ease, box-shadow 0.22s ease"
+            _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
           >
             <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider" mb={1}>
               {stat.label}
@@ -365,7 +367,10 @@ const EngagementDetailView = () => {
       </SimpleGrid>
 
       {/* Progress bar */}
-      <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px" p={5} mb={6}>
+      <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px" p={5} mb={6}
+        transition="transform 0.22s ease, box-shadow 0.22s ease"
+        _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+      >
         <Flex justify="space-between" mb={3}>
           <Text fontSize="13px" fontWeight="semibold" color="var(--dash-text-primary)">Engagement Progress</Text>
           <Text fontSize="13px" fontWeight="bold" color="red.400">{eng.progress}%</Text>
@@ -395,7 +400,10 @@ const EngagementDetailView = () => {
           { label: 'Created',    value: new Date(eng.createdAt).toLocaleDateString('en-GB') },
           { label: 'ID',         value: eng.id?.slice(-8).toUpperCase() },
         ].map((item) => (
-          <Box key={item.label} bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="10px" p={4}>
+          <Box key={item.label} bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="10px" p={4}
+            transition="transform 0.22s ease, box-shadow 0.22s ease"
+            _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+          >
             <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase" letterSpacing="wider" mb={1}>{item.label}</Text>
             <Text fontSize="sm" color="var(--dash-text-primary)">{item.value}</Text>
           </Box>
