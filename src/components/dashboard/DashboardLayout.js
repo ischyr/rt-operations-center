@@ -16,6 +16,7 @@ import PlaceholderView from './views/PlaceholderView';
 import CVEFeedView from './views/CVEFeedView';
 import DiagramEditorView from './views/DiagramEditorView';
 import DiagramLibraryView from './views/DiagramLibraryView';
+import ToolsView from './views/ToolsView';
 
 const MotionFlex = motion(Flex);
 
@@ -47,7 +48,7 @@ const DashboardLayout = () => (
           <Route path="lab/configs"      element={<LabConfigsView />} />
           <Route path="lab/connectivity" element={<LabConnectivityView />} />
           {/* Resources & Materials routes */}
-          <Route path="resources/tools"    element={<PlaceholderView title="Tools" />} />
+          <Route path="resources/tools"    element={<ToolsView />} />
           <Route path="resources/cve-feed" element={<CVEFeedView />} />
           {/* Malware Analysis routes */}
           <Route path="malware/scanner" element={<PlaceholderView title="Malware Scanner" />} />

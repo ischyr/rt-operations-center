@@ -28,6 +28,7 @@ app.use('/api/engagements', require('./routes/engagements'));
 app.use('/api/cve',        require('./routes/cve'));
 app.use('/api/diagrams',   require('./routes/diagrams'));
 app.use('/api/oauth',      require('./routes/oauth'));
+app.use('/api/tools',      require('./routes/tools'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
