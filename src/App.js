@@ -8,6 +8,7 @@ import theme from './theme';
 import PageLayout from './components/common/PageLayout';
 import LandingLayout from './components/pages/LandingLayout';
 import DashboardLayout from './components/dashboard/DashboardLayout';
+import OAuthCallback from './components/auth/OAuthCallback';
 import About from './components/pages/About';
 import Operators from './components/pages/Operators';
 import Certifications from './components/pages/Certifications';
@@ -53,6 +54,7 @@ function AppRoutes() {
           <Route path="/"               element={<Navigate to={isLoggedIn ? '/dashboard' : '/signin'} replace />} />
           <Route path="/signin"         element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LandingLayout />} />
           <Route path="/register"       element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LandingLayout />} />
+          <Route path="/oauth/callback"  element={<OAuthCallback />} />
           <Route path="/about"          element={<PageLayout><About /></PageLayout>} />
           <Route path="/operators"      element={<PageLayout><Operators /></PageLayout>} />
           <Route path="/certifications" element={<PageLayout><Certifications /></PageLayout>} />

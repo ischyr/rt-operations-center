@@ -17,10 +17,19 @@ const userSchema = new mongoose.Schema(
       trim:      true,
     },
     password: {
-      type:      String,
-      required:  [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters'],
-      select:    false,
+      type:   String,
+      select: false,
+      // Not required — OAuth users have no password
+    },
+    oauthProvider: {
+      type: String,
+      enum: ['google', 'github', null],
+      default: null,
+    },
+    oauthId: {
+      type:   String,
+      select: false,
+      default: null,
     },
     role: {
       type:    String,
@@ -52,7 +61,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.password || !this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });

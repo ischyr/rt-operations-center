@@ -199,6 +199,13 @@ export const AuthProvider = ({ children }) => {
 
   const clearMessage = () => setAuthMessage('');
 
+  // Called by OAuthCallback after storing token+user in localStorage
+  const loginWithToken = (token, userObj) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userObj));
+    setUser(userObj);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -217,6 +224,7 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         changePassword,
         clearMessage,
+        loginWithToken,
       }}
     >
       {children}

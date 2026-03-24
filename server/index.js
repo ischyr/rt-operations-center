@@ -1,20 +1,33 @@
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+const express  = require('express');
+const cors     = require('cors');
+const session  = require('express-session');
+const passport = require('./config/passport');
 const connectDB = require('./config/db');
 
 const app = express();
 
 connectDB();
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true }));
 app.use(express.json());
+
+// Session needed only for the OAuth redirect dance (not used for API auth)
+app.use(session({
+  secret:            process.env.SESSION_SECRET || 'redteam-session-secret',
+  resave:            false,
+  saveUninitialized: false,
+  cookie:            { secure: false, maxAge: 5 * 60 * 1000 }, // 5 min — just long enough for OAuth
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/users',       require('./routes/users'));
 app.use('/api/engagements', require('./routes/engagements'));
 app.use('/api/cve',        require('./routes/cve'));
 app.use('/api/diagrams',   require('./routes/diagrams'));
+app.use('/api/oauth',      require('./routes/oauth'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
