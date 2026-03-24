@@ -4,7 +4,8 @@
       "Bash(npm install:*)",
       "WebFetch(domain:kypvas.github.io)",
       "Bash(curl -s \"https://kypvas.github.io/ad_attack_architecture/\")",
-      "Bash(curl -s https://kypvas.github.io/ad_attack_architecture/)"
+      "Bash(curl -s https://kypvas.github.io/ad_attack_architecture/)",
+      "Bash(node -e \"console.log\\(process.version\\)\")"
     ]
   }
 }

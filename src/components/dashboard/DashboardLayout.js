@@ -13,6 +13,7 @@ import PayloadMapView from './views/PayloadMapView';
 import LabConfigsView from './views/LabConfigsView';
 import LabConnectivityView from './views/LabConnectivityView';
 import PlaceholderView from './views/PlaceholderView';
+import CVEFeedView from './views/CVEFeedView';
 
 const MotionFlex = motion(Flex);
 
@@ -45,7 +46,7 @@ const DashboardLayout = () => (
           <Route path="lab/connectivity" element={<LabConnectivityView />} />
           {/* Resources & Materials routes */}
           <Route path="resources/tools"    element={<PlaceholderView title="Tools" />} />
-          <Route path="resources/cve-feed" element={<PlaceholderView title="CVE Feed" />} />
+          <Route path="resources/cve-feed" element={<CVEFeedView />} />
           {/* Malware Analysis routes */}
           <Route path="malware/scanner" element={<PlaceholderView title="Malware Scanner" />} />
           <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />
