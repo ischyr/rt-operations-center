@@ -30,6 +30,8 @@ app.use('/api/diagrams',   require('./routes/diagrams'));
 app.use('/api/oauth',      require('./routes/oauth'));
 app.use('/api/tools',      require('./routes/tools'));
 app.use('/api/c2',         require('./routes/c2'));
+app.use('/api/leakx',      require('./routes/leakx'));
+app.use('/api/subdomains', require('./routes/subdomains'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

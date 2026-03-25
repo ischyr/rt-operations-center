@@ -14,6 +14,8 @@ import SkillRequestsView from './views/SkillRequestsView';
 import TTXPlannerView from './views/TTXPlannerView';
 import PersonasView from './views/PersonasView';
 import C2View from './views/C2View';
+import LeakIXView from './views/LeakIXView';
+import SubdomainsView from './views/SubdomainsView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -77,7 +79,8 @@ const EngagementLayout = () => {
       <Route path="ttps/network"          element={<PlaceholderView title="Network" />} />
 
       {/* Pillaging */}
-      <Route path="pillaging/subdomains"  element={<PlaceholderView title="Subdomains" />} />
+      <Route path="pillaging/leakix"      element={<LeakIXView />} />
+      <Route path="pillaging/subdomains"  element={<SubdomainsView />} />
       <Route path="pillaging/services"    element={<PlaceholderView title="Services" />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />

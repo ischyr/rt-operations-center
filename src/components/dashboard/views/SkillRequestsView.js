@@ -3,7 +3,7 @@ import {
   Box, Flex, Text, Heading, Button, IconButton, Input, Select, Textarea,
   SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, CloseIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, CloseIcon, EditIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { useEngagements } from '../../../contexts/EngagementContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -86,7 +86,7 @@ const MiniAvatar = ({ callsign, title }) => (
 );
 
 // ── Skill Request card ─────────────────────────────────────────────────────────
-const SkillCard = ({ req, onDelete, onCycleStatus, getUserById }) => {
+const SkillCard = ({ req, onDelete, onEdit, onCycleStatus, getUserById }) => {
   const pm  = PRIORITY_META[req.priority] || PRIORITY_META.Medium;
   const sm  = STATUS_META[req.status]     || STATUS_META.Open;
   const rid = req.id || String(req._id);
@@ -179,6 +179,10 @@ const SkillCard = ({ req, onDelete, onCycleStatus, getUserById }) => {
               onClick={() => onCycleStatus(rid, STATUS_CYCLE[req.status])}>
               {sm.label} →
             </Box>
+            <IconButton icon={<EditIcon boxSize={3} />} size="xs" variant="ghost"
+              color="var(--dash-text-muted)" borderRadius="6px"
+              _hover={{ color: 'blue.300', bg: 'rgba(99,179,237,0.1)' }}
+              onClick={() => onEdit(rid)} aria-label="Edit" />
             <IconButton icon={<DeleteIcon boxSize={3} />} size="xs" variant="ghost"
               color="var(--dash-text-muted)" borderRadius="6px"
               _hover={{ color: 'red.400', bg: 'rgba(255,80,95,0.1)' }}
@@ -226,6 +230,7 @@ const SkillRequestsView = () => {
   const [search,       setSearch]       = useState('');
   const [modal,        setModal]        = useState(false);
   const [form,         setForm]         = useState(BLANK);
+  const [editingId,    setEditingId]    = useState(null);
 
   if (!eng) return null;
 
@@ -273,21 +278,50 @@ const SkillRequestsView = () => {
     }));
   };
 
+  const openEdit = (rid) => {
+    const req = requests.find(r => (r.id || String(r._id)) === rid);
+    if (!req) return;
+    setEditingId(rid);
+    setForm({
+      skill:       req.skill || '',
+      category:    req.category || 'Cloud',
+      priority:    req.priority || 'Medium',
+      description: req.description || '',
+      assignedTo:  (req.assignedTo || []).map(String),
+    });
+    setModal(true);
+  };
+
   const saveRequest = () => {
     if (!form.skill.trim()) return;
-    const req = {
-      id:                  Date.now().toString(),
-      skill:               form.skill.trim(),
-      category:            form.category,
-      priority:            form.priority,
-      description:         form.description.trim(),
-      status:              'Open',
-      assignedTo:          form.assignedTo,
-      requestedBy:         myId,
-      requestedByCallsign: currentUser?.callsign || '',
-    };
-    updateEngagement(eng.id, { skillRequests: [...requests, req] });
+
+    if (editingId) {
+      // Update existing
+      updateEngagement(eng.id, {
+        skillRequests: requests.map(r =>
+          (r.id || String(r._id)) === editingId
+            ? { ...r, skill: form.skill.trim(), category: form.category, priority: form.priority, description: form.description.trim(), assignedTo: form.assignedTo }
+            : r
+        ),
+      });
+    } else {
+      // Create new
+      const req = {
+        id:                  Date.now().toString(),
+        skill:               form.skill.trim(),
+        category:            form.category,
+        priority:            form.priority,
+        description:         form.description.trim(),
+        status:              'Open',
+        assignedTo:          form.assignedTo,
+        requestedBy:         myId,
+        requestedByCallsign: currentUser?.callsign || '',
+      };
+      updateEngagement(eng.id, { skillRequests: [...requests, req] });
+    }
+
     setForm(BLANK);
+    setEditingId(null);
     setModal(false);
   };
 
@@ -322,7 +356,7 @@ const SkillRequestsView = () => {
         <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" borderRadius="8px"
           bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
           color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
-          onClick={() => { setForm(BLANK); setModal(true); }}>
+          onClick={() => { setForm(BLANK); setEditingId(null); setModal(true); }}>
           Add Skill Gap
         </Button>
       </Flex>
@@ -359,7 +393,7 @@ const SkillRequestsView = () => {
           <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" mt={2}
             borderRadius="8px" bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
             color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
-            onClick={() => { setForm(BLANK); setModal(true); }}>
+            onClick={() => { setForm(BLANK); setEditingId(null); setModal(true); }}>
             Log First Skill Gap
           </Button>
         </Flex>
@@ -378,6 +412,7 @@ const SkillRequestsView = () => {
               key={req.id || String(req._id)}
               req={req}
               onDelete={deleteRequest}
+              onEdit={openEdit}
               onCycleStatus={cycleStatus}
               getUserById={getUserById}
             />
@@ -386,7 +421,7 @@ const SkillRequestsView = () => {
       )}
 
       {/* ── Add Skill Gap Modal ── */}
-      <Modal isOpen={modal} onClose={() => setModal(false)} isCentered size="md">
+      <Modal isOpen={modal} onClose={() => { setModal(false); setEditingId(null); }} isCentered size="md">
         <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(4px)" />
         <ModalContent bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
           borderRadius="16px" overflow="hidden" p={0}
@@ -405,16 +440,16 @@ const SkillRequestsView = () => {
               <Flex justify="space-between" align="flex-start" mb={5}>
                 <Box>
                   <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">
-                    Log Skill Gap
+                    {editingId ? 'Edit Skill Gap' : 'Log Skill Gap'}
                   </Text>
                   <Text fontSize="11px" color="var(--dash-text-muted)" mt="2px">
-                    Record a missing skill and who needs to learn it
+                    {editingId ? 'Update skill gap details' : 'Record a missing skill and who needs to learn it'}
                   </Text>
                 </Box>
                 <IconButton icon={<CloseIcon boxSize={2.5} />} size="xs" variant="ghost"
                   color="var(--dash-text-muted)" borderRadius="8px"
                   _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
-                  onClick={() => setModal(false)} aria-label="Close" />
+                  onClick={() => { setModal(false); setEditingId(null); }} aria-label="Close" />
               </Flex>
 
               {/* Skill name */}
@@ -514,14 +549,14 @@ const SkillRequestsView = () => {
                 <Button flex="1" size="sm" variant="ghost" borderRadius="10px"
                   color="var(--dash-text-muted)" border="1px solid rgba(255,255,255,0.08)"
                   _hover={{ bg: 'rgba(255,255,255,0.05)', color: 'white' }}
-                  onClick={() => setModal(false)}>
+                  onClick={() => { setModal(false); setEditingId(null); }}>
                   Cancel
                 </Button>
                 <Button flex="1" size="sm" borderRadius="10px" fontWeight="semibold"
                   bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
                   color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
                   onClick={saveRequest}>
-                  Save Skill Gap
+                  {editingId ? 'Save Changes' : 'Save Skill Gap'}
                 </Button>
               </Flex>
             </Box>

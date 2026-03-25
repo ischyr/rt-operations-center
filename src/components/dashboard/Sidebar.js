@@ -100,6 +100,7 @@ const engagementNav = [
       { key: 'pillaging/subdomains',  label: 'Subdomains',  icon: SearchIcon     },
       { key: 'pillaging/services',    label: 'Services',    icon: InfoIcon       },
       { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
+      { key: 'pillaging/leakix',      label: 'LeakIX',      icon: SearchIcon     },
       { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
       { key: 'pillaging/emails',      label: 'Emails',      icon: EmailIcon      },
       { key: 'pillaging/documents',   label: 'Documents',   icon: AttachmentIcon },

@@ -1,0 +1,687 @@
+# NOTICE: THESE ENTRIES ARE COMMENTED BY DEFAULT
+# Please be sure to uncomment when inserting API keys, etc.
+# home: ~/.bbot
+# keep_scans: 20
+# status_frequency: 15
+# file_blobs: false
+# folder_blobs: false
+# scope:
+#   strict: false
+#   report_distance: 0
+#   search_distance: 0
+# dns:
+#   disable: false
+#   minimal: false
+#   threads: 25
+#   brute_threads: 1000
+#   brute_nameservers: https://raw.githubusercontent.com/blacklanternsecurity/public-dns-servers/master/nameservers.txt
+#   search_distance: 1
+#   runaway_limit: 5
+#   timeout: 5
+#   retries: 1
+#   wildcard_disable: false
+#   wildcard_ignore: []
+#   wildcard_tests: 10
+#   abort_threshold: 50
+#   filter_ptrs: true
+#   debug: false
+#   omit_queries:
+#   - SRV:mail.protection.outlook.com
+#   - CNAME:mail.protection.outlook.com
+#   - TXT:mail.protection.outlook.com
+# web:
+#   http_proxy: null
+#   user_agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
+#     like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.2151.97
+#   spider_distance: 0
+#   spider_depth: 1
+#   spider_links_per_page: 25
+#   http_timeout: 10
+#   httpx_timeout: 5
+#   http_headers: {}
+#   api_retries: 2
+#   http_retries: 1
+#   httpx_retries: 1
+#   429_sleep_interval: 30
+#   429_max_sleep_interval: 60
+#   debug: false
+#   http_max_redirects: 5
+#   ssl_verify: false
+# engine:
+#   debug: false
+# deps:
+#   ffuf:
+#     version: 2.1.0
+#   behavior: abort_on_failure
+# module_dirs: []
+# module_handle_event_timeout: 3600
+# module_handle_batch_timeout: 7200
+# speculate: true
+# excavate: true
+# aggregate: true
+# dnsresolve: true
+# cloudcheck: true
+# url_querystring_remove: true
+# url_querystring_collapse: true
+# url_extension_blacklist:
+# - png
+# - jpg
+# - bmp
+# - ico
+# - jpeg
+# - gif
+# - svg
+# - webp
+# - css
+# - woff
+# - woff2
+# - ttf
+# - eot
+# - sass
+# - scss
+# - mp3
+# - m4a
+# - wav
+# - flac
+# - mp4
+# - mkv
+# - avi
+# - wmv
+# - mov
+# - flv
+# - webm
+# url_extension_special:
+# - js
+# url_extension_static:
+# - pdf
+# - doc
+# - docx
+# - xls
+# - xlsx
+# - ppt
+# - pptx
+# - txt
+# - csv
+# - xml
+# - yaml
+# - ini
+# - log
+# - conf
+# - cfg
+# - env
+# - md
+# - rtf
+# - tiff
+# - bmp
+# - jpg
+# - jpeg
+# - png
+# - gif
+# - svg
+# - ico
+# - mp3
+# - wav
+# - flac
+# - mp4
+# - mov
+# - avi
+# - mkv
+# - webm
+# - zip
+# - tar
+# - gz
+# - bz2
+# - 7z
+# - rar
+# parameter_blacklist:
+# - __VIEWSTATE
+# - __EVENTARGUMENT
+# - __EVENTVALIDATION
+# - __EVENTTARGET
+# - __EVENTARGUMENT
+# - __VIEWSTATEGENERATOR
+# - __SCROLLPOSITIONY
+# - __SCROLLPOSITIONX
+# - ASP.NET_SessionId
+# - PHPSESSID
+# - __cf_bm
+# - f5_cspm
+# parameter_blacklist_prefixes:
+# - TS01
+# - BIGipServer
+# - incap_
+# - visid_incap_
+# - AWSALB
+# - utm_
+# - ApplicationGatewayAffinity
+# - JSESSIONID
+# - ARRAffinity
+# omit_event_types:
+# - HTTP_RESPONSE
+# - RAW_TEXT
+# - URL_UNVERIFIED
+# - DNS_NAME_UNRESOLVED
+# - FILESYSTEM
+# - WEB_PARAMETER
+# - RAW_DNS_RECORD
+# interactsh_server: null
+# interactsh_disable: false
+# modules:
+#   unarchive: {}
+#   dnsresolve: {}
+#   cloudcheck: {}
+#   aggregate: {}
+#   excavate:
+#     yara_max_match_data: 2000
+#     custom_yara_rules: ''
+#     speculate_params: false
+#   speculate:
+#     max_hosts: 65536
+#     ports: 80,443
+#     essential_only: false
+#   lightfuzz:
+#     force_common_headers: false
+#     enabled_submodules:
+#     - sqli
+#     - cmdi
+#     - xss
+#     - path
+#     - ssti
+#     - crypto
+#     - serial
+#     - esi
+#     disable_post: false
+#     try_post_as_get: false
+#     try_get_as_post: false
+#     avoid_wafs: true
+#   mysql:
+#     host: localhost
+#     port: 3306
+#     database: bbot
+#   postgres:
+#     host: localhost
+#     port: 5432
+#     database: bbot
+#   websocket:
+#     url: ''
+#     preserve_graph: true
+#     ignore_ssl: false
+#   csv:
+#     output_file: ''
+#   web_parameters:
+#     output_file: ''
+#     include_count: false
+#   subdomains:
+#     output_file: ''
+#     include_unresolved: false
+#   neo4j:
+#     uri: bolt://localhost:7687
+#   splunk:
+#     url: ''
+#     index: ''
+#     source: ''
+#     timeout: 10
+#   slack:
+#     webhook_url: ''
+#     event_types:
+#     - VULNERABILITY
+#     - FINDING
+#     min_severity: LOW
+#     retries: 10
+#   txt:
+#     output_file: ''
+#   sqlite:
+#     database: ''
+#   python: {}
+#   http:
+#     url: ''
+#     method: POST
+#     bearer: ''
+#     timeout: 10
+#     siem_friendly: false
+#   teams:
+#     webhook_url: ''
+#     event_types:
+#     - VULNERABILITY
+#     - FINDING
+#     min_severity: LOW
+#     retries: 10
+#   json:
+#     output_file: ''
+#     siem_friendly: false
+#   asset_inventory:
+#     output_file: ''
+#     use_previous: false
+#     recheck: false
+#     summary_netmask: 16
+#   discord:
+#     webhook_url: ''
+#     event_types:
+#     - VULNERABILITY
+#     - FINDING
+#     min_severity: LOW
+#     retries: 10
+#   emails:
+#     output_file: ''
+#   nmap_xml: {}
+#   web_report:
+#     output_file: ''
+#     css_theme_file: https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css
+#   stdout:
+#     format: text
+#     event_types: []
+#     event_fields: []
+#     in_scope_only: false
+#     accept_dupes: true
+#   legba:
+#     ssh_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/ssh-betterdefaultpasslist.txt
+#     ftp_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt
+#     telnet_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/telnet-betterdefaultpasslist.txt
+#     vnc_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/vnc-betterdefaultpasslist.txt
+#     mssql_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/mssql-betterdefaultpasslist.txt
+#     mysql_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/mysql-betterdefaultpasslist.txt
+#     postgresql_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Passwords/Default-Credentials/postgres-betterdefaultpasslist.txt
+#     concurrency: 3
+#     rate_limit: 3
+#     version: 1.1.1
+#   bucket_firebase:
+#     permutations: false
+#   paramminer_cookies:
+#     wordlist: ''
+#     recycle_words: false
+#     skip_boring_words: true
+#   code_repository: {}
+#   github_org:
+#     include_members: true
+#     include_member_repos: false
+#   portfilter:
+#     cdn_tags: cdn-
+#     allowed_cdn_ports: 80,443
+#   subdomainradar:
+#     group: fast
+#     timeout: 120
+#   hackertarget: {}
+#   chaos: {}
+#   wayback:
+#     urls: false
+#     garbage_threshold: 10
+#   virustotal: {}
+#   bucket_amazon:
+#     permutations: false
+#   credshed:
+#     credshed_url: ''
+#   git_clone:
+#     output_folder: ''
+#   leakix: {}
+#   dnsbrute_mutations:
+#     max_mutations: 100
+#   fullhunt: {}
+#   gowitness:
+#     version: 3.0.5
+#     threads: 0
+#     timeout: 10
+#     resolution_x: 1440
+#     resolution_y: 900
+#     output_path: ''
+#     social: false
+#     idle_timeout: 1800
+#     chrome_path: ''
+#   portscan:
+#     top_ports: 100
+#     ports: ''
+#     rate: 300
+#     wait: 5
+#     ping_first: false
+#     ping_only: false
+#     adapter: ''
+#     adapter_ip: ''
+#     adapter_mac: ''
+#     router_mac: ''
+#     module_timeout: 259200
+#   github_usersearch: {}
+#   bucket_google:
+#     permutations: false
+#   retirejs:
+#     version: 5.3.0
+#     node_version: 18.19.1
+#     severity: medium
+#   ffuf_shortnames:
+#     wordlist_extensions: ''
+#     max_depth: 1
+#     version: 2.0.0
+#     extensions: ''
+#     ignore_redirects: true
+#     find_common_prefixes: false
+#     find_delimiters: true
+#     find_subwords: false
+#     max_predictions: 250
+#     rate: 0
+#   pgp:
+#     search_urls:
+#     - https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=vindex&search=<query>
+#     - http://the.earth.li:11371/pks/lookup?fingerprint=on&op=vindex&search=<query>
+#     - https://pgpkeys.eu/pks/lookup?search=<query>&op=index
+#     - https://pgp.mit.edu/pks/lookup?search=<query>&op=index
+#   bucket_digitalocean:
+#     permutations: false
+#   sitedossier: {}
+#   bypass403: {}
+#   filedownload:
+#     extensions:
+#     - bak
+#     - bash
+#     - bashrc
+#     - cfg
+#     - conf
+#     - crt
+#     - csv
+#     - db
+#     - dll
+#     - doc
+#     - docx
+#     - exe
+#     - ica
+#     - indd
+#     - ini
+#     - jar
+#     - json
+#     - key
+#     - log
+#     - markdown
+#     - md
+#     - msi
+#     - odg
+#     - odp
+#     - ods
+#     - odt
+#     - pdf
+#     - pem
+#     - pps
+#     - ppsx
+#     - ppt
+#     - pptx
+#     - ps1
+#     - pub
+#     - raw
+#     - rdp
+#     - rsa
+#     - sh
+#     - sql
+#     - sqlite
+#     - swp
+#     - sxw
+#     - tar.gz
+#     - tgz
+#     - tar
+#     - txt
+#     - vbs
+#     - war
+#     - wpd
+#     - xls
+#     - xlsx
+#     - xml
+#     - yaml
+#     - yml
+#     - zip
+#     - lzma
+#     - rar
+#     - 7z
+#     - xz
+#     - bz2
+#     max_filesize: 10MB
+#     output_folder: ''
+#   myssl: {}
+#   c99: {}
+#   apkpure:
+#     output_folder: ''
+#   ajaxpro: {}
+#   subdomaincenter: {}
+#   digitorus: {}
+#   robots:
+#     include_sitemap: false
+#     include_allow: true
+#     include_disallow: true
+#   telerik:
+#     exploit_RAU_crypto: false
+#     include_subdirs: false
+#   sslcert:
+#     timeout: 5.0
+#     skip_non_ssl: true
+#   crt: {}
+#   dehashed: {}
+#   reflected_parameters: {}
+#   ntlm:
+#     try_all: false
+#   dnstlsrpt:
+#     emit_emails: true
+#     emit_raw_dns_records: false
+#     emit_urls: true
+#   builtwith:
+#     redirects: true
+#   shodan_idb:
+#     retries: null
+#   postman: {}
+#   oauth:
+#     try_all: false
+#   baddns_zone:
+#     custom_nameservers: []
+#     only_high_confidence: false
+#   baddns_direct:
+#     custom_nameservers: []
+#   smuggler: {}
+#   social: {}
+#   ip2location:
+#     lang: ''
+#   anubisdb:
+#     limit: 1000
+#   emailformat: {}
+#   trufflehog:
+#     version: 3.90.8
+#     config: ''
+#     only_verified: true
+#     concurrency: 8
+#     deleted_forks: false
+#   viewdns: {}
+#   paramminer_headers:
+#     wordlist: ''
+#     recycle_words: false
+#     skip_boring_words: true
+#   url_manipulation:
+#     allow_redirects: true
+#   postman_download:
+#     output_folder: ''
+#   azure_tenant: {}
+#   dnsdumpster: {}
+#   ipneighbor:
+#     num_bits: 4
+#   bucket_microsoft:
+#     permutations: false
+#   jadx:
+#     threads: 4
+#   httpx:
+#     threads: 50
+#     in_scope_only: true
+#     version: 1.2.5
+#     max_response_size: 5242880
+#     store_responses: false
+#     probe_all_ips: false
+#   nuclei:
+#     version: 3.7.1
+#     tags: ''
+#     templates: ''
+#     severity: ''
+#     ratelimit: 150
+#     concurrency: 25
+#     mode: manual
+#     etags: ''
+#     budget: 1
+#     silent: false
+#     directory_only: true
+#     retries: 0
+#     batch_size: 200
+#     module_timeout: 21600
+#   iis_shortnames:
+#     detect_only: true
+#     max_node_count: 50
+#     speculate_magic_urls: true
+#   git: {}
+#   aspnet_bin_exposure: {}
+#   paramminer_getparams:
+#     wordlist: ''
+#     recycle_words: false
+#     skip_boring_words: true
+#   bucket_file_enum:
+#     file_limit: 50
+#   fingerprintx:
+#     version: 1.1.4
+#     skip_common_web: true
+#   dnsbimi:
+#     emit_raw_dns_records: false
+#     emit_urls: true
+#     selectors: default,email,mail,bimi
+#   gitlab_onprem: {}
+#   ffuf:
+#     wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/raft-small-directories.txt
+#     lines: 5000
+#     max_depth: 0
+#     extensions: ''
+#     ignore_case: false
+#     rate: 0
+#   ipstack: {}
+#   bufferoverrun:
+#     commercial: false
+#   censys_dns:
+#     max_pages: 5
+#   securitytrails: {}
+#   passivetotal: {}
+#   skymem: {}
+#   azure_realm: {}
+#   graphql_introspection:
+#     graphql_endpoint_urls:
+#     - /
+#     - /graphql
+#     - /v1/graphql
+#     output_folder: ''
+#   dockerhub: {}
+#   gitlab_com: {}
+#   certspotter: {}
+#   hunt: {}
+#   badsecrets: {}
+#   crt_db: {}
+#   google_playstore: {}
+#   dnscommonsrv:
+#     max_depth: 2
+#   dnsbrute:
+#     wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt
+#     max_depth: 5
+#   vhost:
+#     wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt
+#     force_basehost: ''
+#     lines: 5000
+#   trickest: {}
+#   wafw00f:
+#     generic_detect: true
+#   docker_pull:
+#     all_tags: false
+#     output_folder: ''
+#   otx: {}
+#   github_codesearch:
+#     limit: 100
+#   newsletters: {}
+#   gitdumper:
+#     output_folder: ''
+#     fuzz_tags: false
+#     max_semanic_version: 10
+#   medusa:
+#     snmp_wordlist: https://raw.githubusercontent.com/danielmiessler/SecLists/refs/heads/master/Discovery/SNMP/common-snmp-community-strings.txt
+#     snmp_versions:
+#     - '1'
+#     - 2C
+#     wait_microseconds: 200
+#     timeout_s: 5
+#     threads: 5
+#   dotnetnuke: {}
+#   generic_ssrf:
+#     skip_dns_interaction: false
+#   wpscan:
+#     enumerate: vp,vt,cb,dbe
+#     threads: 5
+#     request_timeout: 5
+#     connection_timeout: 2
+#     disable_tls_checks: true
+#     force: false
+#   extractous:
+#     extensions:
+#     - bak
+#     - bash
+#     - bashrc
+#     - conf
+#     - cfg
+#     - crt
+#     - csv
+#     - db
+#     - sqlite
+#     - doc
+#     - docx
+#     - ica
+#     - indd
+#     - ini
+#     - json
+#     - key
+#     - pub
+#     - log
+#     - markdown
+#     - md
+#     - odg
+#     - odp
+#     - ods
+#     - odt
+#     - pdf
+#     - pem
+#     - pps
+#     - ppsx
+#     - ppt
+#     - pptx
+#     - ps1
+#     - rdp
+#     - rsa
+#     - sh
+#     - sql
+#     - swp
+#     - sxw
+#     - txt
+#     - vbs
+#     - wpd
+#     - xls
+#     - xlsx
+#     - xml
+#     - yml
+#     - yaml
+#   github_workflows:
+#     num_logs: 1
+#     output_folder: ''
+#   censys_ip:
+#     dns_names_limit: 100
+#     in_scope_only: true
+#   host_header: {}
+#   rapiddns: {}
+#   urlscan:
+#     urls: false
+#   baddns:
+#     custom_nameservers: []
+#     only_high_confidence: false
+#     enabled_submodules: []
+#   hunterio: {}
+#   securitytxt:
+#     emails: true
+#     urls: true
+#   dnscaa:
+#     in_scope_only: true
+#     dns_names: true
+#     emails: true
+#     urls: true
+#   shodan_dns: {}
+#   bevigil:
+#     urls: false
+#   asn: {}
+#   affiliates: {}

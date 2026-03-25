@@ -150,8 +150,9 @@ const deployWorkflow = async (workspaceDir, cfg, engId, deployId) => {
   const flush = async (status, extra = {}) => {
     try {
       const setFields = {
-        'c2Deployments.$.status': status,
-        'c2Deployments.$.output': liveBuffers[deployId] || '',
+        'c2Deployments.$.status':    status,
+        'c2Deployments.$.output':    liveBuffers[deployId] || '',
+        'c2Deployments.$.updatedAt': new Date(),
       };
       Object.entries(extra).forEach(([k, v]) => { setFields[`c2Deployments.$.${k}`] = v; });
       await Engagement.findOneAndUpdate(
@@ -222,8 +223,9 @@ const destroyWorkflow = async (workspaceDir, config, engId, deployId) => {
       await Engagement.findOneAndUpdate(
         { _id: engId, 'c2Deployments._id': deployId },
         { $set: {
-          'c2Deployments.$.status': status,
-          'c2Deployments.$.output': liveBuffers[deployId] || '',
+          'c2Deployments.$.status':    status,
+          'c2Deployments.$.output':    liveBuffers[deployId] || '',
+          'c2Deployments.$.updatedAt': new Date(),
         }}
       );
     } catch (e) { console.error('[c2] db flush error:', e.message); }
@@ -366,6 +368,7 @@ exports.getStatus = async (req, res) => {
     res.json({
       status:    deployment.status,
       ipAddress: deployment.ipAddress,
+      updatedAt: deployment.updatedAt,
       output,
     });
   } catch (err) {

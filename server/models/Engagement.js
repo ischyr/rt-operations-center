@@ -89,6 +89,31 @@ const personaSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const subdomainScanSchema = new mongoose.Schema(
+  {
+    domain:     { type: String, required: true },
+    status:     { type: String, enum: ['running', 'completed', 'partial', 'failed'], default: 'running' },
+    toolsUsed:  [{ type: String }],
+    results:    { type: mongoose.Schema.Types.Mixed, default: { subfinder: [], amass: [], bbot: [] } },
+    totalUnique: [{ type: String }],
+    toolStatus:  { type: mongoose.Schema.Types.Mixed, default: {} },
+    errors:      { type: mongoose.Schema.Types.Mixed, default: {} },
+    scannedBy:         { type: String, default: '' },
+    scannedByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
+const leakxScanSchema = new mongoose.Schema(
+  {
+    domain:            { type: String, required: true },
+    data:              { type: mongoose.Schema.Types.Mixed, default: {} },
+    scannedBy:         { type: String, default: '' },
+    scannedByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const c2DeploymentSchema = new mongoose.Schema(
   {
     template:          { type: String, default: 'digitalocean-droplet' },
@@ -174,6 +199,10 @@ const engagementSchema = new mongoose.Schema(
     ttxPhases:       [ttxPhaseSchema],
     c2Deployments:   [c2DeploymentSchema],
     c2Config:        { type: mongoose.Schema.Types.Mixed, default: {} },
+    leakxScans:       [leakxScanSchema],
+    leakxConfig:      { type: mongoose.Schema.Types.Mixed, default: {} },
+    subdomainScans:   [subdomainScanSchema],
+    subdomainConfig:  { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );
