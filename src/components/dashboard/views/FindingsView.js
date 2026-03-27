@@ -122,7 +122,7 @@ const FindingsView = () => {
   const counts = findings.reduce((acc, f) => { acc[f.severity] = (acc[f.severity] || 0) + 1; return acc; }, {});
 
   return (
-    <Box pb={8}>
+    <Box px={6} pb={8}>
       {/* Header */}
       <Flex justify="space-between" align="flex-start" mb={6}>
         <Box>

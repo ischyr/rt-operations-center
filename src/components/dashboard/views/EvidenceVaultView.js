@@ -425,15 +425,11 @@ const EvidenceVaultView = () => {
       <Flex align="center" justify="space-between" px={6} py={4} flexShrink={0}
         borderBottom="1px solid var(--dash-card-border)">
         <Box>
-          <Flex align="center" gap={2}>
-            {/* teal accent strip — visually differentiates from loot tracker */}
-            <Box w="3px" h="22px" borderRadius="full" bg={ACCENT} flexShrink={0} />
-            <Heading size="sm" color="var(--dash-text-primary)" fontWeight="bold">
-              Evidence Vault
-            </Heading>
-          </Flex>
-          <Text fontSize="xs" color="var(--dash-text-muted)" mt={0.5} pl="11px">
-            {evidence.length} record{evidence.length !== 1 ? 's' : ''} logged
+          <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
+            Evidence <Text as="span" color={ACCENT}>Vault</Text>
+          </Heading>
+          <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
+            {eng.name} · log command outputs, screenshots and operational evidence
           </Text>
         </Box>
         <Button

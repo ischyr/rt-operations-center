@@ -419,7 +419,7 @@ const TTXPlannerView = () => {
   const progress = phases.length > 0 ? Math.round((done / phases.length) * 100) : 0;
 
   return (
-    <Box pb={12}>
+    <Box px={6} pb={12}>
 
       {/* Header */}
       <Flex justify="space-between" align="flex-start" mb={6} flexWrap="wrap" gap={3}>

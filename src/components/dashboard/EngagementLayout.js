@@ -16,6 +16,7 @@ import PersonasView from './views/PersonasView';
 import C2View from './views/C2View';
 import LootTrackerView from './views/LootTrackerView';
 import EvidenceVaultView from './views/EvidenceVaultView';
+import CleanupTrackerView from './views/CleanupTrackerView';
 import SubdomainsView from './views/SubdomainsView';
 import PlaceholderView from './views/PlaceholderView';
 
@@ -64,7 +65,7 @@ const EngagementLayout = () => {
       {/* Intelligence */}
       <Route path="intelligence/loot-tracker"    element={<LootTrackerView />} />
       <Route path="intelligence/evidence-vault"  element={<EvidenceVaultView />} />
-      <Route path="intelligence/cleanup-tracker" element={<PlaceholderView title="Cleanup Tracker" />} />
+      <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PlaceholderView title="Phishing Infrastructure" />} />
 

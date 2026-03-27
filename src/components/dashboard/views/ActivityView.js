@@ -72,7 +72,7 @@ const ActivityView = () => {
   const groups = groupByDay(filtered);
 
   return (
-    <Box pb={8}>
+    <Box px={6} pb={8}>
       {/* Header */}
       <Flex justify="space-between" align="flex-start" mb={6} flexWrap="wrap" gap={3}>
         <Box>

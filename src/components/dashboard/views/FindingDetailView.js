@@ -142,7 +142,7 @@ const FindingDetailView = () => {
 
   return (
     <MotionBox
-      pb={8}
+      px={6} pb={8}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}

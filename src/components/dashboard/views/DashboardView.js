@@ -97,11 +97,11 @@ const DashboardView = () => {
       </SimpleGrid>
 
       {/* Main grid */}
-      <Grid templateColumns={{ base: '1fr', xl: '1fr 320px' }} gap={4} mb={4}>
+      <Grid templateColumns={{ base: '1fr', xl: '1fr 320px' }} gap={4} mb={4} alignItems="stretch">
         <ActiveEngagements />
-        <Flex direction="column" gap={4}>
+        <Flex direction="column" gap={4} h="100%">
           <FindingsBreakdown />
-          <ResourceUtilization />
+          <ResourceUtilization flex={1} minH={0} />
         </Flex>
       </Grid>
 

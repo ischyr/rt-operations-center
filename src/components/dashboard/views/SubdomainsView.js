@@ -750,7 +750,7 @@ const SubdomainsView = () => {
   if (!eng) return null;
 
   return (
-    <Box pb={10}>
+    <Box px={6} pb={10}>
       {/* Header */}
       <Flex justify="space-between" align="center" mb={5}>
         <Box>

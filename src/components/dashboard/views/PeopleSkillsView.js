@@ -115,7 +115,7 @@ const PeopleSkillsView = () => {
   };
 
   return (
-    <Box pb={8}>
+    <Box px={6} pb={8}>
       <Flex justify="space-between" align="flex-start" mb={6}>
         <Box>
           <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)">

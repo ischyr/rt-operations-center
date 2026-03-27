@@ -1,7 +1,8 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { StarIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../../../contexts/EngagementContext';
+
+const ACCENT = 'rgba(236,201,75,0.85)';
 
 const TeamSkillCoverage = () => {
   const { dashboardStats } = useEngagements();
@@ -9,13 +10,20 @@ const TeamSkillCoverage = () => {
   const { teamSkills } = dashboardStats;
 
   return (
-    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}
+    <Box
+      pos="relative"
+      bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+      borderRadius="14px" p={5} overflow="hidden"
       transition="transform 0.22s ease, box-shadow 0.22s ease"
-      _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+      _hover={{ transform: 'translateY(-4px)', boxShadow: `0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${ACCENT}20` }}
     >
+      <Box pos="absolute" top="0" left="0" right="0" h="2px"
+        style={{ background: `linear-gradient(to right, transparent, ${ACCENT}, transparent)` }} />
+
       <Flex align="center" gap={2} mb={5}>
-        <StarIcon boxSize={3} color="red.400" />
-        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
+        <Box w="3px" h="14px" borderRadius="full" bg={ACCENT} flexShrink={0} />
+        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-text-muted)" textTransform="uppercase">
           Team Skill Coverage
         </Text>
       </Flex>
@@ -26,7 +34,7 @@ const TeamSkillCoverage = () => {
             No skills tracked yet.
           </Text>
           <Text
-            fontSize="11px" color="red.400" cursor="pointer" mt={1}
+            fontSize="11px" color="rgba(236,201,75,0.8)" cursor="pointer" mt={1}
             _hover={{ textDecoration: 'underline' }}
             onClick={() => navigate('/dashboard/engagements')}
           >
@@ -66,7 +74,7 @@ const TeamSkillCoverage = () => {
       {teamSkills.length > 5 && (
         <Text
           fontSize="11px" color="var(--dash-text-muted)" textAlign="center" mt={2}
-          cursor="pointer" _hover={{ color: 'red.400' }} transition="color 0.15s"
+          cursor="pointer" _hover={{ color: 'rgba(236,201,75,0.9)' }} transition="color 0.15s"
           onClick={() => navigate('/dashboard/engagements')}
         >
           +{teamSkills.length - 5} more skills — view in People & Skills

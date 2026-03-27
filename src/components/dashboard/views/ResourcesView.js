@@ -122,7 +122,7 @@ const ResourcesView = () => {
   };
 
   return (
-    <Box pb={8}>
+    <Box px={6} pb={8}>
       {/* Header */}
       <Flex justify="space-between" align="center" mb={6}>
         <Box>

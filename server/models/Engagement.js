@@ -177,6 +177,29 @@ const evidenceSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const cleanupSchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    artifactType: {
+      type:    String,
+      enum:    ['File', 'Registry', 'Process', 'Network', 'Credential', 'Service', 'Script', 'Other'],
+      default: 'File',
+    },
+    path:               { type: String, default: '' },
+    commands:           { type: String, default: '' },
+    beforeProof:        { type: String, default: '' },
+    afterProof:         { type: String, default: '' },
+    beforeImages:       [{ type: String }],
+    afterImages:        [{ type: String }],
+    notes:              { type: String, default: '' },
+    tags:               [{ type: String }],
+    status:             { type: String, enum: ['Pending', 'Cleaned'], default: 'Pending' },
+    cleanedBy:          { type: String, default: '' },
+    cleanedByCallsign:  { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const lootSchema = new mongoose.Schema(
   {
     title:              { type: String, required: true, trim: true },
@@ -240,6 +263,7 @@ const engagementSchema = new mongoose.Schema(
     subdomainConfig:  { type: mongoose.Schema.Types.Mixed, default: {} },
     loot:             [lootSchema],
     evidence:         [evidenceSchema],
+    cleanup:          [cleanupSchema],
   },
   { timestamps: true }
 );

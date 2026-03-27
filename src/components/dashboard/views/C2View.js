@@ -774,7 +774,7 @@ const C2View = () => {
   const activeCount  = deployments.filter(d => ACTIVE_STATUSES.includes(d.status)).length;
 
   return (
-    <Box pb={10}>
+    <Box px={6} pb={10}>
       {/* Header */}
       <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={3}>
         <Box>

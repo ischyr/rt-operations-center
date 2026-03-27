@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Box, Flex, Text, IconButton } from '@chakra-ui/react';
-import { WarningIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
+
+const ACCENT = 'rgba(255,80,95,0.85)';
 
 const PAGE_SIZE = 3;
 const MotionFlex = motion(Flex);
@@ -128,17 +130,24 @@ const ActiveEngagements = () => {
 
   const goTo = (newPage) => setPage(newPage);
 
-  // Fixed slot height: 3 cards × 160px + 2 gaps × 12px = 504px
   const CARDS_H = '504px';
 
   return (
-    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}
+    <Box
+      pos="relative"
+      bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+      borderRadius="14px" p={5} overflow="hidden"
       transition="transform 0.22s ease, box-shadow 0.22s ease"
-      _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+      _hover={{ transform: 'translateY(-4px)', boxShadow: `0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${ACCENT}20` }}
     >
+      {/* Gradient accent line */}
+      <Box pos="absolute" top="0" left="0" right="0" h="2px"
+        style={{ background: `linear-gradient(to right, transparent, ${ACCENT}, transparent)` }} />
+
       <Flex align="center" gap={2} mb={5}>
-        <WarningIcon boxSize={3} color="red.500" />
-        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
+        <Box w="3px" h="14px" borderRadius="full" bg={ACCENT} flexShrink={0} />
+        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-text-muted)" textTransform="uppercase">
           Active Engagements
         </Text>
         {activeEngagements.length > 0 && (
@@ -149,7 +158,6 @@ const ActiveEngagements = () => {
         )}
       </Flex>
 
-      {/* Fixed-height card slot — always sized for 3 cards */}
       <Box h={CARDS_H} overflow="hidden">
         {loading ? (
           <Flex h="100%" align="center" justify="center">
@@ -178,7 +186,6 @@ const ActiveEngagements = () => {
         )}
       </Box>
 
-      {/* Pagination — always directly below the card slot */}
       {totalPages > 1 && (
         <Flex align="center" justify="center" gap={3} mt={4}>
           <IconButton

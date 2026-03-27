@@ -341,14 +341,11 @@ const LootTrackerView = () => {
       <Flex align="center" justify="space-between" px={6} py={4} flexShrink={0}
         borderBottom="1px solid var(--dash-card-border)">
         <Box>
-          <Flex align="center" gap={2}>
-            <Box w="3px" h="22px" borderRadius="full" bg="rgba(255,80,95,0.9)" flexShrink={0} />
-            <Heading size="sm" color="var(--dash-text-primary)" fontWeight="bold">
-              Loot Tracker
-            </Heading>
-          </Flex>
-          <Text fontSize="xs" color="var(--dash-text-muted)" mt={0.5} pl="11px">
-            {loot.length} item{loot.length !== 1 ? 's' : ''} captured
+          <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
+            Loot <Text as="span" color="rgba(255,80,95,0.9)">Tracker</Text>
+          </Heading>
+          <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
+            {eng.name} · captured credentials, hashes, keys and sensitive data
           </Text>
         </Box>
         <Button

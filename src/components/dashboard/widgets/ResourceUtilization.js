@@ -1,32 +1,42 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { LinkIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { useEngagements } from '../../../contexts/EngagementContext';
 
-const ResourceUtilization = () => {
+const ACCENT = 'rgba(79,209,197,0.85)';
+
+const ResourceUtilization = ({ ...rest }) => {
   const { dashboardStats } = useEngagements();
   const navigate = useNavigate();
   const { resources } = dashboardStats;
 
   return (
-    <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="12px" p={5}
+    <Box
+      pos="relative"
+      bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+      borderRadius="14px" p={5} overflow="hidden"
+      display="flex" flexDirection="column"
       transition="transform 0.22s ease, box-shadow 0.22s ease"
-      _hover={{ transform: 'translateY(-4px)', boxShadow: '0 8px 28px rgba(0,0,0,0.4)' }}
+      _hover={{ transform: 'translateY(-4px)', boxShadow: `0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px ${ACCENT}20` }}
+      {...rest}
     >
+      <Box pos="absolute" top="0" left="0" right="0" h="2px"
+        style={{ background: `linear-gradient(to right, transparent, ${ACCENT}, transparent)` }} />
+
       <Flex align="center" gap={2} mb={5}>
-        <LinkIcon boxSize={3} color="red.400" />
-        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest" color="var(--dash-text-muted)" textTransform="uppercase">
+        <Box w="3px" h="14px" borderRadius="full" bg={ACCENT} flexShrink={0} />
+        <Text fontSize="11px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-text-muted)" textTransform="uppercase">
           Resource Utilization
         </Text>
       </Flex>
 
       {resources.length === 0 ? (
-        <Flex direction="column" align="center" py={4} gap={1}>
+        <Flex direction="column" align="center" justify="center" flex={1} gap={1}>
           <Text fontSize="sm" color="var(--dash-text-muted)" textAlign="center">
             No resources tracked yet.
           </Text>
           <Text
-            fontSize="11px" color="red.400" cursor="pointer" mt={1}
+            fontSize="11px" color="rgba(79,209,197,0.8)" cursor="pointer" mt={1}
             _hover={{ textDecoration: 'underline' }}
             onClick={() => navigate('/dashboard/engagements')}
           >
@@ -35,7 +45,7 @@ const ResourceUtilization = () => {
         </Flex>
       ) : (
         <>
-          <Flex direction="column" gap={3}>
+          <Flex direction="column" gap={3} flex={1}>
             {[...resources]
               .sort((a, b) => (b.total > 0 ? b.used / b.total : 0) - (a.total > 0 ? a.used / a.total : 0))
               .slice(0, 5)
