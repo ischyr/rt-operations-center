@@ -60,6 +60,7 @@ const engagementNav = [
       { key: 'operations/calendar',       label: 'Calendar',           icon: CalendarIcon     },
       { key: 'operations/skill-requests', label: 'Skill Requests',     icon: StarIcon         },
       { key: 'operations/ttx',            label: 'TTX Planner',        icon: EditIcon         },
+      { key: 'operations/team-vault',     label: 'Team Vault',         icon: LockIcon         },
     ],
   },
   {

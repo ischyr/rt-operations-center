@@ -200,6 +200,27 @@ const cleanupSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const vaultEntrySchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    category: {
+      type: String,
+      enum: ['Login', 'Server', 'API Key', 'SSH Key', 'Certificate', 'Wi-Fi', 'Database', 'Note', 'Other'],
+      default: 'Login',
+    },
+    username:           { type: String, default: '' },
+    password:           { type: String, default: '' },
+    url:                { type: String, default: '' },
+    notes:              { type: String, default: '' },
+    customFields:       [{ label: { type: String }, value: { type: String }, hidden: { type: Boolean, default: true } }],
+    tags:               [{ type: String }],
+    favorite:           { type: Boolean, default: false },
+    createdBy:          { type: String, default: '' },
+    createdByCallsign:  { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const lootSchema = new mongoose.Schema(
   {
     title:              { type: String, required: true, trim: true },
@@ -261,6 +282,7 @@ const engagementSchema = new mongoose.Schema(
     leakxConfig:      { type: mongoose.Schema.Types.Mixed, default: {} },
     subdomainScans:   [subdomainScanSchema],
     subdomainConfig:  { type: mongoose.Schema.Types.Mixed, default: {} },
+    vault:            [vaultEntrySchema],
     loot:             [lootSchema],
     evidence:         [evidenceSchema],
     cleanup:          [cleanupSchema],

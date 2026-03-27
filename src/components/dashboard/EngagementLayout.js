@@ -18,6 +18,7 @@ import LootTrackerView from './views/LootTrackerView';
 import EvidenceVaultView from './views/EvidenceVaultView';
 import CleanupTrackerView from './views/CleanupTrackerView';
 import SubdomainsView from './views/SubdomainsView';
+import TeamVaultView from './views/TeamVaultView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -57,6 +58,7 @@ const EngagementLayout = () => {
       <Route path="operations/calendar"       element={<CalendarView />} />
       <Route path="operations/skill-requests" element={<SkillRequestsView />} />
       <Route path="operations/ttx"            element={<TTXPlannerView />} />
+      <Route path="operations/team-vault"     element={<TeamVaultView />} />
 
       {/* Team */}
       <Route path="team/people"    element={<PeopleSkillsView />} />
