@@ -1,0 +1,857 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
+import {
+  Box, Flex, Text, Heading, Input, InputGroup, InputLeftElement,
+  InputRightElement, IconButton, Spinner, SimpleGrid, Button,
+  Tooltip, Badge, Tag, TagLabel, Divider,
+} from '@chakra-ui/react';
+import {
+  SearchIcon, CloseIcon, LockIcon, UnlockIcon, WarningTwoIcon,
+  CheckIcon, RepeatIcon, DeleteIcon, TimeIcon, InfoIcon, SettingsIcon,
+  EmailIcon, ExternalLinkIcon,
+} from '@chakra-ui/icons';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const MotionBox = motion(Box);
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const authHeaders = (json = true) => {
+  const h = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+};
+
+const ACCENT = '#9F7AEA';
+const RED    = '#FC8181';
+const GREEN  = '#68D391';
+const BLUE   = '#63B3ED';
+const ORANGE = '#F6AD55';
+
+const fmtDate = (iso) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const fmtRelative = (iso) => {
+  if (!iso) return '';
+  const diff  = Date.now() - new Date(iso);
+  const mins  = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days  = Math.floor(diff / 86400000);
+  if (mins < 1)   return 'just now';
+  if (mins < 60)  return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+};
+
+const fmtNum = (n) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M`
+  : n >= 1_000   ? `${(n / 1_000).toFixed(0)}K`
+  : String(n);
+
+// ── Plan disclaimer banner ────────────────────────────────────────────────────
+
+const PlanBanner = () => (
+  <Box mb={5} px={4} py={3} borderRadius="10px"
+    bg="rgba(99,179,237,0.07)" border="1px solid rgba(99,179,237,0.25)">
+    <Flex align="center" gap={2} mb={2}>
+      <InfoIcon boxSize={3} color={BLUE} />
+      <Text fontSize="10px" fontWeight="bold" color={BLUE} textTransform="uppercase" letterSpacing="wider">
+        Plan Features
+      </Text>
+    </Flex>
+    <Flex gap={4} flexWrap="wrap">
+      {[
+        'Up to 25 breached addresses per domain',
+        '10 address searches per minute',
+        'Results cached for 30 days',
+      ].map((t) => (
+        <Flex key={t} align="center" gap={1.5}>
+          <Box w="4px" h="4px" borderRadius="full" bg={BLUE} flexShrink={0} />
+          <Text fontSize="11px" color="var(--dash-text-secondary)">{t}</Text>
+        </Flex>
+      ))}
+    </Flex>
+  </Box>
+);
+
+// ── API Key section ───────────────────────────────────────────────────────────
+
+const ApiKeySection = ({ onKeySaved }) => {
+  const [open,    setOpen]    = useState(false);
+  const [keyVal,  setKeyVal]  = useState('');
+  const [masked,  setMasked]  = useState(null);
+  const [configured, setConfigured] = useState(false);
+  const [saving,  setSaving]  = useState(false);
+  const [err,     setErr]     = useState(null);
+  const [ok,      setOk]      = useState(false);
+
+  const loadStatus = useCallback(async () => {
+    try {
+      const res  = await fetch(`${API}/emailleaks/apikey`, { headers: authHeaders(false) });
+      const data = await res.json();
+      if (res.ok) {
+        setConfigured(data.configured);
+        setMasked(data.masked);
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { loadStatus(); }, [loadStatus]);
+
+  const handleSave = async () => {
+    if (!keyVal.trim()) return;
+    setSaving(true);
+    setErr(null);
+    setOk(false);
+    try {
+      const res  = await fetch(`${API}/emailleaks/apikey`, {
+        method: 'POST', headers: authHeaders(true),
+        body: JSON.stringify({ key: keyVal.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setOk(true);
+      setKeyVal('');
+      setOpen(false);
+      await loadStatus();
+      onKeySaved?.();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Box mb={5} px={4} py={3} borderRadius="10px"
+      bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)">
+      <Flex align="center" justify="space-between" gap={3}>
+        <Flex align="center" gap={2}>
+          <SettingsIcon boxSize={3} color={ACCENT} />
+          <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)"
+            textTransform="uppercase" letterSpacing="wider">
+            HIBP API Key
+          </Text>
+          {configured ? (
+            <Flex align="center" gap={1} px={2} py="1px" borderRadius="4px"
+              bg="rgba(104,211,145,0.1)" border="1px solid rgba(104,211,145,0.3)">
+              <CheckIcon boxSize={2.5} color={GREEN} />
+              <Text fontSize="9px" fontWeight="bold" color={GREEN}>CONFIGURED</Text>
+            </Flex>
+          ) : (
+            <Flex align="center" gap={1} px={2} py="1px" borderRadius="4px"
+              bg="rgba(252,129,129,0.1)" border="1px solid rgba(252,129,129,0.3)">
+              <WarningTwoIcon boxSize={2.5} color={RED} />
+              <Text fontSize="9px" fontWeight="bold" color={RED}>NOT SET</Text>
+            </Flex>
+          )}
+          {configured && masked && (
+            <Text fontSize="11px" color="var(--dash-text-muted)" fontFamily="mono">{masked}</Text>
+          )}
+        </Flex>
+        <Button size="xs" variant="ghost" color={ACCENT} borderRadius="6px"
+          border={`1px solid ${ACCENT}40`} _hover={{ bg: `${ACCENT}15` }}
+          onClick={() => { setOpen((p) => !p); setErr(null); setOk(false); }}>
+          {open ? 'Cancel' : configured ? 'Update Key' : 'Set Key'}
+        </Button>
+      </Flex>
+
+      <AnimatePresence>
+        {open && (
+          <MotionBox
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }} overflow="hidden">
+            <Flex mt={3} gap={2}>
+              <Input
+                value={keyVal}
+                onChange={(e) => setKeyVal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+                placeholder="Paste your HIBP API key…"
+                type="password"
+                size="sm" borderRadius="8px" fontFamily="mono" fontSize="12px"
+                bg="rgba(0,0,0,0.2)" borderColor="var(--dash-card-border)"
+                _placeholder={{ color: 'var(--dash-text-muted)' }}
+                _focus={{ borderColor: ACCENT, boxShadow: `0 0 0 1px ${ACCENT}55` }}
+              />
+              <Button size="sm" borderRadius="8px" px={4} flexShrink={0}
+                bg={`${ACCENT}20`} color={ACCENT} border={`1px solid ${ACCENT}50`}
+                _hover={{ bg: `${ACCENT}35` }} fontWeight="bold" fontSize="12px"
+                isLoading={saving} loadingText="Saving…"
+                onClick={handleSave}>
+                Save
+              </Button>
+            </Flex>
+            {err && (
+              <Text fontSize="11px" color={RED} mt={1.5}>{err}</Text>
+            )}
+            {ok && (
+              <Text fontSize="11px" color={GREEN} mt={1.5}>API key saved successfully.</Text>
+            )}
+          </MotionBox>
+        )}
+      </AnimatePresence>
+    </Box>
+  );
+};
+
+// ── Search type toggle ────────────────────────────────────────────────────────
+
+const TypeToggle = ({ value, onChange }) => (
+  <>
+    <Flex mb={value === 'domain' ? 3 : 4} gap={2}>
+      {['account', 'domain'].map((t) => {
+        const active = value === t;
+        return (
+          <Button key={t} size="sm" borderRadius="8px" px={4}
+            fontWeight="bold" fontSize="12px" textTransform="capitalize"
+            bg={active ? `${ACCENT}25` : 'transparent'}
+            color={active ? ACCENT : 'var(--dash-text-muted)'}
+            border={active ? `1px solid ${ACCENT}60` : '1px solid var(--dash-card-border)'}
+            _hover={{ bg: active ? `${ACCENT}35` : 'rgba(255,255,255,0.05)' }}
+            onClick={() => onChange(t)}>
+            {t === 'account' ? <><EmailIcon boxSize={3} mr={1.5} />Account (Email)</> : <><ExternalLinkIcon boxSize={3} mr={1.5} />Domain</>}
+          </Button>
+        );
+      })}
+    </Flex>
+    {value === 'domain' && (
+      <Box mb={4} px={4} py={3} borderRadius="10px"
+        bg="rgba(246,173,85,0.07)" border="1px solid rgba(246,173,85,0.25)">
+        <Flex align="flex-start" gap={2}>
+          <WarningTwoIcon boxSize={3} color={ORANGE} mt="2px" flexShrink={0} />
+          <Box>
+            <Text fontSize="11px" fontWeight="bold" color={ORANGE} mb={0.5}>
+              Domain ownership required
+            </Text>
+            <Text fontSize="11px" color="var(--dash-text-secondary)" lineHeight="short">
+              HIBP only allows domain searches for domains you own and have verified.
+              Go to <Text as="span" fontFamily="mono" color={ORANGE}>haveibeenpwned.com/DomainSearch</Text> to
+              add and verify your domain before searching.
+            </Text>
+          </Box>
+        </Flex>
+      </Box>
+    )}
+  </>
+);
+
+// ── Status banner ─────────────────────────────────────────────────────────────
+
+const StatusBanner = ({ found, query, type, total, fromCache, cachedAt, onRescan, rescanning }) => {
+  const color  = found ? RED   : GREEN;
+  const bgRgba = found ? 'rgba(252,129,129,0.08)' : 'rgba(104,211,145,0.08)';
+  const border = found ? 'rgba(252,129,129,0.35)' : 'rgba(104,211,145,0.3)';
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      px={5} py={4} borderRadius="14px" mb={5}
+      bg={bgRgba} border={`1px solid ${border}`}
+      pos="relative" overflow="hidden">
+      <Box pos="absolute" top={0} left={0} right={0} h="2px"
+        style={{ background: `linear-gradient(to right, transparent, ${color}80, transparent)` }} />
+
+      <Flex align="center" gap={4} justify="space-between" flexWrap="wrap">
+        <Flex align="center" gap={3}>
+          <Flex w="42px" h="42px" borderRadius="10px" flexShrink={0}
+            bg={`${color}18`} border={`1px solid ${color}40`}
+            align="center" justify="center">
+            {found ? <UnlockIcon boxSize={4} color={color} /> : <CheckIcon boxSize={4} color={color} />}
+          </Flex>
+          <Box>
+            <Flex align="center" gap={2} flexWrap="wrap">
+              <Text fontSize="15px" fontWeight="bold" color={color}>
+                {found ? 'Breaches Found' : 'No Breaches Found'}
+              </Text>
+              <Badge fontSize="9px" px={2} py="1px" borderRadius="4px"
+                bg={`${ACCENT}20`} color={ACCENT} border={`1px solid ${ACCENT}40`}
+                textTransform="uppercase">
+                {type}
+              </Badge>
+              {fromCache && (
+                <Flex align="center" gap={1} px={2} py="1px" borderRadius="4px"
+                  bg="rgba(255,255,255,0.07)" border="1px solid rgba(255,255,255,0.12)">
+                  <TimeIcon boxSize={2.5} color="var(--dash-text-muted)" />
+                  <Text fontSize="9px" color="var(--dash-text-muted)" fontWeight="bold">
+                    CACHED · {fmtRelative(cachedAt)}
+                  </Text>
+                </Flex>
+              )}
+            </Flex>
+            <Text fontSize="12px" color="var(--dash-text-secondary)" mt={0.5}>
+              <Text as="span" fontWeight="semibold" color="var(--dash-text-primary)"
+                fontFamily="mono">{query}</Text>
+              {found
+                ? <> appears in <Text as="span" fontWeight="bold" color={color}>{total} breach{total !== 1 ? 'es' : ''}</Text> indexed by HaveIBeenPwned</>
+                : <> was not found in any HaveIBeenPwned-indexed breach</>}
+            </Text>
+          </Box>
+        </Flex>
+
+        <Tooltip label="Re-fetch live from HIBP (uses API credit)" fontSize="11px">
+          <Button size="sm" leftIcon={<RepeatIcon />}
+            variant="ghost" color="var(--dash-text-muted)" borderRadius="8px"
+            border="1px solid rgba(255,255,255,0.1)"
+            _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
+            isLoading={rescanning} loadingText="Scanning…"
+            onClick={onRescan}>
+            Re-scan
+          </Button>
+        </Tooltip>
+      </Flex>
+    </MotionBox>
+  );
+};
+
+// ── Account breach card ───────────────────────────────────────────────────────
+
+const BreachCard = ({ breach, index }) => {
+  const sensitive = breach.isSensitive;
+  const accent    = sensitive ? ORANGE : ACCENT;
+
+  return (
+    <MotionBox
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22, ease: 'easeOut', delay: Math.min(index * 0.03, 0.45) }}
+      bg="var(--dash-card-bg)" borderRadius="12px"
+      border={`1px solid ${sensitive ? 'rgba(246,173,85,0.3)' : 'var(--dash-card-border)'}`}
+      pos="relative" overflow="hidden"
+      _hover={{ boxShadow: `0 6px 24px rgba(0,0,0,0.4), 0 0 0 1px ${accent}30` }}
+      style={{ transition: 'box-shadow 0.2s' }}>
+      <Box pos="absolute" top={0} left={0} right={0} h="2px"
+        style={{ background: `linear-gradient(to right, transparent, ${accent}90, transparent)` }} />
+
+      <Box px={4} py={3}>
+        {/* Title row */}
+        <Flex align="flex-start" justify="space-between" gap={2} mb={2}>
+          <Box flex={1} minW={0}>
+            <Text fontSize="13px" fontWeight="bold" color="var(--dash-text-primary)"
+              noOfLines={1} lineHeight="short">
+              {breach.title || breach.name}
+            </Text>
+            {breach.domain && (
+              <Text fontSize="10px" color="var(--dash-text-muted)" fontFamily="mono" mt={0.5}>
+                {breach.domain}
+              </Text>
+            )}
+          </Box>
+          <Flex gap={1} flexShrink={0} flexWrap="wrap" justify="flex-end">
+            {breach.isVerified && (
+              <Flex align="center" gap={1} px={2} py="2px" borderRadius="5px"
+                bg="rgba(104,211,145,0.1)" border="1px solid rgba(104,211,145,0.3)">
+                <CheckIcon boxSize={2.5} color={GREEN} />
+                <Text fontSize="9px" fontWeight="bold" color={GREEN}>Verified</Text>
+              </Flex>
+            )}
+            {sensitive && (
+              <Flex align="center" px={2} py="2px" borderRadius="5px"
+                bg="rgba(246,173,85,0.1)" border="1px solid rgba(246,173,85,0.3)">
+                <Text fontSize="9px" fontWeight="bold" color={ORANGE}>Sensitive</Text>
+              </Flex>
+            )}
+          </Flex>
+        </Flex>
+
+        {/* Meta row */}
+        <Flex align="center" gap={2} mb={2.5} flexWrap="wrap">
+          {breach.pwnCount > 0 && (
+            <Flex align="center" gap={1} px={2} py="2px" borderRadius="5px"
+              bg="rgba(252,129,129,0.1)" border="1px solid rgba(252,129,129,0.25)">
+              <Text fontSize="9px" fontWeight="bold" color={RED}>{fmtNum(breach.pwnCount)} pwned</Text>
+            </Flex>
+          )}
+          {breach.breachDate && (
+            <Text fontSize="10px" color="var(--dash-text-muted)">
+              Breach: {fmtDate(breach.breachDate)}
+            </Text>
+          )}
+          {breach.addedDate && (
+            <Text fontSize="10px" color="var(--dash-text-muted)">
+              Added: {fmtDate(breach.addedDate)}
+            </Text>
+          )}
+        </Flex>
+
+        {/* Data classes */}
+        {breach.dataClasses?.length > 0 && (
+          <Flex gap={1} flexWrap="wrap">
+            {breach.dataClasses.slice(0, 6).map((dc) => (
+              <Tag key={dc} size="sm" borderRadius="5px"
+                bg={`${accent}15`} border={`1px solid ${accent}35`}>
+                <TagLabel fontSize="9px" color={accent} fontWeight="semibold">{dc}</TagLabel>
+              </Tag>
+            ))}
+            {breach.dataClasses.length > 6 && (
+              <Tag size="sm" borderRadius="5px"
+                bg="rgba(255,255,255,0.05)" border="1px solid rgba(255,255,255,0.1)">
+                <TagLabel fontSize="9px" color="var(--dash-text-muted)">
+                  +{breach.dataClasses.length - 6} more
+                </TagLabel>
+              </Tag>
+            )}
+          </Flex>
+        )}
+      </Box>
+    </MotionBox>
+  );
+};
+
+// ── Domain results ────────────────────────────────────────────────────────────
+
+const DomainResultRow = ({ item, index }) => (
+  <MotionBox
+    initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.18, delay: Math.min(index * 0.02, 0.4) }}
+    px={4} py={3} borderRadius="10px"
+    bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+    pos="relative" overflow="hidden">
+    <Box pos="absolute" top={0} left={0} w="2px" h="100%"
+      style={{ background: `linear-gradient(to bottom, transparent, ${RED}80, transparent)` }} />
+
+    <Flex align="flex-start" justify="space-between" gap={3} flexWrap="wrap">
+      <Box flex={1} minW={0}>
+        <Flex align="center" gap={2} mb={1.5}>
+          <EmailIcon boxSize={3} color={RED} flexShrink={0} />
+          <Text fontSize="12px" fontWeight="bold" color="var(--dash-text-primary)"
+            fontFamily="mono" noOfLines={1}>{item.email}</Text>
+        </Flex>
+        <Flex gap={1} flexWrap="wrap">
+          {item.breachNames.slice(0, 8).map((name) => (
+            <Tag key={name} size="sm" borderRadius="5px"
+              bg="rgba(252,129,129,0.1)" border="1px solid rgba(252,129,129,0.25)">
+              <TagLabel fontSize="9px" color={RED} fontWeight="semibold">{name}</TagLabel>
+            </Tag>
+          ))}
+          {item.breachNames.length > 8 && (
+            <Tag size="sm" borderRadius="5px"
+              bg="rgba(255,255,255,0.05)" border="1px solid rgba(255,255,255,0.1)">
+              <TagLabel fontSize="9px" color="var(--dash-text-muted)">
+                +{item.breachNames.length - 8} more
+              </TagLabel>
+            </Tag>
+          )}
+        </Flex>
+      </Box>
+      <Flex align="center" gap={1} px={2} py="2px" borderRadius="5px" flexShrink={0}
+        bg="rgba(252,129,129,0.1)" border="1px solid rgba(252,129,129,0.25)">
+        <Text fontSize="9px" fontWeight="bold" color={RED}>{item.breachNames.length} breach{item.breachNames.length !== 1 ? 'es' : ''}</Text>
+      </Flex>
+    </Flex>
+  </MotionBox>
+);
+
+// ── History item ──────────────────────────────────────────────────────────────
+
+const HistoryItem = ({ item, onSelect, onDelete }) => (
+  <MotionBox
+    initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.18 }}
+    px={3} py={2.5} borderRadius="8px" cursor="pointer"
+    bg="rgba(255,255,255,0.03)" border="1px solid rgba(255,255,255,0.07)"
+    _hover={{ bg: 'rgba(255,255,255,0.06)', borderColor: `${ACCENT}40` }}
+    style={{ transition: 'all 0.12s' }}
+    onClick={() => onSelect(item)}>
+    <Flex align="center" justify="space-between" gap={2}>
+      <Box flex={1} minW={0}>
+        <Flex align="center" gap={1.5} mb={0.5}>
+          <Badge fontSize="8px" px={1.5} py="1px" borderRadius="3px"
+            bg={`${ACCENT}20`} color={ACCENT} textTransform="uppercase">
+            {item.type}
+          </Badge>
+          <Text fontSize="11px" fontWeight="semibold" color="var(--dash-text-primary)"
+            noOfLines={1} fontFamily="mono">{item.query}</Text>
+        </Flex>
+        <Flex align="center" gap={2} mt={0.5}>
+          <Box w="5px" h="5px" borderRadius="full" flexShrink={0}
+            bg={item.found ? RED : GREEN} />
+          <Text fontSize="9px" color="var(--dash-text-muted)">
+            {item.found ? `${item.total} breach${item.total !== 1 ? 'es' : ''}` : 'Clean'}
+            {' · '}{fmtRelative(item.updatedAt)}
+          </Text>
+        </Flex>
+      </Box>
+      <IconButton icon={<DeleteIcon boxSize={2.5} />} size="xs" variant="ghost"
+        color="var(--dash-text-muted)" _hover={{ color: RED }}
+        aria-label="Delete cache"
+        onClick={(e) => { e.stopPropagation(); onDelete(item._id); }} />
+    </Flex>
+  </MotionBox>
+);
+
+// ── Main view ─────────────────────────────────────────────────────────────────
+
+const EmailLeaksView = () => {
+  const [searchType, setSearchType] = useState('account');
+  const [query,      setQuery]      = useState('');
+  const [results,    setResults]    = useState([]);
+  const [found,      setFound]      = useState(false);
+  const [total,      setTotal]      = useState(0);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState(null);
+  const [searched,   setSearched]   = useState(false);
+  const [lastQuery,  setLastQuery]  = useState('');
+  const [lastType,   setLastType]   = useState('account');
+  const [fromCache,  setFromCache]  = useState(false);
+  const [cachedAt,   setCachedAt]   = useState(null);
+  const [history,    setHistory]    = useState([]);
+  const inputRef = useRef(null);
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const res  = await fetch(`${API}/emailleaks/cache`, { headers: authHeaders(false) });
+      const data = await res.json();
+      if (res.ok) setHistory(Array.isArray(data) ? data : []);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  const doSearch = useCallback(async (q, t, force = false) => {
+    if (!q.trim()) return;
+    setLoading(true);
+    setError(null);
+    setSearched(true);
+    setLastQuery(q.trim().toLowerCase());
+    setLastType(t);
+    try {
+      const res  = await fetch(`${API}/emailleaks/search`, {
+        method: 'POST', headers: authHeaders(true),
+        body: JSON.stringify({ query: q.trim(), type: t, force }),
+      });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); }
+      catch { throw new Error(`Server returned non-JSON (HTTP ${res.status})`); }
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setResults(data.results || []);
+      setFound(data.found ?? false);
+      setTotal(data.total ?? 0);
+      setFromCache(data.fromCache ?? false);
+      setCachedAt(data.cachedAt ?? null);
+      await loadHistory();
+    } catch (e) {
+      setError(e.message || 'Search failed');
+      setResults([]);
+      setFound(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadHistory]);
+
+  const handleKey     = (e)   => { if (e.key === 'Enter') doSearch(query, searchType); };
+  const clearAll      = ()    => { setQuery(''); setResults([]); setSearched(false); setError(null); setFound(false); };
+  const handleRescan  = ()    => doSearch(lastQuery, lastType, true);
+  const handleHistory = (item) => { setQuery(item.query); setSearchType(item.type); doSearch(item.query, item.type); };
+
+  const handleDeleteCache = async (id) => {
+    await fetch(`${API}/emailleaks/cache/${id}`, {
+      method: 'DELETE', headers: authHeaders(false),
+    });
+    await loadHistory();
+    if (lastQuery === id) clearAll();
+  };
+
+  // Account stats
+  const earliest = results.reduce((acc, r) => {
+    if (!r.breachDate) return acc;
+    return (!acc || new Date(r.breachDate) < new Date(acc)) ? r.breachDate : acc;
+  }, null);
+  const totalPwned = results.reduce((acc, r) => acc + (r.pwnCount || 0), 0);
+
+  return (
+    <Box px={6} pb={12}>
+
+      {/* ── Header ── */}
+      <Flex justify="space-between" align="flex-start" mb={5} flexWrap="wrap" gap={3}>
+        <Box>
+          <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
+            Email <Text as="span" color={ACCENT}>Leaks</Text>
+          </Heading>
+          <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
+            Check accounts &amp; domains against breach databases · powered by{' '}
+            <Text as="span" color={ACCENT} fontWeight="semibold">HaveIBeenPwned</Text>
+          </Text>
+        </Box>
+      </Flex>
+
+      {/* ── Plan disclaimer ── */}
+      <PlanBanner />
+
+      {/* ── API Key section ── */}
+      <ApiKeySection onKeySaved={loadHistory} />
+
+      <Flex gap={6} align="flex-start" direction={{ base: 'column', xl: 'row' }}>
+
+        {/* ── Left: search + results ── */}
+        <Box flex={1} minW={0}>
+
+          {/* Search type toggle */}
+          <TypeToggle value={searchType} onChange={(t) => { setSearchType(t); clearAll(); }} />
+
+          {/* Search bar */}
+          <Box mb={5}>
+            <InputGroup size="md">
+              <InputLeftElement pointerEvents="none" pl={1}>
+                {loading
+                  ? <Spinner size="xs" color={ACCENT} />
+                  : <SearchIcon boxSize={4} color="var(--dash-text-muted)" />}
+              </InputLeftElement>
+              <Input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKey}
+                placeholder={searchType === 'account' ? 'user@example.com' : 'example.com'}
+                bg="var(--dash-card-bg)" borderColor="var(--dash-card-border)"
+                borderRadius="10px" color="var(--dash-text-primary)"
+                fontSize="sm" fontFamily="mono"
+                _placeholder={{ color: 'var(--dash-text-muted)', fontFamily: 'sans-serif' }}
+                _hover={{ borderColor: `${ACCENT}60` }}
+                _focus={{ borderColor: ACCENT, boxShadow: `0 0 0 1px ${ACCENT}55` }}
+                pr={query ? '96px' : '44px'}
+              />
+              {query && (
+                <InputRightElement w="96px">
+                  <Flex gap={1}>
+                    <IconButton icon={<CloseIcon boxSize={2.5} />} size="xs" variant="ghost"
+                      color="var(--dash-text-muted)" _hover={{ color: 'white' }}
+                      aria-label="Clear" onClick={clearAll} />
+                    <Button size="xs" borderRadius="6px"
+                      bg={`${ACCENT}20`} color={ACCENT} border={`1px solid ${ACCENT}50`}
+                      _hover={{ bg: `${ACCENT}30` }} fontWeight="bold" fontSize="11px"
+                      isLoading={loading} onClick={() => doSearch(query, searchType)}>
+                      Check
+                    </Button>
+                  </Flex>
+                </InputRightElement>
+              )}
+            </InputGroup>
+            <Text fontSize="10px" color="var(--dash-text-muted)" mt={1.5}>
+              Cached results return instantly and don't consume API credits.
+            </Text>
+          </Box>
+
+          {/* Error */}
+          {error && (
+            error.includes('403') && lastType === 'domain' ? (
+              <Box mb={5} px={4} py={4} borderRadius="10px"
+                bg="rgba(246,173,85,0.08)" border="1px solid rgba(246,173,85,0.3)">
+                <Flex align="flex-start" gap={2.5}>
+                  <WarningTwoIcon boxSize={4} color={ORANGE} mt="1px" flexShrink={0} />
+                  <Box>
+                    <Text fontSize="13px" fontWeight="bold" color={ORANGE} mb={1}>
+                      Domain not verified
+                    </Text>
+                    <Text fontSize="12px" color="var(--dash-text-secondary)" lineHeight="short" mb={2}>
+                      HIBP requires you to prove ownership of <Text as="span" fontFamily="mono"
+                        color="var(--dash-text-primary)">{lastQuery}</Text> before
+                      returning breach data for it. This prevents unauthorised exposure of
+                      employee email addresses.
+                    </Text>
+                    <Text fontSize="11px" color="var(--dash-text-muted)">
+                      To fix: log into your HIBP account → Domain Search dashboard → add &amp; verify
+                      the domain via DNS TXT record or email, then retry.
+                    </Text>
+                  </Box>
+                </Flex>
+              </Box>
+            ) : (
+              <Box mb={5} px={4} py={3} borderRadius="10px"
+                bg="rgba(252,129,129,0.08)" border="1px solid rgba(252,129,129,0.3)">
+                <Flex align="center" gap={2}>
+                  <WarningTwoIcon boxSize={3.5} color={RED} flexShrink={0} />
+                  <Text fontSize="sm" color={RED}>{error}</Text>
+                </Flex>
+              </Box>
+            )
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <Flex direction="column" align="center" justify="center" gap={3} py={14}>
+              <Box pos="relative">
+                <Spinner size="xl" color={ACCENT} thickness="3px" speed="0.9s" />
+                <Flex pos="absolute" inset={0} align="center" justify="center">
+                  <LockIcon boxSize={4} color={ACCENT} />
+                </Flex>
+              </Box>
+              <Box textAlign="center">
+                <Text fontSize="sm" color="var(--dash-text-secondary)" fontWeight="semibold">
+                  Querying HaveIBeenPwned…
+                </Text>
+                <Text fontSize="11px" color="var(--dash-text-muted)" mt={1}>
+                  Checking against known breach databases
+                </Text>
+              </Box>
+            </Flex>
+          )}
+
+          {/* Results */}
+          <AnimatePresence mode="wait">
+            {!loading && searched && !error && (
+              <MotionBox key="results"
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+
+                {/* Status banner */}
+                <StatusBanner
+                  found={found} query={lastQuery} type={lastType} total={total}
+                  fromCache={fromCache} cachedAt={cachedAt}
+                  onRescan={handleRescan} rescanning={loading}
+                />
+
+                {/* Account stats */}
+                {lastType === 'account' && found && (
+                  <SimpleGrid columns={{ base: 2, md: 3 }} gap={3} mb={5}>
+                    <StatCard label="Breaches" value={total}              color={RED} />
+                    <StatCard label="Total Pwned" value={fmtNum(totalPwned)} color={ORANGE} />
+                    <StatCard label="Earliest" value={fmtDate(earliest) || '—'} color={BLUE} />
+                  </SimpleGrid>
+                )}
+
+                {/* Domain stats */}
+                {lastType === 'domain' && found && (
+                  <SimpleGrid columns={2} gap={3} mb={5}>
+                    <StatCard label="Breached Addresses" value={total} color={RED} />
+                    <StatCard label="Max Shown" value="25" color={ORANGE}
+                      sub="HIBP plan limit" />
+                  </SimpleGrid>
+                )}
+
+                {/* Account breach cards */}
+                {lastType === 'account' && results.length > 0 && (
+                  <>
+                    <Flex align="center" gap={2} mb={4}>
+                      <Box w="3px" h="14px" borderRadius="full" bg={RED} />
+                      <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)"
+                        textTransform="uppercase" letterSpacing="wider">
+                        {results.length} breach{results.length !== 1 ? 'es' : ''} · sorted by date
+                      </Text>
+                    </Flex>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={3}>
+                      <AnimatePresence>
+                        {results.map((b, i) => (
+                          <BreachCard key={b.name || i} breach={b} index={i} />
+                        ))}
+                      </AnimatePresence>
+                    </SimpleGrid>
+                  </>
+                )}
+
+                {/* Domain results */}
+                {lastType === 'domain' && results.length > 0 && (
+                  <>
+                    <Flex align="center" gap={2} mb={4}>
+                      <Box w="3px" h="14px" borderRadius="full" bg={RED} />
+                      <Text fontSize="11px" fontWeight="bold" color="var(--dash-text-muted)"
+                        textTransform="uppercase" letterSpacing="wider">
+                        {results.length} breached address{results.length !== 1 ? 'es' : ''} · sorted by breach count
+                      </Text>
+                    </Flex>
+                    <Flex direction="column" gap={2}>
+                      <AnimatePresence>
+                        {results.map((item, i) => (
+                          <DomainResultRow key={item.email || i} item={item} index={i} />
+                        ))}
+                      </AnimatePresence>
+                    </Flex>
+                  </>
+                )}
+              </MotionBox>
+            )}
+
+            {/* Pre-search empty state */}
+            {!loading && !searched && (
+              <MotionBox key="empty"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <Flex direction="column" align="center" justify="center" gap={3} py={16}
+                  color="var(--dash-text-muted)">
+                  <Flex w="56px" h="56px" borderRadius="14px"
+                    bg={`${ACCENT}12`} border={`2px solid ${ACCENT}40`}
+                    align="center" justify="center">
+                    <LockIcon boxSize={5} color={ACCENT} />
+                  </Flex>
+                  <Box textAlign="center">
+                    <Text fontSize="sm" fontWeight="semibold" color="var(--dash-text-secondary)">
+                      Breach checker
+                    </Text>
+                    <Text fontSize="xs" mt={1} maxW="300px">
+                      Enter an {searchType === 'account' ? 'email address' : 'domain'} above to check it
+                      against HaveIBeenPwned breach databases
+                    </Text>
+                  </Box>
+                </Flex>
+              </MotionBox>
+            )}
+          </AnimatePresence>
+        </Box>
+
+        {/* ── Right: scan history ── */}
+        <Box w={{ base: '100%', xl: '280px' }} flexShrink={0}>
+          <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+            borderRadius="14px" overflow="hidden">
+            <Flex align="center" gap={2} px={4} py={3}
+              borderBottom="1px solid var(--dash-card-border)">
+              <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+              <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
+                textTransform="uppercase" letterSpacing="wider" flex={1}>
+                Scan History
+              </Text>
+              <Text fontSize="10px" color="var(--dash-text-muted)">
+                {history.length} cached
+              </Text>
+            </Flex>
+
+            <Box px={3} py={3}>
+              {history.length === 0 ? (
+                <Text fontSize="11px" color="var(--dash-text-muted)" textAlign="center" py={4}>
+                  No scans yet
+                </Text>
+              ) : (
+                <Flex direction="column" gap={2}>
+                  {history.map((item) => (
+                    <HistoryItem
+                      key={item._id}
+                      item={item}
+                      onSelect={handleHistory}
+                      onDelete={handleDeleteCache}
+                    />
+                  ))}
+                </Flex>
+              )}
+            </Box>
+          </Box>
+        </Box>
+
+      </Flex>
+    </Box>
+  );
+};
+
+// ── Stat card (local) ─────────────────────────────────────────────────────────
+
+const StatCard = ({ label, value, color, sub }) => {
+  const c = color || ACCENT;
+  return (
+    <MotionBox flex={1} px={4} py={3} borderRadius="12px"
+      bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+      pos="relative" overflow="hidden"
+      whileHover={{ y: -2, boxShadow: `0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px ${c}30` }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+      <Box pos="absolute" top={0} left={0} right={0} h="2px"
+        style={{ background: `linear-gradient(to right, transparent, ${c}99, transparent)` }} />
+      <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+        textTransform="uppercase" letterSpacing="wider" mb={0.5}>{label}</Text>
+      <Text fontSize="2xl" fontWeight="bold" color={c} lineHeight={1}>{value}</Text>
+      {sub && <Text fontSize="9px" color="var(--dash-text-muted)" mt={1}>{sub}</Text>}
+    </MotionBox>
+  );
+};
+
+export default EmailLeaksView;

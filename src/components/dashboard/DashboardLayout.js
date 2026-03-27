@@ -14,9 +14,12 @@ import LabConfigsView from './views/LabConfigsView';
 import LabConnectivityView from './views/LabConnectivityView';
 import PlaceholderView from './views/PlaceholderView';
 import CVEFeedView from './views/CVEFeedView';
+import RansomFeedView from './views/RansomFeedView';
+import EmailLeaksView from './views/EmailLeaksView';
 import DiagramEditorView from './views/DiagramEditorView';
 import DiagramLibraryView from './views/DiagramLibraryView';
 import ToolsView from './views/ToolsView';
+import MalwareScannerView from './views/MalwareScannerView';
 
 const MotionFlex = motion(Flex);
 
@@ -48,10 +51,12 @@ const DashboardLayout = () => (
           <Route path="lab/configs"      element={<LabConfigsView />} />
           <Route path="lab/connectivity" element={<LabConnectivityView />} />
           {/* Resources & Materials routes */}
-          <Route path="resources/tools"    element={<ToolsView />} />
-          <Route path="resources/cve-feed" element={<CVEFeedView />} />
+          <Route path="resources/tools"        element={<ToolsView />} />
+          <Route path="resources/cve-feed"    element={<CVEFeedView />} />
+          <Route path="resources/ransom-feed"   element={<RansomFeedView />} />
+          <Route path="resources/email-leaks"  element={<EmailLeaksView />} />
           {/* Malware Analysis routes */}
-          <Route path="malware/scanner" element={<PlaceholderView title="Malware Scanner" />} />
+          <Route path="malware/scanner" element={<MalwareScannerView />} />
           <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />
           {/* Diagram Drawing routes */}
           <Route path="diagrams/editor"  element={<DiagramEditorView />} />

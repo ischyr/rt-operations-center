@@ -33,8 +33,10 @@ const redLabNav = [
 
 // ── Resources & Materials nav (always visible, global) ────────────────────────
 const resourcesNav = [
-  { key: 'resources/tools',    label: 'Tools',    icon: StarIcon       },
-  { key: 'resources/cve-feed', label: 'CVE Feed', icon: WarningTwoIcon },
+  { key: 'resources/tools',        label: 'Tools',        icon: StarIcon       },
+  { key: 'resources/cve-feed',     label: 'CVE Feed',     icon: WarningTwoIcon },
+  { key: 'resources/ransom-feed',  label: 'Ransom Feed',  icon: LockIcon       },
+  { key: 'resources/email-leaks',  label: 'Email Leaks',  icon: EmailIcon      },
 ];
 
 // ── Malware Analysis nav (always visible, global) ─────────────────────────────
