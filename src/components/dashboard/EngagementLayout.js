@@ -19,6 +19,7 @@ import EvidenceVaultView from './views/EvidenceVaultView';
 import CleanupTrackerView from './views/CleanupTrackerView';
 import SubdomainsView from './views/SubdomainsView';
 import TeamVaultView from './views/TeamVaultView';
+import QRCodeView from './views/QRCodeView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -70,6 +71,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PlaceholderView title="Phishing Infrastructure" />} />
+      <Route path="intelligence/qr-codes"       element={<QRCodeView />} />
 
       {/* Sock Puppets */}
       <Route path="sockpuppets/personas"     element={<PersonasView />} />

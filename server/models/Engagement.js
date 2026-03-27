@@ -221,6 +221,41 @@ const vaultEntrySchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const qrScanSchema = new mongoose.Schema(
+  {
+    ip:        { type: String, default: '' },
+    userAgent: { type: String, default: '' },
+    os:        { type: String, default: '' },
+    browser:   { type: String, default: '' },
+    referer:   { type: String, default: '' },
+    country:   { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
+const qrCodeSchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    template: {
+      type: String,
+      enum: ['url', 'wifi', 'vcard', 'email', 'sms', 'text', 'phishing'],
+      default: 'url',
+    },
+    targetUrl:          { type: String, default: '' },
+    payload:            { type: mongoose.Schema.Types.Mixed, default: {} },
+    shortCode:          { type: String, required: true, unique: false },
+    qrDataUrl:          { type: String, default: '' },
+    fgColor:            { type: String, default: '#000000' },
+    bgColor:            { type: String, default: '#FFFFFF' },
+    scans:              [qrScanSchema],
+    active:             { type: Boolean, default: true },
+    tags:               [{ type: String }],
+    createdBy:          { type: String, default: '' },
+    createdByCallsign:  { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const lootSchema = new mongoose.Schema(
   {
     title:              { type: String, required: true, trim: true },
@@ -286,6 +321,7 @@ const engagementSchema = new mongoose.Schema(
     loot:             [lootSchema],
     evidence:         [evidenceSchema],
     cleanup:          [cleanupSchema],
+    qrCodes:          [qrCodeSchema],
   },
   { timestamps: true }
 );

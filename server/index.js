@@ -39,6 +39,7 @@ app.use('/api/emailleaks', require('./routes/emailleaks'));
 app.use('/api/malware',   require('./routes/malware'));
 app.use('/api/cleanup',   require('./routes/cleanup'));
 app.use('/api/vault',    require('./routes/vault'));
+app.use('/api/qr',      require('./routes/qr'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

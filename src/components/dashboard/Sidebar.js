@@ -78,6 +78,7 @@ const engagementNav = [
       { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
       { key: 'intelligence/c2',              label: 'C2 Infrastructure',       icon: LinkIcon   },
       { key: 'intelligence/phishing',        label: 'Phishing Infrastructure', icon: EmailIcon  },
+      { key: 'intelligence/qr-codes',       label: 'QR Code Generator',       icon: CopyIcon   },
     ],
   },
   {
