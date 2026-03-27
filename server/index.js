@@ -10,7 +10,7 @@ const app = express();
 connectDB();
 
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Session needed only for the OAuth redirect dance (not used for API auth)
 app.use(session({
@@ -32,6 +32,7 @@ app.use('/api/tools',      require('./routes/tools'));
 app.use('/api/c2',         require('./routes/c2'));
 app.use('/api/leakx',      require('./routes/leakx'));
 app.use('/api/subdomains', require('./routes/subdomains'));
+app.use('/api/loot',      require('./routes/loot'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

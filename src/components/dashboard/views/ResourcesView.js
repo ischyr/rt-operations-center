@@ -134,13 +134,24 @@ const ResourcesView = () => {
           </Text>
         </Box>
         <Button
-          leftIcon={<AddIcon boxSize={3} />}
-          bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
+          leftIcon={
+            <Box
+              as={motion.div}
+              animate={{ rotate: showAdd ? 45 : 0 }}
+              transition={{ duration: 0.18 }}
+              display="flex" alignItems="center"
+            >
+              <AddIcon boxSize={3} />
+            </Box>
+          }
+          bg={showAdd ? 'rgba(255,80,95,0.18)' : 'rgba(255,80,95,0.1)'}
+          border={`1px solid ${showAdd ? 'rgba(255,80,95,0.5)' : 'rgba(255,80,95,0.3)'}`}
           color="rgba(255,130,130,0.9)" fontSize="sm" borderRadius="10px" h="40px" px={4}
-          _hover={{ bg: 'rgba(255,80,95,0.18)' }}
+          _hover={{ bg: 'rgba(255,80,95,0.22)' }}
+          transition="all 0.18s"
           onClick={() => { setShowAdd(v => !v); setError(''); }}
         >
-          Add Resource
+          {showAdd ? 'Cancel' : 'Add Resource'}
         </Button>
       </Flex>
 
@@ -148,9 +159,11 @@ const ResourcesView = () => {
       <AnimatePresence>
         {showAdd && (
           <MotionBox
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
-            overflow="hidden" mb={5}
+            initial={{ opacity: 0, y: -12, scaleY: 0.96, transformOrigin: 'top' }}
+            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+            exit={{ opacity: 0, y: -8, scaleY: 0.97 }}
+            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+            mb={5}
           >
             <Box bg="var(--dash-card-bg)" border="1px solid rgba(255,80,95,0.2)" borderRadius="14px" p={5}>
               <Text fontSize="11px" fontWeight="bold" color="red.400" mb={4}

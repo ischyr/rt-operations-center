@@ -14,7 +14,7 @@ import SkillRequestsView from './views/SkillRequestsView';
 import TTXPlannerView from './views/TTXPlannerView';
 import PersonasView from './views/PersonasView';
 import C2View from './views/C2View';
-import LeakIXView from './views/LeakIXView';
+import LootTrackerView from './views/LootTrackerView';
 import SubdomainsView from './views/SubdomainsView';
 import PlaceholderView from './views/PlaceholderView';
 
@@ -61,7 +61,7 @@ const EngagementLayout = () => {
       <Route path="team/resources" element={<ResourcesView />} />
 
       {/* Intelligence */}
-      <Route path="intelligence/loot-tracker"    element={<PlaceholderView title="Loot Tracker" />} />
+      <Route path="intelligence/loot-tracker"    element={<LootTrackerView />} />
       <Route path="intelligence/evidence-vault"  element={<PlaceholderView title="Evidence Vault" />} />
       <Route path="intelligence/cleanup-tracker" element={<PlaceholderView title="Cleanup Tracker" />} />
       <Route path="intelligence/c2"              element={<C2View />} />
@@ -79,7 +79,6 @@ const EngagementLayout = () => {
       <Route path="ttps/network"          element={<PlaceholderView title="Network" />} />
 
       {/* Pillaging */}
-      <Route path="pillaging/leakix"      element={<LeakIXView />} />
       <Route path="pillaging/subdomains"  element={<SubdomainsView />} />
       <Route path="pillaging/services"    element={<PlaceholderView title="Services" />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />

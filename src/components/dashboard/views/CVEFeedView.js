@@ -237,18 +237,32 @@ const CveDetail = ({ cve }) => {
 
 // ── Main view ──────────────────────────────────────────────────────────────────
 const CVEFeedView = () => {
-  const [feed,       setFeed]       = useState([]);      // top-5 list
-  const [newIds,     setNewIds]     = useState(new Set()); // IDs that are "fresh"
-  const [feedLoading, setFeedLoading] = useState(true);
-  const [feedError,  setFeedError]  = useState(null);
-  const [countdown,  setCountdown]  = useState(POLL_MS / 1000);
+  const LS_KEY      = 'cve_last_fetch';
+  const LS_CACHE    = 'cve_feed_cache';
 
-  const [query,      setQuery]      = useState('');
-  const [searching,  setSearching]  = useState(false);
+  const getSecondsLeft = () => {
+    const last = parseInt(localStorage.getItem(LS_KEY) || '0', 10);
+    const elapsed = Math.floor((Date.now() - last) / 1000);
+    return Math.max(0, POLL_MS / 1000 - elapsed);
+  };
+
+  const loadCache = () => {
+    try { return JSON.parse(localStorage.getItem(LS_CACHE) || 'null'); } catch { return null; }
+  };
+
+  const cached = loadCache();
+  const [feed,        setFeed]        = useState(cached ?? []);
+  const [newIds,      setNewIds]      = useState(new Set());
+  const [feedLoading, setFeedLoading] = useState(!cached);
+  const [feedError,   setFeedError]   = useState(null);
+  const [countdown,   setCountdown]   = useState(getSecondsLeft);
+
+  const [query,        setQuery]        = useState('');
+  const [searching,    setSearching]    = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [searchError,  setSearchError]  = useState(null);
 
-  const prevIdsRef = useRef(new Set());
+  const prevIdsRef = useRef(new Set(cached ? cached.map(c => c.cve_id) : []));
   const timerRef   = useRef(null);
   const cdRef      = useRef(null);
 
@@ -267,6 +281,7 @@ const CVEFeedView = () => {
       setFeed(list);
       setNewIds(fresh);
       setFeedError(null);
+      localStorage.setItem(LS_CACHE, JSON.stringify(list));
 
       // Clear "fresh" markers after 8 s
       setTimeout(() => setNewIds(new Set()), 8000);
@@ -274,15 +289,19 @@ const CVEFeedView = () => {
       setFeedError(e.message || 'Failed to fetch CVE feed');
     } finally {
       setFeedLoading(false);
+      localStorage.setItem(LS_KEY, Date.now().toString());
       setCountdown(POLL_MS / 1000);
     }
   }, []);
 
   // ── Polling + countdown ──────────────────────────────────────────────────────
   useEffect(() => {
-    fetchFeed();
-    timerRef.current = setInterval(fetchFeed, POLL_MS);
-    cdRef.current    = setInterval(() => setCountdown((n) => (n > 0 ? n - 1 : 0)), 1000);
+    // Only hit the API if the cooldown has expired
+    if (getSecondsLeft() === 0) fetchFeed();
+    timerRef.current = setInterval(() => {
+      if (getSecondsLeft() === 0) fetchFeed();
+    }, 5000);
+    cdRef.current = setInterval(() => setCountdown(getSecondsLeft), 1000);
     return () => {
       clearInterval(timerRef.current);
       clearInterval(cdRef.current);
@@ -338,14 +357,18 @@ const CVEFeedView = () => {
           </Flex>
           <Flex
             align="center" gap={1.5} px={3} py="5px"
-            bg="rgba(255,255,255,0.04)" border="1px solid rgba(255,255,255,0.1)"
-            borderRadius="8px" cursor="pointer"
-            onClick={() => { fetchFeed(); }}
-            _hover={{ bg: 'rgba(255,255,255,0.07)' }} transition="background 0.15s"
+            bg={countdown === 0 ? 'rgba(104,211,145,0.06)' : 'rgba(255,255,255,0.04)'}
+            border={`1px solid ${countdown === 0 ? 'rgba(104,211,145,0.25)' : 'rgba(255,255,255,0.1)'}`}
+            borderRadius="8px"
+            cursor={countdown === 0 ? 'pointer' : 'not-allowed'}
+            opacity={countdown === 0 ? 1 : 0.55}
+            onClick={() => { if (countdown === 0) fetchFeed(); }}
+            _hover={countdown === 0 ? { bg: 'rgba(104,211,145,0.12)' } : {}}
+            transition="all 0.15s"
           >
-            <RepeatIcon boxSize={3} color="var(--dash-text-muted)" />
-            <Text fontSize="11px" color="var(--dash-text-muted)">
-              Refresh in {countdown}s
+            <RepeatIcon boxSize={3} color={countdown === 0 ? '#68D391' : 'var(--dash-text-muted)'} />
+            <Text fontSize="11px" color={countdown === 0 ? '#68D391' : 'var(--dash-text-muted)'} fontWeight={countdown === 0 ? '600' : '400'}>
+              {countdown === 0 ? 'Refresh now' : `Refresh in ${countdown}s`}
             </Text>
           </Flex>
         </Flex>

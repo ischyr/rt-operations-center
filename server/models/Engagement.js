@@ -159,6 +159,23 @@ const skillRequestSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const lootSchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    category: {
+      type:    String,
+      enum:    ['Credentials', 'Password File', 'Config File', 'Hash', 'SSH Key', 'Network Location', 'Screenshot', 'Note', 'Other'],
+      default: 'Other',
+    },
+    content:            { type: String, default: '' },
+    images:             [{ type: String }],
+    tags:               [{ type: String }],
+    capturedBy:         { type: String, default: '' },
+    capturedByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const engagementSchema = new mongoose.Schema(
   {
     user: {
@@ -203,6 +220,7 @@ const engagementSchema = new mongoose.Schema(
     leakxConfig:      { type: mongoose.Schema.Types.Mixed, default: {} },
     subdomainScans:   [subdomainScanSchema],
     subdomainConfig:  { type: mongoose.Schema.Types.Mixed, default: {} },
+    loot:             [lootSchema],
   },
   { timestamps: true }
 );

@@ -3,7 +3,7 @@ import {
   Box, Flex, Text, Heading, Button, Progress,
   Input, Select, SimpleGrid, Alert, AlertIcon, IconButton,
 } from '@chakra-ui/react';
-import { EditIcon, CheckIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
+import { EditIcon, CheckIcon, DeleteIcon, AddIcon, TriangleUpIcon, WarningIcon, StarIcon, TimeIcon } from '@chakra-ui/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -119,9 +119,10 @@ const StatCard = ({ label, value, sub, accent, icon }) => (
           <Text fontSize="10px" color="var(--dash-text-muted)" mt={1.5} noOfLines={1}>{sub}</Text>
         )}
       </Box>
-      <Box p={2} borderRadius="8px" flexShrink={0} ml={2}
-        bg={`${accent}22`} border={`1px solid ${accent}40`}
-        fontSize="15px" lineHeight="1" display="flex" alignItems="center" justifyContent="center">
+      <Box p={2} borderRadius="8px" flexShrink={0} ml={2} w="32px" h="32px"
+        bg={`${accent}18`} border={`1px solid ${accent}35`}
+        display="flex" alignItems="center" justifyContent="center"
+        color={accent}>
         {icon}
       </Box>
     </Flex>
@@ -492,21 +493,21 @@ const EngagementDetailView = () => {
           value={`${eng.progress}%`}
           sub={eng.stage || 'Preparing'}
           accent="#fc8181"
-          icon="📈"
+          icon={<TriangleUpIcon boxSize={3.5} />}
         />
         <StatCard
           label="Findings"
           value={findings.length}
           sub={topSev ? `Highest: ${topSev}` : 'None recorded'}
           accent="#fcd34d"
-          icon="🎯"
+          icon={<WarningIcon boxSize={3.5} />}
         />
         <StatCard
           label="Operators"
           value={eng.operators?.length || 0}
           sub={operators.length > 0 ? operators.map(o => o.callsign).join(', ') : 'Unassigned'}
           accent="#4fd1c5"
-          icon="👤"
+          icon={<StarIcon boxSize={3.5} />}
         />
         <StatCard
           label="Days Remaining"
@@ -515,7 +516,7 @@ const EngagementDetailView = () => {
             ? `Due ${new Date(eng.endDate + 'T00:00:00').toLocaleDateString('en-GB')}`
             : 'No end date set'}
           accent={daysColor}
-          icon="⏱"
+          icon={<TimeIcon boxSize={3.5} />}
         />
       </SimpleGrid>
 

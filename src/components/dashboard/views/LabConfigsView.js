@@ -542,6 +542,25 @@ const LabConfigsView = () => (
       </Flex>
     </Flex>
 
+    {/* Manual deploy note */}
+    <Box
+      mb={4} px={4} py={3} borderRadius="10px"
+      bg="rgba(252,211,77,0.06)" border="1px solid rgba(252,211,77,0.2)"
+    >
+      <Flex align="flex-start" gap={2.5}>
+        <WarningTwoIcon boxSize={3.5} color="rgba(252,211,77,0.8)" mt="1px" flexShrink={0} />
+        <Box>
+          <Text fontSize="12px" fontWeight="semibold" color="rgba(252,211,77,0.9)" mb={0.5}>
+            Manual deployment required
+          </Text>
+          <Text fontSize="11px" color="rgba(252,211,77,0.65)" lineHeight="tall">
+            These are lab configurations that currently need to be deployed manually using the commands provided.
+            In the future, this entire process will be automated — labs will be deployed directly from the platform with a single click.
+          </Text>
+        </Box>
+      </Flex>
+    </Box>
+
     {/* Info banner */}
     <Box
       mb={6} px={4} py={3} borderRadius="10px"

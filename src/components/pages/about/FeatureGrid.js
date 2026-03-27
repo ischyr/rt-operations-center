@@ -1,5 +1,6 @@
 import { Box, Heading, Text, SimpleGrid, Button, Flex } from '@chakra-ui/react';
 import { ArrowForwardIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
 
 const features = [
   {
@@ -24,7 +25,9 @@ const features = [
   },
 ];
 
-const FeatureGrid = () => (
+const FeatureGrid = () => {
+  const navigate = useNavigate();
+  return (
   <Box width="100%" textAlign="center" overflow="visible">
     <Heading mb={2}>Why choose Red Team Ops Center?</Heading>
     <Text color="gray.500" fontSize="sm" mb={8}>Four pillars that set us apart.</Text>
@@ -120,11 +123,13 @@ const FeatureGrid = () => (
           transform: 'translateY(-2px)',
         }}
         _active={{ transform: 'translateY(0px)' }}
+        onClick={() => navigate('/register')}
       >
         Get Started
       </Button>
     </Box>
   </Box>
-);
+  );
+};
 
 export default FeatureGrid;
