@@ -159,6 +159,24 @@ const skillRequestSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const evidenceSchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    type: {
+      type:    String,
+      enum:    ['Command', 'Finding', 'Access', 'Network', 'Exfil', 'Screenshot', 'Note', 'Other'],
+      default: 'Note',
+    },
+    content:            { type: String, default: '' },
+    images:             [{ type: String }],
+    tags:               [{ type: String }],
+    timestamp:          { type: Date, default: Date.now },
+    capturedBy:         { type: String, default: '' },
+    capturedByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const lootSchema = new mongoose.Schema(
   {
     title:              { type: String, required: true, trim: true },
@@ -221,6 +239,7 @@ const engagementSchema = new mongoose.Schema(
     subdomainScans:   [subdomainScanSchema],
     subdomainConfig:  { type: mongoose.Schema.Types.Mixed, default: {} },
     loot:             [lootSchema],
+    evidence:         [evidenceSchema],
   },
   { timestamps: true }
 );

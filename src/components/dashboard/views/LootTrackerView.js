@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Box, Flex, Text, Heading, Button, IconButton, Input, Select,
   Textarea, SimpleGrid, Spinner,
@@ -207,6 +207,8 @@ const LootTrackerView = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [lightbox,      setLightbox]      = useState({ open: false, images: [], index: 0 });
   const [copied,        setCopied]        = useState(false);
+  const [overviewPage,  setOverviewPage]  = useState(0);
+  const [sidebarPage,   setSidebarPage]   = useState(0);
 
   const fileInputRef = useRef(null);
 
@@ -223,6 +225,9 @@ const LootTrackerView = () => {
   });
 
   const selectedItem = selected ? loot.find((l) => l._id === selected) : null;
+
+  // Reset sidebar page when filters change
+  useEffect(() => { setSidebarPage(0); }, [search, filterCat]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -336,10 +341,13 @@ const LootTrackerView = () => {
       <Flex align="center" justify="space-between" px={6} py={4} flexShrink={0}
         borderBottom="1px solid var(--dash-card-border)">
         <Box>
-          <Heading size="sm" color="var(--dash-text-primary)" fontWeight="bold">
-            Loot Tracker
-          </Heading>
-          <Text fontSize="xs" color="var(--dash-text-muted)" mt={0.5}>
+          <Flex align="center" gap={2}>
+            <Box w="3px" h="22px" borderRadius="full" bg="rgba(255,80,95,0.9)" flexShrink={0} />
+            <Heading size="sm" color="var(--dash-text-primary)" fontWeight="bold">
+              Loot Tracker
+            </Heading>
+          </Flex>
+          <Text fontSize="xs" color="var(--dash-text-muted)" mt={0.5} pl="11px">
             {loot.length} item{loot.length !== 1 ? 's' : ''} captured
           </Text>
         </Box>
@@ -353,6 +361,39 @@ const LootTrackerView = () => {
         >
           Add Loot
         </Button>
+      </Flex>
+
+      {/* Stats bar */}
+      <Flex px={6} py={3} gap={3} flexShrink={0}
+        borderBottom="1px solid var(--dash-card-border)">
+        {[
+          { label: 'Total Captured', value: loot.length,                                              color: '#fc8181' },
+          { label: 'With Content',   value: loot.filter(l => l.content?.trim()).length,               color: '#9F7AEA' },
+          { label: 'With Images',    value: loot.filter(l => l.images?.length > 0).length,            color: '#68D391' },
+          { label: 'Categories',     value: new Set(loot.map(l => l.category)).size,                  color: '#63B3ED' },
+        ].map(s => (
+          <MotionBox
+            key={s.label}
+            flex={1}
+            px={4} py={3}
+            borderRadius="10px"
+            bg="rgba(255,255,255,0.03)"
+            border="1px solid rgba(255,255,255,0.08)"
+            pos="relative" overflow="hidden"
+            whileHover={{ y: -3, boxShadow: `0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px ${s.color}30` }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <Box pos="absolute" top="0" left="0" right="0" h="2px"
+              style={{ background: `linear-gradient(to right, transparent, ${s.color}99, transparent)` }} />
+            <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+              textTransform="uppercase" letterSpacing="wider" mb={1}>
+              {s.label}
+            </Text>
+            <Text fontSize="xl" fontWeight="bold" color={s.color} lineHeight={1}>
+              {s.value}
+            </Text>
+          </MotionBox>
+        ))}
       </Flex>
 
       {/* Body */}
@@ -402,89 +443,124 @@ const LootTrackerView = () => {
             </Flex>
           </Box>
 
-          {/* List */}
-          <Box flex={1} overflowY="auto" py={1}>
-            {filtered.length === 0 && (
-              <Flex direction="column" align="center" justify="center" h="120px" gap={1}>
-                <Text fontSize="xs" color="var(--dash-text-muted)">
-                  {loot.length === 0 ? 'No loot yet' : 'No results'}
-                </Text>
-              </Flex>
-            )}
-            {filtered.map((item) => {
-              const isActive = selected === item._id;
-              return (
-                <Box
-                  key={item._id}
-                  px={3} py={3} mx={1} mb="2px"
-                  borderRadius="8px"
-                  cursor="pointer"
-                  bg={isActive ? 'rgba(255,80,95,0.1)' : 'transparent'}
-                  border={isActive ? '1px solid rgba(255,80,95,0.3)' : '1px solid transparent'}
-                  _hover={{ bg: isActive ? 'rgba(255,80,95,0.12)' : 'rgba(255,255,255,0.04)' }}
-                  onClick={() => {
-                    if (selected === item._id) { setSelected(null); setMode('view'); }
-                    else { setSelected(item._id); setMode('view'); }
-                  }}
-                >
-                  <Flex align="center" gap={2} mb={1} justify="space-between">
-                    <Text
-                      fontSize="xs" fontWeight="semibold"
-                      color="var(--dash-text-primary)"
-                      noOfLines={1} flex={1}
-                    >
-                      {item.title}
-                    </Text>
-                    <CategoryBadge cat={item.category} small />
-                  </Flex>
-                  {item.content && (
-                    <Text fontSize="10px" color="var(--dash-text-muted)" noOfLines={1} mb={1}>
-                      {item.content.slice(0, 50)}{item.content.length > 50 ? '…' : ''}
-                    </Text>
-                  )}
-                  <Flex align="center" justify="space-between">
-                    <Text fontSize="9px" color="var(--dash-text-muted)">
-                      {formatDate(item.createdAt)}
-                    </Text>
-                    {item.images?.length > 0 && (
-                      <Text fontSize="9px" color="var(--dash-text-muted)">
-                        {item.images.length} img{item.images.length !== 1 ? 's' : ''}
+          {/* List — paginated */}
+          {(() => {
+            const PAGE_SIZE = 5;
+            const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+            const page = Math.min(sidebarPage, totalPages - 1);
+            const pageItems = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+            return (
+              <Box flex={1} display="flex" flexDirection="column" overflow="hidden">
+                <Box flex={1} overflowY="auto" py={1}>
+                  {filtered.length === 0 && (
+                    <Flex direction="column" align="center" justify="center" h="120px" gap={1}>
+                      <Text fontSize="xs" color="var(--dash-text-muted)">
+                        {loot.length === 0 ? 'No loot yet' : 'No results'}
                       </Text>
-                    )}
-                  </Flex>
+                    </Flex>
+                  )}
+                  {pageItems.map((item) => {
+                    const isActive = selected === item._id;
+                    return (
+                      <MotionBox
+                        key={item._id}
+                        initial={{ opacity: 0, x: -6 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.15 }}
+                        px={3} py={2.5} mx={1} mb={0.5}
+                        borderRadius="8px"
+                        cursor="pointer"
+                        bg={isActive ? 'rgba(255,80,95,0.1)' : 'transparent'}
+                        border={isActive ? '1px solid rgba(255,80,95,0.3)' : '1px solid transparent'}
+                        _hover={{ bg: isActive ? 'rgba(255,80,95,0.12)' : 'rgba(255,255,255,0.04)' }}
+                        onClick={() => {
+                          if (selected === item._id) { setSelected(null); setMode('view'); }
+                          else { setSelected(item._id); setMode('view'); }
+                        }}
+                      >
+                        <Flex align="flex-start" justify="space-between" gap={1}>
+                          <Text fontSize="xs" fontWeight="semibold"
+                            color={isActive ? 'var(--dash-text-primary)' : 'var(--dash-text-secondary)'}
+                            noOfLines={1} flex={1}>
+                            {item.title}
+                          </Text>
+                          <CategoryBadge cat={item.category} small />
+                        </Flex>
+                        <Text fontSize="9px" color="var(--dash-text-muted)" mt={1} noOfLines={1}>
+                          {formatDate(item.createdAt)}
+                        </Text>
+                        {item.tags?.length > 0 && (
+                          <Flex gap={1} mt={1} flexWrap="wrap">
+                            {item.tags.slice(0, 2).map((t) => <Tag key={t} label={t} />)}
+                            {item.tags.length > 2 && (
+                              <Text fontSize="9px" color="var(--dash-text-muted)">+{item.tags.length - 2}</Text>
+                            )}
+                          </Flex>
+                        )}
+                      </MotionBox>
+                    );
+                  })}
                 </Box>
-              );
-            })}
-          </Box>
+                {totalPages > 1 && (
+                  <Flex align="center" justify="center" gap={2} py={2}
+                    borderTop="1px solid var(--dash-card-border)" flexShrink={0}>
+                    <IconButton
+                      icon={<ChevronLeftIcon />} size="xs" variant="ghost"
+                      color="var(--dash-text-muted)" _hover={{ color: 'white' }}
+                      isDisabled={page === 0}
+                      onClick={() => setSidebarPage((p) => Math.max(0, p - 1))}
+                      aria-label="Previous page"
+                    />
+                    <Text fontSize="10px" color="var(--dash-text-muted)" minW="40px" textAlign="center">
+                      {page + 1} / {totalPages}
+                    </Text>
+                    <IconButton
+                      icon={<ChevronRightIcon />} size="xs" variant="ghost"
+                      color="var(--dash-text-muted)" _hover={{ color: 'white' }}
+                      isDisabled={page >= totalPages - 1}
+                      onClick={() => setSidebarPage((p) => Math.min(totalPages - 1, p + 1))}
+                      aria-label="Next page"
+                    />
+                  </Flex>
+                )}
+              </Box>
+            );
+          })()}
         </Box>
 
         {/* Right Panel */}
         <Box flex={1} overflow="hidden" display="flex" flexDirection="column">
           {/* ── Empty state ─────────────────────────────────────────────── */}
           {!showForm && !selectedItem && loot.length === 0 && (
-            <Flex flex={1} direction="column" align="center" justify="center" gap={4}>
+            <Flex flex={1} direction="column" align="center" justify="center" gap={3}
+              color="var(--dash-text-muted)">
               <Box
-                p={6} borderRadius="16px"
-                bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
-                textAlign="center"
+                w="52px" h="52px" borderRadius="12px"
+                border="2px solid rgba(255,80,95,0.35)"
+                bg="rgba(255,80,95,0.1)"
+                display="flex" alignItems="center" justifyContent="center"
               >
-                <Text fontSize="3xl" mb={3}>🗃️</Text>
-                <Text fontWeight="bold" color="var(--dash-text-primary)" mb={1}>
-                  No loot captured yet
-                </Text>
-                <Text fontSize="sm" color="var(--dash-text-muted)" mb={4}>
-                  Start tracking credentials, configs, and other findings.
-                </Text>
-                <Button
-                  size="sm" leftIcon={<AddIcon />}
-                  bg="rgba(255,80,95,0.15)" color="rgba(255,100,115,0.9)"
-                  border="1px solid rgba(255,80,95,0.3)"
-                  _hover={{ bg: 'rgba(255,80,95,0.25)' }}
-                  borderRadius="8px" fontWeight="semibold"
-                  onClick={openAdd}
+                <Box
+                  w="22px" h="26px" borderRadius="4px"
+                  border="2px solid rgba(255,80,95,0.8)"
+                  position="relative"
                 >
-                  Add your first loot
-                </Button>
+                  <Box
+                    position="absolute" bottom="-6px" left="50%"
+                    transform="translateX(-50%)"
+                    w="8px" h="8px" borderRadius="full"
+                    border="2px solid rgba(255,80,95,0.8)"
+                    bg="transparent"
+                  />
+                </Box>
+              </Box>
+              <Box textAlign="center">
+                <Text fontSize="sm" fontWeight="semibold" color="var(--dash-text-secondary)">
+                  Loot Tracker
+                </Text>
+                <Text fontSize="xs" mt={1}>
+                  No loot captured yet — hit "Add Loot" to start
+                </Text>
               </Box>
             </Flex>
           )}
@@ -492,100 +568,90 @@ const LootTrackerView = () => {
           {/* ── Overview dashboard (no selection) ──────────────────────── */}
           {!showForm && !selectedItem && loot.length > 0 && (
             <Box flex={1} overflowY="auto" p={6}>
-              {/* Stats row */}
-              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3} mb={6}>
-                {[
-                  { label: 'Total Captured', value: loot.length, color: '#fc8181' },
-                  { label: 'With Content',   value: loot.filter(l => l.content?.trim()).length, color: '#9F7AEA' },
-                  { label: 'With Images',    value: loot.filter(l => l.images?.length > 0).length, color: '#68D391' },
-                  { label: 'Categories',     value: new Set(loot.map(l => l.category)).size, color: '#63B3ED' },
-                ].map(s => (
-                  <MotionBox key={s.label} p={4} borderRadius="12px"
-                    bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
-                    pos="relative" overflow="hidden"
-                    whileHover={{ y: -5, boxShadow: `0 12px 28px rgba(0,0,0,0.4), 0 0 0 1px ${s.color}30` }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-                    <Box pos="absolute" top="0" left="0" right="0" h="2px"
-                      style={{ background: `linear-gradient(to right, transparent, ${s.color}99, transparent)` }} />
-                    <Text fontSize="22px" fontWeight="bold" color={s.color} lineHeight="1">{s.value}</Text>
-                    <Text fontSize="10px" color="var(--dash-text-muted)" mt={1} textTransform="uppercase" letterSpacing="wider">{s.label}</Text>
-                  </MotionBox>
-                ))}
-              </SimpleGrid>
-
-              {/* By category breakdown */}
-              <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                letterSpacing="wider" fontWeight="semibold" mb={3}>By Category</Text>
-              <Flex gap={2} flexWrap="wrap" mb={6}>
-                {CATEGORIES.filter(c => loot.some(l => l.category === c)).map(c => {
-                  const s = CAT_STYLES[c] || CAT_STYLES['Other'];
-                  const count = loot.filter(l => l.category === c).length;
-                  return (
-                    <Flex key={c} align="center" gap={2} px={3} py={2} borderRadius="8px"
-                      bg={s.bg} border={`1px solid ${s.color}35`}
-                      cursor="pointer" _hover={{ borderColor: s.color + '70' }}
-                      onClick={() => setFilterCat(c)}>
-                      <Box w="6px" h="6px" borderRadius="full" bg={s.color} />
-                      <Text fontSize="12px" fontWeight="600" color={s.color}>{c}</Text>
-                      <Box px={1.5} py="1px" borderRadius="full" bg={`${s.color}20`}>
-                        <Text fontSize="10px" fontWeight="bold" color={s.color}>{count}</Text>
-                      </Box>
-                    </Flex>
-                  );
-                })}
-              </Flex>
-
-              {/* Recent loot */}
-              <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                letterSpacing="wider" fontWeight="semibold" mb={3}>Recent</Text>
-              <Flex direction="column" gap={2}>
-                {[...loot].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5).map(item => {
-                  const s = CAT_STYLES[item.category] || CAT_STYLES['Other'];
-                  return (
-                    <Flex key={item._id} align="center" gap={3} px={4} py={3} borderRadius="10px"
-                      bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
-                      cursor="pointer" transition="border-color 0.15s"
-                      _hover={{ borderColor: s.color + '50' }}
-                      onClick={() => { setSelected(item._id); setMode('view'); }}>
-                      <Box w="3px" h="32px" borderRadius="full" bg={s.color} flexShrink={0} />
-                      <Box flex={1} minW={0}>
-                        <Text fontSize="13px" fontWeight="600" color="var(--dash-text-primary)" noOfLines={1}>{item.title}</Text>
-                        {item.content && (
-                          <Text fontSize="11px" color="var(--dash-text-muted)" noOfLines={1} mt={0.5} fontFamily="monospace">
-                            {item.content.slice(0, 60)}{item.content.length > 60 ? '…' : ''}
+              {/* Recent loot — paginated */}
+              {(() => {
+                const PAGE_SIZE = 5;
+                const sorted = [...loot].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+                const page = Math.min(overviewPage, totalPages - 1);
+                const pageItems = sorted.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+                return (
+                  <>
+                    <Flex align="center" justify="space-between" mb={3}>
+                      <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
+                        letterSpacing="wider" fontWeight="semibold">
+                        Recent
+                      </Text>
+                      {totalPages > 1 && (
+                        <Flex align="center" gap={1}>
+                          <IconButton
+                            icon={<ChevronLeftIcon />} size="xs" variant="ghost"
+                            color="var(--dash-text-muted)"
+                            _hover={{ color: 'white' }}
+                            isDisabled={page === 0}
+                            onClick={() => setOverviewPage((p) => Math.max(0, p - 1))}
+                            aria-label="Previous page"
+                          />
+                          <Text fontSize="10px" color="var(--dash-text-muted)" minW="40px" textAlign="center">
+                            {page + 1} / {totalPages}
                           </Text>
-                        )}
-                      </Box>
-                      <Flex gap={2} align="center" flexShrink={0}>
-                        {item.images?.length > 0 && (
-                          <Text fontSize="10px" color="var(--dash-text-muted)">{item.images.length} img</Text>
-                        )}
-                        <CategoryBadge cat={item.category} small />
-                        <Text fontSize="10px" color="var(--dash-text-muted)">{formatDate(item.createdAt)}</Text>
-                      </Flex>
+                          <IconButton
+                            icon={<ChevronRightIcon />} size="xs" variant="ghost"
+                            color="var(--dash-text-muted)"
+                            _hover={{ color: 'white' }}
+                            isDisabled={page >= totalPages - 1}
+                            onClick={() => setOverviewPage((p) => Math.min(totalPages - 1, p + 1))}
+                            aria-label="Next page"
+                          />
+                        </Flex>
+                      )}
                     </Flex>
-                  );
-                })}
-              </Flex>
+                    <Flex direction="column" gap={2}>
+                      {pageItems.map(item => {
+                        const s = CAT_STYLES[item.category] || CAT_STYLES['Other'];
+                        return (
+                          <Flex key={item._id} align="center" gap={3} px={4} py={3} borderRadius="10px"
+                            bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+                            cursor="pointer" transition="border-color 0.15s"
+                            _hover={{ borderColor: s.color + '50' }}
+                            onClick={() => { setSelected(item._id); setMode('view'); }}>
+                            <Box w="3px" h="32px" borderRadius="full" bg={s.color} flexShrink={0} />
+                            <Box flex={1} minW={0}>
+                              <Text fontSize="13px" fontWeight="600" color="var(--dash-text-primary)" noOfLines={1}>{item.title}</Text>
+                              {item.content && (
+                                <Text fontSize="11px" color="var(--dash-text-muted)" noOfLines={1} mt={0.5} fontFamily="monospace">
+                                  {item.content.slice(0, 60)}{item.content.length > 60 ? '…' : ''}
+                                </Text>
+                              )}
+                            </Box>
+                            <Flex gap={2} align="center" flexShrink={0}>
+                              {item.images?.length > 0 && (
+                                <Text fontSize="10px" color="var(--dash-text-muted)">{item.images.length} img</Text>
+                              )}
+                              <CategoryBadge cat={item.category} small />
+                              <Text fontSize="10px" color="var(--dash-text-muted)">{formatDate(item.createdAt)}</Text>
+                            </Flex>
+                          </Flex>
+                        );
+                      })}
+                    </Flex>
+                  </>
+                );
+              })()}
             </Box>
           )}
 
           {/* ── Add / Edit Form ─────────────────────────────────────────── */}
           {showForm && (
-            <Box flex={1} overflowY="auto" p={6}>
-              <Flex align="center" justify="space-between" mb={5}>
-                <Heading size="xs" color="var(--dash-text-primary)" fontWeight="bold" textTransform="uppercase" letterSpacing="wider">
-                  {mode === 'add' ? 'Add Loot' : 'Edit Loot'}
-                </Heading>
-              </Flex>
+            <Box flex={1} overflowY="auto" px={6} py={5}>
+              <Heading size="xs" color="var(--dash-text-primary)" mb={5}>
+                {mode === 'add' ? 'Add Loot' : 'Edit Loot'}
+              </Heading>
 
               <Flex direction="column" gap={4} maxW="700px">
                 {/* Title */}
                 <Box>
-                  <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                    letterSpacing="wider" fontWeight="semibold" mb={1}>
-                    Title *
-                  </Text>
+                  <SectionLabel>Title</SectionLabel>
                   <Input
                     {...inputSx}
                     placeholder="e.g. Domain Admin Credentials"
@@ -596,10 +662,7 @@ const LootTrackerView = () => {
 
                 {/* Category */}
                 <Box>
-                  <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                    letterSpacing="wider" fontWeight="semibold" mb={2}>
-                    Category
-                  </Text>
+                  <SectionLabel>Category</SectionLabel>
                   <Flex gap={2} flexWrap="wrap">
                     {CATEGORIES.map(c => {
                       const s = CAT_STYLES[c] || CAT_STYLES['Other'];
@@ -621,10 +684,7 @@ const LootTrackerView = () => {
 
                 {/* Tags */}
                 <Box>
-                  <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                    letterSpacing="wider" fontWeight="semibold" mb={1}>
-                    Tags (comma-separated)
-                  </Text>
+                  <SectionLabel>Tags (comma-separated)</SectionLabel>
                   <Input
                     {...inputSx}
                     placeholder="e.g. domain-admin, kerberoast, ntlm"
@@ -635,10 +695,7 @@ const LootTrackerView = () => {
 
                 {/* Content */}
                 <Box>
-                  <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                    letterSpacing="wider" fontWeight="semibold" mb={1}>
-                    Content / Code Block
-                  </Text>
+                  <SectionLabel>Content / Code Block</SectionLabel>
                   <Textarea
                     variant="unstyled"
                     bg="rgba(0,0,0,0.4)"
@@ -661,10 +718,7 @@ const LootTrackerView = () => {
 
                 {/* Images */}
                 <Box>
-                  <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                    letterSpacing="wider" fontWeight="semibold" mb={2}>
-                    Screenshots / Images
-                  </Text>
+                  <SectionLabel>Screenshots / Images</SectionLabel>
                   <input
                     ref={fileInputRef}
                     type="file"

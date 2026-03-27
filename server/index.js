@@ -33,6 +33,7 @@ app.use('/api/c2',         require('./routes/c2'));
 app.use('/api/leakx',      require('./routes/leakx'));
 app.use('/api/subdomains', require('./routes/subdomains'));
 app.use('/api/loot',      require('./routes/loot'));
+app.use('/api/evidence',  require('./routes/evidence'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

@@ -177,7 +177,7 @@ const OpAvatar = ({ callsign, skills = [] }) => (
     {skills.length > 0 && (
       <Box
         pos="absolute" bottom="calc(100% + 8px)" left="50%" transform="translateX(-50%)"
-        zIndex={20} w="max-content" maxW="180px"
+        zIndex={1500} w="max-content" maxW="180px"
         bg="rgba(15,15,22,0.97)" border="1px solid rgba(79,209,197,0.25)"
         borderRadius="10px" p={3} pointerEvents="none"
         opacity={0} _groupHover={{ opacity: 1 }}
@@ -692,6 +692,7 @@ const EngagementDetailView = () => {
           accent="#4fd1c5"
           title="Operators"
           subtitle={`${eng.operators?.length || 0} assigned to this engagement`}
+          overflow="visible"
         >
           {operators.length === 0 ? (
             <EmptySlate main="No operators assigned" sub="Edit engagement to assign operators" />
