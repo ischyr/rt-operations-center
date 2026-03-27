@@ -273,6 +273,56 @@ const lootSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const phishingWebTemplateSchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    description:        { type: String, default: '' },
+    html:               { type: String, default: '<!DOCTYPE html>\n<html>\n<head>\n  <title>Login</title>\n  <style>\n    body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f5f5f5; }\n    .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; width: 100%; }\n    h2 { margin-top: 0; }\n    input { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }\n    button { width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }\n  </style>\n</head>\n<body>\n  <div class="container">\n    <h2>Sign In</h2>\n    <form>\n      <input type="email" placeholder="Email" />\n      <input type="password" placeholder="Password" />\n      <button type="submit">Sign In</button>\n    </form>\n  </div>\n</body>\n</html>' },
+    category:           { type: String, default: 'Login Page' },
+    tags:               [{ type: String }],
+    createdBy:          { type: String, default: '' },
+    createdByCallsign:  { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
+const phishingEmailTemplateSchema = new mongoose.Schema(
+  {
+    title:              { type: String, required: true, trim: true },
+    description:        { type: String, default: '' },
+    subject:            { type: String, default: '' },
+    senderName:         { type: String, default: '' },
+    senderEmail:        { type: String, default: '' },
+    html:               { type: String, default: '<!DOCTYPE html>\n<html>\n<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">\n  <h2>Action Required</h2>\n  <p>Dear {{name}},</p>\n  <p>Please verify your account by clicking the link below:</p>\n  <p><a href="{{url}}" style="display: inline-block; padding: 12px 24px; background: #4285f4; color: white; text-decoration: none; border-radius: 4px;">Verify Account</a></p>\n  <p>Best regards,<br/>IT Support</p>\n</body>\n</html>' },
+    textBody:           { type: String, default: '' },
+    category:           { type: String, default: 'Credential Harvest' },
+    tags:               [{ type: String }],
+    createdBy:          { type: String, default: '' },
+    createdByCallsign:  { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
+const phishingConfigSchema = new mongoose.Schema(
+  {
+    smtpHost:           { type: String, default: '' },
+    smtpPort:           { type: Number, default: 587 },
+    smtpUsername:        { type: String, default: '' },
+    smtpPassword:       { type: String, default: '' },
+    smtpTLS:            { type: Boolean, default: true },
+    senderEmail:        { type: String, default: '' },
+    senderName:         { type: String, default: '' },
+    domain:             { type: String, default: '' },
+    landingDomain:      { type: String, default: '' },
+    gophishUrl:         { type: String, default: '' },
+    gophishApiKey:      { type: String, default: '' },
+    notes:              { type: String, default: '' },
+    updatedBy:          { type: String, default: '' },
+    updatedByCallsign:  { type: String, default: '' },
+  },
+  { timestamps: true, _id: false }
+);
+
 const engagementSchema = new mongoose.Schema(
   {
     user: {
@@ -322,6 +372,9 @@ const engagementSchema = new mongoose.Schema(
     evidence:         [evidenceSchema],
     cleanup:          [cleanupSchema],
     qrCodes:          [qrCodeSchema],
+    phishingWebTemplates:   [phishingWebTemplateSchema],
+    phishingEmailTemplates: [phishingEmailTemplateSchema],
+    phishingConfig:         { type: phishingConfigSchema, default: () => ({}) },
   },
   { timestamps: true }
 );

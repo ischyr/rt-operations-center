@@ -1,54 +1,114 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Box, Flex, Text, Heading, Button, IconButton, Input, Select,
-  SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody, Spinner,
+  SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody, Spinner, Tooltip,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, CloseIcon, ViewIcon, ViewOffIcon, CopyIcon, CheckIcon } from '@chakra-ui/icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AddIcon, DeleteIcon, CloseIcon, ViewIcon, ViewOffIcon, CopyIcon,
+  CheckIcon, SettingsIcon, ExternalLinkIcon, InfoIcon, SearchIcon,
+} from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { useEngagements } from '../../../contexts/EngagementContext';
 import { useAuth } from '../../../contexts/AuthContext';
 
-// ── API / styles ───────────────────────────────────────────────────────────────
-const API = 'http://localhost:5000/api';
+const MotionBox = motion(Box);
+
+// ── Colors ───────────────────────────────────────────────────────────────────
+const ACCENT = '#9F7AEA';
+const RED    = '#FC8181';
+const GREEN  = '#68D391';
+const BLUE   = '#63B3ED';
+const ORANGE = '#F6AD55';
+const CYAN   = '#76E4F7';
+const YELLOW = '#ECC94B';
+
+// ── API ──────────────────────────────────────────────────────────────────────
+const API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const authHeaders = () => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
 
-const inputStyles = {
-  variant: 'unstyled',
-  bg: 'rgba(255,255,255,0.05)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: '10px',
-  px: 4, h: '40px', fontSize: 'sm',
-  color: 'var(--dash-text-primary)',
+// ── Input styles ─────────────────────────────────────────────────────────────
+const inputSx = {
+  variant: 'unstyled', bg: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px',
+  px: 4, h: '40px', fontSize: 'sm', color: 'var(--dash-text-primary)',
   _placeholder: { color: 'var(--dash-text-muted)' },
-  _hover: { border: '1px solid rgba(255,80,95,0.4)' },
-  _focus: { border: '1px solid rgba(255,80,95,0.7)', boxShadow: '0 0 0 1px rgba(255,80,95,0.3)' },
+  _hover: { border: `1px solid ${ACCENT}50` },
+  _focus: { border: `1px solid ${ACCENT}80`, boxShadow: `0 0 0 1px ${ACCENT}40` },
 };
 
-const selectStyles = {
-  bg: 'rgba(255,255,255,0.05)',
-  borderColor: 'rgba(255,255,255,0.1)',
-  borderRadius: '10px', h: '40px', fontSize: 'sm',
-  color: 'var(--dash-text-primary)',
-  cursor: 'pointer', focusBorderColor: 'rgba(255,80,95,0.7)',
-  _hover: { borderColor: 'rgba(255,80,95,0.4)' },
+const selSx = {
+  bg: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)',
+  borderRadius: '10px', h: '40px', fontSize: 'sm', color: 'var(--dash-text-primary)',
+  cursor: 'pointer', focusBorderColor: `${ACCENT}80`,
+  _hover: { borderColor: `${ACCENT}50` },
   sx: { '& option': { background: '#1a1a1f !important' } },
 };
 
-// ── Static data ───────────────────────────────────────────────────────────────
+// ── SVG Icons ────────────────────────────────────────────────────────────────
+const ServerIcon = (props) => (
+  <Box as="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+    <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+    <line x1="6" y1="6" x2="6.01" y2="6" />
+    <line x1="6" y1="18" x2="6.01" y2="18" />
+  </Box>
+);
+
+const CloudIcon = (props) => (
+  <Box as="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+  </Box>
+);
+
+const TerminalIcon = (props) => (
+  <Box as="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polyline points="4 17 10 11 4 5" />
+    <line x1="12" y1="19" x2="20" y2="19" />
+  </Box>
+);
+
+const BoltIcon = (props) => (
+  <Box as="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </Box>
+);
+
+const ShieldIcon = (props) => (
+  <Box as="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </Box>
+);
+
+const GlobeIcon = (props) => (
+  <Box as="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </Box>
+);
+
+// ── Static data ──────────────────────────────────────────────────────────────
 const DO_REGIONS = [
-  { value: 'nyc1', label: '🇺🇸  New York 1' },
-  { value: 'nyc3', label: '🇺🇸  New York 3' },
-  { value: 'sfo3', label: '🇺🇸  San Francisco 3' },
-  { value: 'ams3', label: '🇳🇱  Amsterdam 3' },
-  { value: 'sgp1', label: '🇸🇬  Singapore 1' },
-  { value: 'lon1', label: '🇬🇧  London 1' },
-  { value: 'fra1', label: '🇩🇪  Frankfurt 1' },
-  { value: 'tor1', label: '🇨🇦  Toronto 1' },
-  { value: 'blr1', label: '🇮🇳  Bangalore 1' },
-  { value: 'syd1', label: '🇦🇺  Sydney 1' },
+  { value: 'nyc1', label: 'New York 1', flag: 'US' },
+  { value: 'nyc3', label: 'New York 3', flag: 'US' },
+  { value: 'sfo3', label: 'San Francisco 3', flag: 'US' },
+  { value: 'ams3', label: 'Amsterdam 3', flag: 'NL' },
+  { value: 'sgp1', label: 'Singapore 1', flag: 'SG' },
+  { value: 'lon1', label: 'London 1', flag: 'GB' },
+  { value: 'fra1', label: 'Frankfurt 1', flag: 'DE' },
+  { value: 'tor1', label: 'Toronto 1', flag: 'CA' },
+  { value: 'blr1', label: 'Bangalore 1', flag: 'IN' },
+  { value: 'syd1', label: 'Sydney 1', flag: 'AU' },
 ];
 
 const DO_IMAGES = {
@@ -91,17 +151,17 @@ const DO_SIZES = {
 
 const STATUS_META = {
   pending:    { color: '#A0AEC0', label: 'Pending' },
-  deploying:  { color: '#ECC94B', label: 'Deploying' },
-  running:    { color: '#68D391', label: 'Running' },
-  destroying: { color: '#F6AD55', label: 'Destroying' },
+  deploying:  { color: YELLOW,   label: 'Deploying' },
+  running:    { color: GREEN,    label: 'Running' },
+  destroying: { color: ORANGE,   label: 'Destroying' },
   destroyed:  { color: '#718096', label: 'Destroyed' },
-  failed:     { color: '#FC8181', label: 'Failed' },
+  failed:     { color: RED,      label: 'Failed' },
 };
 
 const ACTIVE_STATUSES = ['pending', 'deploying', 'destroying'];
 const SSH_READY_SECONDS = 90;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 const genPassword = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#*';
   return Array.from({ length: 16 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -114,13 +174,25 @@ const getSshCountdown = (dep) => {
   return remaining > 0 ? remaining : null;
 };
 
-// ── Label ─────────────────────────────────────────────────────────────────────
+const fmtRelative = (iso) => {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso);
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+};
+
+// ── Label ────────────────────────────────────────────────────────────────────
 const Label = ({ children }) => (
   <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-    letterSpacing="wider" fontWeight="semibold" mb={1}>{children}</Text>
+    letterSpacing="wider" fontWeight="bold" mb={1.5}>{children}</Text>
 );
 
-// ── Countdown badge ───────────────────────────────────────────────────────────
+// ── Countdown badge ──────────────────────────────────────────────────────────
 const CountdownBadge = ({ dep }) => {
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -131,100 +203,110 @@ const CountdownBadge = ({ dep }) => {
   if (!remaining) return null;
   const pct = ((SSH_READY_SECONDS - remaining) / SSH_READY_SECONDS) * 100;
   return (
-    <Flex align="center" gap={2} p={2} borderRadius="8px"
-      bg="rgba(236,201,75,0.06)" border="1px solid rgba(236,201,75,0.2)" mb={3}>
-      <Box pos="relative" w="24px" h="24px" flexShrink={0}>
-        <svg width="24" height="24" viewBox="0 0 24 24" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="12" cy="12" r="10" fill="none" stroke="rgba(236,201,75,0.15)" strokeWidth="2.5" />
-          <circle cx="12" cy="12" r="10" fill="none" stroke="#ECC94B" strokeWidth="2.5"
+    <Flex align="center" gap={2} p={2.5} borderRadius="10px"
+      bg={`${YELLOW}08`} border={`1px solid ${YELLOW}25`} mb={3}>
+      <Box pos="relative" w="26px" h="26px" flexShrink={0}>
+        <svg width="26" height="26" viewBox="0 0 26 26" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="13" cy="13" r="10" fill="none" stroke={`${YELLOW}20`} strokeWidth="2.5" />
+          <circle cx="13" cy="13" r="10" fill="none" stroke={YELLOW} strokeWidth="2.5"
             strokeDasharray={`${2 * Math.PI * 10}`}
             strokeDashoffset={`${2 * Math.PI * 10 * (1 - pct / 100)}`}
             strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear' }} />
         </svg>
         <Text pos="absolute" top="50%" left="50%" transform="translate(-50%,-50%)"
-          fontSize="7px" fontWeight="bold" color="#ECC94B" lineHeight={1}>
+          fontSize="7px" fontWeight="bold" color={YELLOW} lineHeight={1}>
           {remaining}
         </Text>
       </Box>
       <Box>
-        <Text fontSize="11px" fontWeight="semibold" color="#ECC94B">cloud-init running</Text>
+        <Text fontSize="11px" fontWeight="semibold" color={YELLOW}>cloud-init running</Text>
         <Text fontSize="10px" color="var(--dash-text-muted)">SSH password auth ready in ~{remaining}s</Text>
       </Box>
     </Flex>
   );
 };
 
-// ── Deployment card ───────────────────────────────────────────────────────────
+// ── Copiable field ───────────────────────────────────────────────────────────
+const CopyField = ({ value, label, color = GREEN, masked = false }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <Flex align="center" gap={1.5} p={2} borderRadius="8px"
+      bg={`${color}08`} border={`1px solid ${color}18`} w="fit-content">
+      {label && <Text fontSize="10px" color="var(--dash-text-muted)" mr={0.5}>{label}</Text>}
+      <Text fontSize="12px" color={color} fontFamily="monospace" fontWeight="600">
+        {masked ? '••••••••' : value}
+      </Text>
+      <IconButton icon={copied ? <CheckIcon boxSize={2.5} color={color} /> : <CopyIcon boxSize={2.5} />}
+        size="xs" variant="ghost" minW="20px" h="20px"
+        color={copied ? color : 'var(--dash-text-muted)'}
+        _hover={{ color }} onClick={copy} aria-label="Copy" />
+    </Flex>
+  );
+};
+
+// ── Deployment card ──────────────────────────────────────────────────────────
 const DeploymentCard = ({ dep, onViewLogs, onDestroy, onDelete }) => {
-  const [copiedIp,   setCopiedIp]   = useState(false);
-  const [copiedPass, setCopiedPass] = useState(false);
   const sm = STATUS_META[dep.status] || STATUS_META.failed;
   const isActive = ACTIVE_STATUSES.includes(dep.status);
 
-  const copyIp = () => {
-    navigator.clipboard.writeText(dep.ipAddress);
-    setCopiedIp(true);
-    setTimeout(() => setCopiedIp(false), 1500);
-  };
-
-  const copyPass = () => {
-    navigator.clipboard.writeText(dep.config?.rootPassword || '');
-    setCopiedPass(true);
-    setTimeout(() => setCopiedPass(false), 1500);
-  };
-
   return (
-    <Box pos="relative" bg="var(--dash-card-bg)"
+    <MotionBox
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      pos="relative" bg="var(--dash-card-bg)"
       border="1px solid var(--dash-card-border)" borderRadius="14px"
-      overflow="hidden" transition="border-color 0.18s"
-      _hover={{ borderColor: sm.color + '55' }}>
+      overflow="hidden" _hover={{ borderColor: `${sm.color}55` }}
+      style={{ transition: 'border-color 0.18s' }}>
       <Box pos="absolute" top="0" left="0" right="0" h="2px"
         style={{ background: `linear-gradient(to right, transparent, ${sm.color}99, transparent)` }} />
       <Box p={4}>
         {/* Name + status */}
-        <Flex justify="space-between" align="flex-start" mb={2}>
+        <Flex justify="space-between" align="flex-start" mb={2.5}>
           <Box flex="1" minW={0} pr={2}>
-            <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)" noOfLines={1}>
-              {dep.name}
-            </Text>
-            <Text fontSize="11px" color="var(--dash-text-muted)" mt="2px">
-              DigitalOcean · {dep.config?.region || '—'} · {dep.config?.size || '—'}
-            </Text>
+            <Flex align="center" gap={2}>
+              <Flex w="30px" h="30px" borderRadius="8px" bg={`${sm.color}12`}
+                border={`1px solid ${sm.color}30`} align="center" justify="center" flexShrink={0}>
+                <ServerIcon boxSize="14px" color={sm.color} />
+              </Flex>
+              <Box>
+                <Text fontSize="13px" fontWeight="bold" color="var(--dash-text-primary)" noOfLines={1}>
+                  {dep.name}
+                </Text>
+                <Text fontSize="10px" color="var(--dash-text-muted)" mt="1px">
+                  DigitalOcean · {dep.config?.region || '—'} · {dep.config?.size || '—'}
+                </Text>
+              </Box>
+            </Flex>
           </Box>
           <Flex align="center" gap={1.5} px={2} py={1} borderRadius="6px"
-            bg={sm.color + '18'} border={`1px solid ${sm.color}44`} flexShrink={0}>
+            bg={`${sm.color}15`} border={`1px solid ${sm.color}40`} flexShrink={0}>
             {isActive
               ? <Spinner size="xs" color={sm.color} />
               : <Box w="6px" h="6px" borderRadius="full" bg={sm.color}
                   boxShadow={dep.status === 'running' ? `0 0 6px ${sm.color}` : 'none'} />}
-            <Text fontSize="10px" fontWeight="700" color={sm.color}
+            <Text fontSize="9px" fontWeight="700" color={sm.color}
               textTransform="uppercase" letterSpacing="wider">{sm.label}</Text>
           </Flex>
         </Flex>
 
-        {/* Image */}
+        {/* Image tag */}
         <Box display="inline-block" mb={3} px={2} py="2px" borderRadius="5px"
-          fontSize="9px" fontWeight="semibold" letterSpacing="wider" textTransform="uppercase"
-          bg="rgba(255,255,255,0.06)" border="1px solid rgba(255,255,255,0.1)"
-          color="var(--dash-text-muted)">
+          fontSize="9px" fontWeight="bold" letterSpacing="wider" textTransform="uppercase"
+          bg={`${ACCENT}10`} border={`1px solid ${ACCENT}25`} color={ACCENT}>
           {dep.config?.image || 'unknown image'}
         </Box>
 
-        {/* 90s countdown after running */}
+        {/* 90s countdown */}
         <CountdownBadge dep={dep} />
 
         {/* IP */}
         {dep.ipAddress ? (
-          <Flex align="center" gap={1.5} mb={3} p={2} borderRadius="8px"
-            bg="rgba(104,211,145,0.06)" border="1px solid rgba(104,211,145,0.15)" w="fit-content">
-            <Text fontSize="12px" color="#68D391" fontFamily="monospace" fontWeight="600">
-              {dep.ipAddress}
-            </Text>
-            <IconButton icon={copiedIp ? <CheckIcon color="#68D391" /> : <CopyIcon />}
-              size="xs" variant="ghost"
-              color={copiedIp ? '#68D391' : 'var(--dash-text-muted)'}
-              _hover={{ color: '#68D391' }} onClick={copyIp} aria-label="Copy IP" />
-          </Flex>
+          <Box mb={3}><CopyField value={dep.ipAddress} color={GREEN} /></Box>
         ) : dep.status !== 'destroyed' && (
           <Flex align="center" gap={1.5} mb={3} p={2} borderRadius="8px"
             bg="rgba(255,255,255,0.03)" border="1px solid rgba(255,255,255,0.07)" w="fit-content">
@@ -234,63 +316,62 @@ const DeploymentCard = ({ dep, onViewLogs, onDestroy, onDelete }) => {
           </Flex>
         )}
 
-        {/* Password copy */}
+        {/* Password */}
         {dep.config?.rootPassword && (
-          <Flex align="center" gap={1.5} mb={3} p={2} borderRadius="8px"
-            bg="rgba(255,255,255,0.03)" border="1px solid rgba(255,255,255,0.07)" w="fit-content">
-            <Text fontSize="11px" color="var(--dash-text-muted)" mr={1}>Root password</Text>
-            <Text fontSize="12px" color="var(--dash-text-secondary)" fontFamily="monospace" letterSpacing="wider">
-              {'•'.repeat(8)}
-            </Text>
-            <IconButton
-              icon={copiedPass ? <CheckIcon color="rgba(255,130,130,0.9)" /> : <CopyIcon />}
-              size="xs" variant="ghost"
-              color={copiedPass ? 'rgba(255,130,130,0.9)' : 'var(--dash-text-muted)'}
-              _hover={{ color: 'rgba(255,130,130,0.9)' }}
-              onClick={copyPass} aria-label="Copy password" />
-          </Flex>
+          <Box mb={3}><CopyField value={dep.config.rootPassword} label="root pass" color={ACCENT} masked /></Box>
         )}
 
         {/* Footer */}
-        <Flex justify="space-between" align="center">
-          <Text fontSize="11px" color="var(--dash-text-muted)">
-            By <Text as="span" color="var(--dash-text-secondary)">{dep.createdByCallsign || '—'}</Text>
-          </Text>
+        <Flex justify="space-between" align="center" pt={2}
+          borderTop="1px solid rgba(255,255,255,0.05)">
+          <Flex align="center" gap={1.5}>
+            <Text fontSize="10px" color="var(--dash-text-muted)">
+              {dep.createdByCallsign || '—'}
+            </Text>
+            {dep.updatedAt && (
+              <Text fontSize="9px" color="var(--dash-text-muted)">· {fmtRelative(dep.updatedAt)}</Text>
+            )}
+          </Flex>
           <Flex gap={1}>
-            <Button size="xs" variant="ghost" fontSize="10px" fontWeight="600"
-              color="var(--dash-text-muted)" borderRadius="6px"
-              _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
-              onClick={() => onViewLogs(dep)}>Logs</Button>
+            <Tooltip label="View Logs" fontSize="10px">
+              <IconButton icon={<TerminalIcon boxSize="13px" />} size="xs" variant="ghost"
+                color="var(--dash-text-muted)" borderRadius="6px"
+                _hover={{ color: CYAN, bg: `${CYAN}12` }}
+                onClick={() => onViewLogs(dep)} aria-label="Logs" />
+            </Tooltip>
             {dep.status === 'running' && (
-              <Button size="xs" fontSize="10px" fontWeight="600" borderRadius="6px"
-                bg="rgba(252,129,129,0.08)" border="1px solid rgba(252,129,129,0.25)"
-                color="#FC8181" _hover={{ bg: 'rgba(252,129,129,0.16)' }}
+              <Button size="xs" fontSize="10px" fontWeight="bold" borderRadius="6px"
+                bg={`${RED}12`} border={`1px solid ${RED}30`}
+                color={RED} _hover={{ bg: `${RED}20` }}
                 onClick={() => onDestroy(dep)}>Destroy</Button>
             )}
             {['destroyed', 'failed'].includes(dep.status) && (
-              <IconButton icon={<DeleteIcon />} size="xs" variant="ghost"
-                color="var(--dash-text-muted)" _hover={{ color: '#FC8181', bg: 'rgba(252,129,129,0.08)' }}
-                onClick={() => onDelete(dep._id)} aria-label="Remove record" />
+              <Tooltip label="Remove record" fontSize="10px">
+                <IconButton icon={<DeleteIcon boxSize={3} />} size="xs" variant="ghost"
+                  color="var(--dash-text-muted)" borderRadius="6px"
+                  _hover={{ color: RED, bg: `${RED}08` }}
+                  onClick={() => onDelete(dep._id)} aria-label="Remove" />
+              </Tooltip>
             )}
           </Flex>
         </Flex>
       </Box>
-    </Box>
+    </MotionBox>
   );
 };
 
-// ── Terminal ──────────────────────────────────────────────────────────────────
+// ── Terminal ─────────────────────────────────────────────────────────────────
 const Terminal = ({ output, status }) => {
   const bottomRef = useRef(null);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [output]);
   return (
-    <Box bg="rgba(0,0,0,0.6)" border="1px solid rgba(255,255,255,0.07)"
-      borderRadius="10px" h="360px" overflowY="auto" p={3} fontFamily="monospace" fontSize="12px"
+    <Box bg="rgba(0,0,0,0.5)" border="1px solid rgba(255,255,255,0.06)"
+      borderRadius="12px" h="360px" overflowY="auto" p={4} fontFamily="monospace" fontSize="12px"
       css={{ '&::-webkit-scrollbar': { width: '3px' }, '&::-webkit-scrollbar-thumb': { background: 'rgba(255,255,255,0.1)', borderRadius: '3px' } }}>
       {ACTIVE_STATUSES.includes(status) && (
         <Flex align="center" gap={2} mb={2}>
-          <Spinner size="xs" color="#ECC94B" />
-          <Text color="#ECC94B" fontSize="11px">
+          <Spinner size="xs" color={YELLOW} />
+          <Text color={YELLOW} fontSize="11px" fontWeight="semibold">
             {status === 'deploying' ? 'Deploying infrastructure…' : 'Destroying infrastructure…'}
           </Text>
         </Flex>
@@ -303,7 +384,7 @@ const Terminal = ({ output, status }) => {
   );
 };
 
-// ── Deploy Modal ──────────────────────────────────────────────────────────────
+// ── Deploy Modal ─────────────────────────────────────────────────────────────
 const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) => {
   const [form, setForm] = useState({
     deployName: '', doToken: savedToken || '',
@@ -312,11 +393,10 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
     planType: 'Basic', size: 's-1vcpu-1gb',
     rootPassword: '',
   });
-  const [showToken, setShowToken]   = useState(false);
-  const [showPass,  setShowPass]    = useState(false);
-  const [saveToken, setSaveToken]   = useState(true);
+  const [showToken, setShowToken] = useState(false);
+  const [showPass,  setShowPass]  = useState(false);
+  const [saveToken, setSaveToken] = useState(true);
 
-  // Sync savedToken into form when modal opens
   useEffect(() => {
     if (isOpen) setForm(f => ({ ...f, doToken: savedToken || f.doToken }));
   }, [isOpen, savedToken]);
@@ -349,7 +429,7 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
 
   return (
     <Modal isOpen onClose={onClose} isCentered size="lg">
-      <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(4px)" />
+      <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(6px)" />
       <ModalContent bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
         borderRadius="16px" overflow="hidden" p={0}
         maxH="90vh" overflowY="auto"
@@ -357,14 +437,14 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
         <ModalBody p={0}>
           <Box p={6} pos="relative">
             <Box pos="absolute" top="0" left="0" right="0" h="2px"
-              style={{ background: 'linear-gradient(to right, transparent, rgba(0,128,255,0.6), transparent)' }} />
+              style={{ background: `linear-gradient(to right, transparent, ${BLUE}80, transparent)` }} />
 
             {/* Header */}
             <Flex justify="space-between" align="flex-start" mb={5}>
               <Flex align="center" gap={3}>
-                <Flex w="36px" h="36px" borderRadius="10px" align="center" justify="center"
-                  bg="rgba(0,128,255,0.1)" border="1px solid rgba(0,128,255,0.25)" fontSize="18px">
-                  🌊
+                <Flex w="38px" h="38px" borderRadius="10px" align="center" justify="center"
+                  bg={`${BLUE}15`} border={`1px solid ${BLUE}35`}>
+                  <CloudIcon boxSize="18px" color={BLUE} />
                 </Flex>
                 <Box>
                   <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">
@@ -387,30 +467,29 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
                 <Label>DigitalOcean API Token</Label>
                 {tokenSaved && (
                   <Flex align="center" gap={1}>
-                    <CheckIcon boxSize={2.5} color="#68D391" />
-                    <Text fontSize="10px" color="#68D391">Saved for this engagement</Text>
+                    <CheckIcon boxSize={2.5} color={GREEN} />
+                    <Text fontSize="10px" color={GREEN} fontWeight="semibold">Saved for this engagement</Text>
                   </Flex>
                 )}
               </Flex>
               <Flex gap={2}>
                 <Input type={showToken ? 'text' : 'password'}
                   value={form.doToken} onChange={set('doToken')}
-                  placeholder="dop_v1_…" {...inputStyles} flex="1" />
-                <IconButton icon={showToken ? <ViewOffIcon /> : <ViewIcon />}
+                  placeholder="dop_v1_…" {...inputSx} flex="1" />
+                <IconButton icon={showToken ? <ViewOffIcon boxSize={3.5} /> : <ViewIcon boxSize={3.5} />}
                   onClick={() => setShowToken(t => !t)}
                   size="sm" variant="ghost" color="var(--dash-text-muted)"
-                  _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
+                  _hover={{ color: ACCENT }}
                   borderRadius="10px" border="1px solid rgba(255,255,255,0.1)"
                   bg="rgba(255,255,255,0.05)" h="40px" w="40px" aria-label="Toggle" />
               </Flex>
-              {/* Save token checkbox */}
               <Flex align="center" gap={2} mt={1.5} cursor="pointer"
                 onClick={() => setSaveToken(s => !s)}>
                 <Box w="14px" h="14px" borderRadius="4px" flexShrink={0}
-                  bg={saveToken ? 'rgba(255,80,95,0.15)' : 'rgba(255,255,255,0.05)'}
-                  border={`1px solid ${saveToken ? 'rgba(255,80,95,0.5)' : 'rgba(255,255,255,0.15)'}`}
+                  bg={saveToken ? `${ACCENT}15` : 'rgba(255,255,255,0.05)'}
+                  border={`1px solid ${saveToken ? `${ACCENT}50` : 'rgba(255,255,255,0.15)'}`}
                   display="flex" alignItems="center" justifyContent="center">
-                  {saveToken && <CheckIcon boxSize={2} color="rgba(255,130,130,0.9)" />}
+                  {saveToken && <CheckIcon boxSize={2} color={ACCENT} />}
                 </Box>
                 <Text fontSize="10px" color="var(--dash-text-muted)" userSelect="none">
                   Save token for this engagement (no need to enter next time)
@@ -423,20 +502,20 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
               <Box>
                 <Label>Deployment Name</Label>
                 <Input value={form.deployName} onChange={set('deployName')}
-                  placeholder="My C2 Node" {...inputStyles} />
+                  placeholder="My C2 Node" {...inputSx} />
               </Box>
               <Box>
                 <Label>Hostname</Label>
                 <Input value={form.hostname} onChange={set('hostname')}
-                  placeholder="c2-node-01" {...inputStyles} />
+                  placeholder="c2-node-01" {...inputSx} />
               </Box>
             </SimpleGrid>
 
             {/* Region */}
             <Box mb={3}>
               <Label>Region</Label>
-              <Select value={form.region} onChange={set('region')} {...selectStyles}>
-                {DO_REGIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              <Select value={form.region} onChange={set('region')} {...selSx}>
+                {DO_REGIONS.map(r => <option key={r.value} value={r.value}>{r.flag} — {r.label}</option>)}
               </Select>
             </Box>
 
@@ -444,13 +523,13 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
             <SimpleGrid columns={2} spacing={3} mb={3}>
               <Box>
                 <Label>Distribution</Label>
-                <Select value={form.distro} onChange={set('distro')} {...selectStyles}>
+                <Select value={form.distro} onChange={set('distro')} {...selSx}>
                   {Object.keys(DO_IMAGES).map(d => <option key={d} value={d}>{d}</option>)}
                 </Select>
               </Box>
               <Box>
                 <Label>Version</Label>
-                <Select value={form.osVersion} onChange={set('osVersion')} {...selectStyles}>
+                <Select value={form.osVersion} onChange={set('osVersion')} {...selSx}>
                   {(DO_IMAGES[form.distro] || []).map(v => (
                     <option key={v.value} value={v.value}>{v.label}</option>
                   ))}
@@ -462,13 +541,13 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
             <SimpleGrid columns={2} spacing={3} mb={3}>
               <Box>
                 <Label>CPU Type</Label>
-                <Select value={form.planType} onChange={set('planType')} {...selectStyles}>
+                <Select value={form.planType} onChange={set('planType')} {...selSx}>
                   {Object.keys(DO_SIZES).map(t => <option key={t} value={t}>{t}</option>)}
                 </Select>
               </Box>
               <Box>
                 <Label>Size</Label>
-                <Select value={form.size} onChange={set('size')} {...selectStyles}>
+                <Select value={form.size} onChange={set('size')} {...selSx}>
                   {(DO_SIZES[form.planType] || []).map(s => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
@@ -482,17 +561,18 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
               <Flex gap={2}>
                 <Input type={showPass ? 'text' : 'password'}
                   value={form.rootPassword} onChange={set('rootPassword')}
-                  placeholder="Min. 8 characters" {...inputStyles} flex="1" />
-                <IconButton icon={showPass ? <ViewOffIcon /> : <ViewIcon />}
+                  placeholder="Min. 8 characters" {...inputSx} flex="1" />
+                <IconButton icon={showPass ? <ViewOffIcon boxSize={3.5} /> : <ViewIcon boxSize={3.5} />}
                   onClick={() => setShowPass(t => !t)}
                   size="sm" variant="ghost" color="var(--dash-text-muted)"
-                  _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
+                  _hover={{ color: ACCENT }}
                   borderRadius="10px" border="1px solid rgba(255,255,255,0.1)"
                   bg="rgba(255,255,255,0.05)" h="40px" w="40px" aria-label="Toggle" />
                 <Button onClick={() => setForm(f => ({ ...f, rootPassword: genPassword() }))}
                   size="sm" variant="ghost" h="40px" px={4} borderRadius="10px" fontSize="12px"
-                  bg="rgba(255,80,95,0.08)" border="1px solid rgba(255,80,95,0.25)"
-                  color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.15)' }}>
+                  bg={`${ACCENT}12`} border={`1px solid ${ACCENT}35`}
+                  color={ACCENT} fontWeight="bold"
+                  _hover={{ bg: `${ACCENT}20` }}>
                   Generate
                 </Button>
               </Flex>
@@ -503,8 +583,8 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
 
             {error && (
               <Box mb={4} p={3} borderRadius="10px"
-                bg="rgba(252,129,129,0.08)" border="1px solid rgba(252,129,129,0.25)">
-                <Text fontSize="12px" color="#FC8181">{error}</Text>
+                bg={`${RED}10`} border={`1px solid ${RED}30`}>
+                <Text fontSize="12px" color={RED}>{error}</Text>
               </Box>
             )}
 
@@ -512,12 +592,12 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
               <Button flex="1" size="sm" variant="ghost" borderRadius="10px" h="40px"
                 color="var(--dash-text-muted)" _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
                 onClick={onClose}>Cancel</Button>
-              <Button flex="1" size="sm" h="40px" borderRadius="10px" fontWeight="semibold"
-                bg="rgba(255,80,95,0.12)" border="1px solid rgba(255,80,95,0.4)"
-                color="rgba(255,130,130,0.95)" _hover={{ bg: 'rgba(255,80,95,0.2)' }}
+              <Button flex="1" size="sm" h="40px" borderRadius="10px" fontWeight="bold"
+                bg={`${ACCENT}15`} border={`1px solid ${ACCENT}50`}
+                color={ACCENT} _hover={{ bg: `${ACCENT}25` }}
                 isDisabled={!canSubmit} isLoading={loading} loadingText="Starting…"
                 onClick={submit}>
-                🚀 Deploy Droplet
+                Deploy Droplet
               </Button>
             </Flex>
           </Box>
@@ -527,7 +607,7 @@ const DeployModal = ({ isOpen, onClose, onDeploy, loading, error, savedToken }) 
   );
 };
 
-// ── Logs Modal ────────────────────────────────────────────────────────────────
+// ── Logs Modal ───────────────────────────────────────────────────────────────
 const LogsModal = ({ dep, engId, onClose, onDestroy }) => {
   const [live, setLive] = useState({ output: dep?.output || '', status: dep?.status, ipAddress: dep?.ipAddress });
   const pollRef = useRef(null);
@@ -556,7 +636,7 @@ const LogsModal = ({ dep, engId, onClose, onDestroy }) => {
 
   return (
     <Modal isOpen onClose={onClose} size="2xl" isCentered>
-      <ModalOverlay bg="rgba(0,0,0,0.7)" backdropFilter="blur(4px)" />
+      <ModalOverlay bg="rgba(0,0,0,0.7)" backdropFilter="blur(6px)" />
       <ModalContent bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
         borderRadius="16px" overflow="hidden">
         <ModalBody p={0}>
@@ -564,25 +644,30 @@ const LogsModal = ({ dep, engId, onClose, onDestroy }) => {
             <Box pos="absolute" top="0" left="0" right="0" h="2px"
               style={{ background: `linear-gradient(to right, transparent, ${sm.color}88, transparent)` }} />
             <Flex justify="space-between" align="center" mb={4}>
-              <Box>
-                <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">{dep.name}</Text>
-                <Flex align="center" gap={2} mt="2px">
-                  {ACTIVE_STATUSES.includes(live.status)
-                    ? <Spinner size="xs" color={sm.color} />
-                    : <Box w="6px" h="6px" borderRadius="full" bg={sm.color} />}
-                  <Text fontSize="11px" color={sm.color} textTransform="uppercase" fontWeight="semibold">
-                    {sm.label}
-                  </Text>
-                  {live.ipAddress && (
-                    <Text fontSize="11px" color="#68D391" fontFamily="monospace">· {live.ipAddress}</Text>
-                  )}
+              <Flex align="center" gap={3}>
+                <Flex w="32px" h="32px" borderRadius="8px" bg={`${sm.color}12`}
+                  border={`1px solid ${sm.color}30`} align="center" justify="center">
+                  <TerminalIcon boxSize="14px" color={sm.color} />
                 </Flex>
-              </Box>
+                <Box>
+                  <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">{dep.name}</Text>
+                  <Flex align="center" gap={2} mt="2px">
+                    {ACTIVE_STATUSES.includes(live.status)
+                      ? <Spinner size="xs" color={sm.color} />
+                      : <Box w="6px" h="6px" borderRadius="full" bg={sm.color} />}
+                    <Text fontSize="10px" color={sm.color} textTransform="uppercase" fontWeight="bold"
+                      letterSpacing="wider">{sm.label}</Text>
+                    {live.ipAddress && (
+                      <Text fontSize="11px" color={GREEN} fontFamily="monospace">· {live.ipAddress}</Text>
+                    )}
+                  </Flex>
+                </Box>
+              </Flex>
               <Flex align="center" gap={2}>
                 {live.status === 'running' && (
-                  <Button size="xs" fontSize="10px" fontWeight="600" borderRadius="6px"
-                    bg="rgba(252,129,129,0.08)" border="1px solid rgba(252,129,129,0.25)"
-                    color="#FC8181" _hover={{ bg: 'rgba(252,129,129,0.16)' }}
+                  <Button size="xs" fontSize="10px" fontWeight="bold" borderRadius="6px"
+                    bg={`${RED}10`} border={`1px solid ${RED}30`}
+                    color={RED} _hover={{ bg: `${RED}20` }}
                     onClick={() => { onClose(); onDestroy(dep); }}>Destroy</Button>
                 )}
                 <IconButton icon={<CloseIcon boxSize={2.5} />} size="xs" variant="ghost"
@@ -593,11 +678,11 @@ const LogsModal = ({ dep, engId, onClose, onDestroy }) => {
             </Flex>
             <Terminal output={live.output} status={live.status} />
             {live.ipAddress && live.status === 'running' && (
-              <Box mt={3} p={3} borderRadius="10px"
-                bg="rgba(104,211,145,0.06)" border="1px solid rgba(104,211,145,0.15)">
+              <Box mt={3} p={3} borderRadius="12px"
+                bg={`${GREEN}08`} border={`1px solid ${GREEN}18`}>
                 <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-                  letterSpacing="wider" mb={1}>Quick connect</Text>
-                <Text fontSize="13px" color="#68D391" fontFamily="monospace">
+                  letterSpacing="wider" fontWeight="bold" mb={1}>Quick connect</Text>
+                <Text fontSize="13px" color={GREEN} fontFamily="monospace" fontWeight="600">
                   ssh root@{live.ipAddress}
                 </Text>
               </Box>
@@ -609,7 +694,7 @@ const LogsModal = ({ dep, engId, onClose, onDestroy }) => {
   );
 };
 
-// ── Destroy Confirm ───────────────────────────────────────────────────────────
+// ── Destroy Confirm ──────────────────────────────────────────────────────────
 const DestroyConfirm = ({ dep, engId, onClose, onConfirmed, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [err, setErr]         = useState('');
@@ -624,7 +709,6 @@ const DestroyConfirm = ({ dep, engId, onClose, onConfirmed, onRefresh }) => {
       if (!res.ok) { setErr(data.message || 'Error'); setLoading(false); return; }
       onConfirmed(dep._id, data.status || 'destroying');
       onClose();
-      // Sync context so destroy state persists across navigation
       if (onRefresh) onRefresh();
     } catch { setErr('Network error'); setLoading(false); }
   };
@@ -633,37 +717,46 @@ const DestroyConfirm = ({ dep, engId, onClose, onConfirmed, onRefresh }) => {
 
   return (
     <Modal isOpen onClose={onClose} size="sm" isCentered>
-      <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(4px)" />
+      <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(6px)" />
       <ModalContent bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
         borderRadius="16px" overflow="hidden">
         <ModalBody p={0}>
           <Box p={6} pos="relative">
             <Box pos="absolute" top="0" left="0" right="0" h="2px"
-              style={{ background: 'linear-gradient(to right, transparent, rgba(252,129,129,0.6), transparent)' }} />
-            <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)" mb={2}>
-              Destroy Droplet?
-            </Text>
-            <Text fontSize="13px" color="var(--dash-text-secondary)" mb={4} lineHeight="1.6">
+              style={{ background: `linear-gradient(to right, transparent, ${RED}80, transparent)` }} />
+            <Flex align="center" gap={3} mb={4}>
+              <Flex w="36px" h="36px" borderRadius="10px" bg={`${RED}12`}
+                border={`1px solid ${RED}30`} align="center" justify="center">
+                <ShieldIcon boxSize="16px" color={RED} />
+              </Flex>
+              <Box>
+                <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">
+                  Destroy Droplet?
+                </Text>
+                <Text fontSize="11px" color="var(--dash-text-muted)">This action cannot be undone</Text>
+              </Box>
+            </Flex>
+            <Text fontSize="12px" color="var(--dash-text-secondary)" mb={4} lineHeight="1.7">
               This will run{' '}
-              <Text as="span" fontFamily="monospace" fontSize="12px"
-                color="rgba(255,130,130,0.9)">terraform destroy</Text>{' '}
+              <Text as="span" fontFamily="monospace" fontSize="11px" color={RED}
+                bg={`${RED}10`} px={1.5} py="1px" borderRadius="4px">terraform destroy</Text>{' '}
               and permanently delete{' '}
-              <Text as="span" fontWeight="semibold" color="var(--dash-text-primary)">{dep.name}</Text>
-              {dep.ipAddress ? ` (${dep.ipAddress})` : ''}. This cannot be undone.
+              <Text as="span" fontWeight="bold" color="var(--dash-text-primary)">{dep.name}</Text>
+              {dep.ipAddress ? ` (${dep.ipAddress})` : ''}.
             </Text>
             {err && (
-              <Box mb={3} p={2} borderRadius="8px"
-                bg="rgba(252,129,129,0.08)" border="1px solid rgba(252,129,129,0.2)">
-                <Text fontSize="12px" color="#FC8181">{err}</Text>
+              <Box mb={3} p={2.5} borderRadius="10px"
+                bg={`${RED}08`} border={`1px solid ${RED}25`}>
+                <Text fontSize="12px" color={RED}>{err}</Text>
               </Box>
             )}
             <Flex gap={3}>
               <Button flex="1" size="sm" variant="ghost" borderRadius="10px" h="38px"
                 color="var(--dash-text-muted)" _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
                 onClick={onClose}>Cancel</Button>
-              <Button flex="1" size="sm" h="38px" borderRadius="10px" fontWeight="semibold"
-                bg="rgba(252,129,129,0.1)" border="1px solid rgba(252,129,129,0.35)"
-                color="#FC8181" _hover={{ bg: 'rgba(252,129,129,0.18)' }}
+              <Button flex="1" size="sm" h="38px" borderRadius="10px" fontWeight="bold"
+                bg={`${RED}12`} border={`1px solid ${RED}40`}
+                color={RED} _hover={{ bg: `${RED}20` }}
                 isLoading={loading} loadingText="Destroying…" onClick={confirm}>
                 Yes, Destroy
               </Button>
@@ -675,7 +768,10 @@ const DestroyConfirm = ({ dep, engId, onClose, onConfirmed, onRefresh }) => {
   );
 };
 
-// ── Main View ─────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// ── Main View ────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+
 const C2View = () => {
   const { slug } = useParams();
   const { getBySlug, updateEngagement, fetchEngagements } = useEngagements();
@@ -690,15 +786,12 @@ const C2View = () => {
   const [destroyTarget, setDestroyTarget] = useState(null);
   const activePollRef   = useRef(null);
 
-  // Fetch fresh data on mount so status is never stale when navigating back
   useEffect(() => { fetchEngagements(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync from engagement context whenever eng changes (handles navigation back)
   useEffect(() => {
     if (eng?.c2Deployments) setDeployments(eng.c2Deployments);
   }, [eng]);
 
-  // Poll active deployments every 5s to pick up IP / status from server
   const refreshActive = useCallback(async () => {
     if (!eng) return;
     const actives = deployments.filter(d => ACTIVE_STATUSES.includes(d.status));
@@ -733,16 +826,13 @@ const C2View = () => {
       const data = await res.json();
       if (!res.ok) { setDeployError(data.message || 'Deploy failed'); setDeploying(false); return; }
 
-      // Save DO token to engagement if requested
       if (formData.saveToken && formData.doToken) {
         await updateEngagement(eng.id, {
           c2Config: { ...(eng.c2Config || {}), doToken: formData.doToken },
         });
       }
 
-      // Refresh engagement context so deployment persists across navigation
       await fetchEngagements();
-
       setShowDeploy(false);
       setDeploying(false);
     } catch { setDeployError('Network error'); setDeploying(false); }
@@ -756,71 +846,113 @@ const C2View = () => {
 
   const handleDeleteRecord = async (deployId) => {
     if (!eng) return;
-    // Optimistic removal
     setDeployments(prev => prev.filter(d => String(d._id) !== String(deployId)));
     try {
       await fetch(`${API}/c2/${eng._id}/deployments/${deployId}`, {
         method: 'DELETE', headers: authHeaders(),
       });
-      // Sync context so removal persists across navigation
       await fetchEngagements();
     } catch {}
   };
 
-  if (!eng) return null;
+  if (!eng) return (
+    <Flex align="center" justify="center" h="60vh"><Spinner size="lg" color={ACCENT} /></Flex>
+  );
 
   const savedToken   = eng.c2Config?.doToken || '';
   const runningCount = deployments.filter(d => d.status === 'running').length;
   const activeCount  = deployments.filter(d => ACTIVE_STATUSES.includes(d.status)).length;
+  const destroyedCount = deployments.filter(d => d.status === 'destroyed').length;
+  const totalCount = deployments.length;
 
   return (
-    <Box px={6} pb={10}>
+    <Box px={6} pb={12}>
+
       {/* Header */}
-      <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={3}>
+      <Flex justify="space-between" align="flex-start" mb={6} flexWrap="wrap" gap={3}>
         <Box>
-          <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)">
-            C2 <Text as="span" color="red.400">Infrastructure</Text>
+          <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
+            C2 <Text as="span" color={ACCENT}>Infrastructure</Text>
           </Heading>
           <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
             {eng.name} · provision and manage C2 nodes via Terraform + Docker
           </Text>
         </Box>
-        <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" borderRadius="8px"
-          bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
-          color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
+        <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" fontWeight="bold"
+          borderRadius="8px" bg={`${ACCENT}15`} border={`1px solid ${ACCENT}40`}
+          color={ACCENT} _hover={{ bg: `${ACCENT}25` }}
           onClick={() => { setDeployError(''); setShowDeploy(true); }}>
           New Deployment
         </Button>
       </Flex>
 
-      {/* Template cards */}
-      <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-        letterSpacing="wider" fontWeight="semibold" mb={3}>Infrastructure Templates</Text>
+      {/* Stats row */}
+      <SimpleGrid columns={{ base: 2, md: 4 }} gap={3} mb={6}>
+        {[
+          { label: 'Total Nodes', value: totalCount, color: ACCENT, icon: ServerIcon },
+          { label: 'Running', value: runningCount, color: GREEN, icon: CheckIcon },
+          { label: 'In Progress', value: activeCount, color: YELLOW, icon: SettingsIcon },
+          { label: 'Destroyed', value: destroyedCount, color: '#718096', icon: DeleteIcon },
+        ].map(({ label, value, color, icon: Icon }) => (
+          <MotionBox key={label}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+            borderRadius="12px" p={4} pos="relative" overflow="hidden">
+            <Box pos="absolute" top={0} left={0} right={0} h="2px"
+              style={{ background: `linear-gradient(to right, transparent, ${color}80, transparent)` }} />
+            <Flex justify="space-between" align="flex-start">
+              <Box>
+                <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                  textTransform="uppercase" letterSpacing="wider" mb={1}>{label}</Text>
+                <Text fontSize="2xl" fontWeight="black" color={color}>{value}</Text>
+              </Box>
+              <Flex w="32px" h="32px" borderRadius="8px" bg={`${color}10`}
+                border={`1px solid ${color}25`} align="center" justify="center">
+                {typeof Icon === 'function' && Icon.render
+                  ? <Icon boxSize={3.5} color={color} />
+                  : <Icon boxSize="14px" color={color} />}
+              </Flex>
+            </Flex>
+          </MotionBox>
+        ))}
+      </SimpleGrid>
+
+      {/* Infrastructure Templates */}
+      <Flex align="center" gap={2} mb={3}>
+        <Box w="3px" h="12px" borderRadius="full" bg={BLUE} />
+        <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
+          letterSpacing="wider" fontWeight="bold">Infrastructure Templates</Text>
+      </Flex>
 
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mb={8}>
         {/* DigitalOcean */}
-        <Box pos="relative" bg="var(--dash-card-bg)"
+        <MotionBox
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: 0.05 }}
+          pos="relative" bg="var(--dash-card-bg)"
           border="1px solid var(--dash-card-border)" borderRadius="14px"
-          overflow="hidden" cursor="pointer" transition="border-color 0.18s"
-          _hover={{ borderColor: 'rgba(0,128,255,0.5)' }}
+          overflow="hidden" cursor="pointer"
+          _hover={{ borderColor: `${BLUE}50` }}
+          style={{ transition: 'border-color 0.18s' }}
           onClick={() => { setDeployError(''); setShowDeploy(true); }}>
           <Box pos="absolute" top="0" left="0" right="0" h="2px"
-            style={{ background: 'linear-gradient(to right, transparent, rgba(0,128,255,0.7), transparent)' }} />
+            style={{ background: `linear-gradient(to right, transparent, ${BLUE}80, transparent)` }} />
           <Box p={4}>
             <Flex align="center" gap={3} mb={3}>
               <Flex w="40px" h="40px" borderRadius="10px" align="center" justify="center"
-                bg="rgba(0,128,255,0.1)" border="1px solid rgba(0,128,255,0.2)" fontSize="20px">
-                🌊
+                bg={`${BLUE}12`} border={`1px solid ${BLUE}30`}>
+                <CloudIcon boxSize="18px" color={BLUE} />
               </Flex>
               <Box>
                 <Text fontSize="13px" fontWeight="bold" color="var(--dash-text-primary)">DigitalOcean</Text>
-                <Text fontSize="11px" color="var(--dash-text-muted)">Droplet</Text>
+                <Text fontSize="10px" color="var(--dash-text-muted)">Droplet</Text>
               </Box>
               {savedToken && (
                 <Flex ml="auto" align="center" gap={1} px={2} py={1} borderRadius="6px"
-                  bg="rgba(104,211,145,0.08)" border="1px solid rgba(104,211,145,0.2)">
-                  <CheckIcon boxSize={2.5} color="#68D391" />
-                  <Text fontSize="10px" color="#68D391" fontWeight="semibold">Token saved</Text>
+                  bg={`${GREEN}08`} border={`1px solid ${GREEN}25`}>
+                  <CheckIcon boxSize={2.5} color={GREEN} />
+                  <Text fontSize="9px" color={GREEN} fontWeight="bold">Token saved</Text>
                 </Flex>
               )}
             </Flex>
@@ -829,45 +961,46 @@ const C2View = () => {
             </Text>
             <Flex gap={1.5} flexWrap="wrap">
               {['Terraform', 'Docker', 'Password Auth'].map(tag => (
-                <Box key={tag} px={2} py="2px" borderRadius="5px" fontSize="9px" fontWeight="semibold"
+                <Box key={tag} px={2} py="2px" borderRadius="5px" fontSize="9px" fontWeight="bold"
                   letterSpacing="wider" textTransform="uppercase"
-                  bg="rgba(0,128,255,0.1)" border="1px solid rgba(0,128,255,0.2)"
-                  color="rgba(96,165,250,0.9)">{tag}</Box>
+                  bg={`${BLUE}10`} border={`1px solid ${BLUE}25`} color={BLUE}>{tag}</Box>
               ))}
             </Flex>
           </Box>
-        </Box>
+        </MotionBox>
 
         {/* Coming soon */}
         {[
-          { name: 'AWS EC2', sub: 'Amazon Web Services', icon: '☁️', color: 'rgba(255,153,0,0.5)' },
-          { name: 'Vultr VPS', sub: 'Vultr Cloud Compute', icon: '⚡', color: 'rgba(0,210,190,0.5)' },
-        ].map(({ name, sub, icon, color }) => (
-          <Box key={name} pos="relative" bg="var(--dash-card-bg)"
-            border="1px solid var(--dash-card-border)" borderRadius="14px"
-            overflow="hidden" opacity={0.45}>
+          { name: 'AWS EC2', sub: 'Amazon Web Services', Icon: GlobeIcon, color: ORANGE },
+          { name: 'Vultr VPS', sub: 'Vultr Cloud Compute', Icon: BoltIcon, color: CYAN },
+        ].map(({ name, sub, Icon, color }) => (
+          <MotionBox key={name}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 0.4, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
+            pos="relative" bg="var(--dash-card-bg)"
+            border="1px solid var(--dash-card-border)" borderRadius="14px" overflow="hidden">
             <Box pos="absolute" top="0" left="0" right="0" h="2px"
-              style={{ background: `linear-gradient(to right, transparent, ${color}, transparent)` }} />
+              style={{ background: `linear-gradient(to right, transparent, ${color}60, transparent)` }} />
             <Box p={4}>
               <Flex align="center" gap={3} mb={3}>
                 <Flex w="40px" h="40px" borderRadius="10px" align="center" justify="center"
-                  bg="rgba(255,255,255,0.04)" border="1px solid rgba(255,255,255,0.08)" fontSize="20px">
-                  {icon}
+                  bg="rgba(255,255,255,0.04)" border="1px solid rgba(255,255,255,0.08)">
+                  <Icon boxSize="18px" color="var(--dash-text-muted)" />
                 </Flex>
                 <Box>
                   <Text fontSize="13px" fontWeight="bold" color="var(--dash-text-primary)">{name}</Text>
-                  <Text fontSize="11px" color="var(--dash-text-muted)">{sub}</Text>
+                  <Text fontSize="10px" color="var(--dash-text-muted)">{sub}</Text>
                 </Box>
               </Flex>
               <Text fontSize="12px" color="var(--dash-text-muted)" lineHeight="1.6" mb={3}>
                 Template not yet available.
               </Text>
               <Box display="inline-block" px={2} py="2px" borderRadius="5px"
-                fontSize="9px" fontWeight="semibold" letterSpacing="wider" textTransform="uppercase"
+                fontSize="9px" fontWeight="bold" letterSpacing="wider" textTransform="uppercase"
                 bg="rgba(255,255,255,0.05)" border="1px solid rgba(255,255,255,0.1)"
                 color="var(--dash-text-muted)">Coming Soon</Box>
             </Box>
-          </Box>
+          </MotionBox>
         ))}
       </SimpleGrid>
 
@@ -875,48 +1008,59 @@ const C2View = () => {
       {deployments.length > 0 && (
         <>
           <Flex align="center" gap={3} mb={3}>
+            <Box w="3px" h="12px" borderRadius="full" bg={GREEN} />
             <Text fontSize="10px" color="var(--dash-text-muted)" textTransform="uppercase"
-              letterSpacing="wider" fontWeight="semibold">Active Deployments</Text>
+              letterSpacing="wider" fontWeight="bold">Active Deployments</Text>
             {runningCount > 0 && (
-              <Box px={2} py="1px" borderRadius="full" bg="rgba(104,211,145,0.1)"
-                border="1px solid rgba(104,211,145,0.25)">
-                <Text fontSize="10px" fontWeight="bold" color="#68D391">{runningCount} running</Text>
+              <Box px={2} py="1px" borderRadius="full" bg={`${GREEN}10`} border={`1px solid ${GREEN}30`}>
+                <Text fontSize="9px" fontWeight="bold" color={GREEN}>{runningCount} running</Text>
               </Box>
             )}
             {activeCount > 0 && (
-              <Box px={2} py="1px" borderRadius="full" bg="rgba(236,201,75,0.1)"
-                border="1px solid rgba(236,201,75,0.25)">
-                <Text fontSize="10px" fontWeight="bold" color="#ECC94B">{activeCount} in progress</Text>
+              <Box px={2} py="1px" borderRadius="full" bg={`${YELLOW}10`} border={`1px solid ${YELLOW}30`}>
+                <Text fontSize="9px" fontWeight="bold" color={YELLOW}>{activeCount} in progress</Text>
               </Box>
             )}
           </Flex>
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-            {deployments.map(dep => (
-              <DeploymentCard key={dep._id} dep={dep}
-                onViewLogs={setLogsTarget} onDestroy={setDestroyTarget}
-                onDelete={handleDeleteRecord} />
-            ))}
+            <AnimatePresence>
+              {deployments.map(dep => (
+                <DeploymentCard key={dep._id} dep={dep}
+                  onViewLogs={setLogsTarget} onDestroy={setDestroyTarget}
+                  onDelete={handleDeleteRecord} />
+              ))}
+            </AnimatePresence>
           </SimpleGrid>
         </>
       )}
 
       {deployments.length === 0 && (
-        <Flex direction="column" align="center" justify="center" py={16} gap={3}
-          bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="16px">
-          <Text fontSize="36px">🖥️</Text>
-          <Text fontSize="14px" fontWeight="semibold" color="var(--dash-text-primary)">
-            No deployments yet
-          </Text>
-          <Text fontSize="12px" color="var(--dash-text-muted)" textAlign="center" maxW="340px">
-            Select the DigitalOcean template above to provision your first C2 node.
-          </Text>
-          <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" mt={2}
-            borderRadius="8px" bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
-            color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
-            onClick={() => { setDeployError(''); setShowDeploy(true); }}>
-            Deploy First Node
-          </Button>
-        </Flex>
+        <MotionBox
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}>
+          <Flex direction="column" align="center" justify="center" py={16} gap={3}
+            bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="16px"
+            pos="relative" overflow="hidden">
+            <Box pos="absolute" top={0} left={0} right={0} h="2px"
+              style={{ background: `linear-gradient(to right, transparent, ${ACCENT}60, transparent)` }} />
+            <Flex w="56px" h="56px" borderRadius="14px" bg={`${ACCENT}12`}
+              border={`2px solid ${ACCENT}40`} align="center" justify="center">
+              <ServerIcon boxSize="24px" color={ACCENT} />
+            </Flex>
+            <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">
+              No deployments yet
+            </Text>
+            <Text fontSize="12px" color="var(--dash-text-muted)" textAlign="center" maxW="340px">
+              Select the DigitalOcean template above to provision your first C2 node.
+            </Text>
+            <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" fontWeight="bold" mt={2}
+              borderRadius="8px" bg={`${ACCENT}15`} border={`1px solid ${ACCENT}40`}
+              color={ACCENT} _hover={{ bg: `${ACCENT}25` }}
+              onClick={() => { setDeployError(''); setShowDeploy(true); }}>
+              Deploy First Node
+            </Button>
+          </Flex>
+        </MotionBox>
       )}
 
       {/* Modals */}
