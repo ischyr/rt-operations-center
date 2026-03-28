@@ -21,11 +21,31 @@ npm start
 
 ---
 
-## Dashboard Preview
+## Platform Screenshots
 
-![Dashboard Overview](docs/dashboard-preview.png)
+### Landing Page
+![Landing Page](docs/screenshots/01-landing.png)
 
-The dashboard is only accessible to authenticated operators. Unauthenticated requests to `/dashboard/*` are redirected to `/signin` automatically.
+### Operations Dashboard
+![Dashboard](docs/screenshots/02-dashboard.png)
+
+### Engagements Center
+![Engagements](docs/screenshots/03-engagements.png)
+
+### Cheatsheet — Payload & Evasion Map
+![Cheatsheet](docs/screenshots/04-cheatsheet.png)
+
+### Lab Configs
+![Lab Configs](docs/screenshots/05-lab-configs.png)
+
+### CVE Feed
+![CVE Feed](docs/screenshots/06-cve-feed.png)
+
+### Email Leaks
+![Email Leaks](docs/screenshots/07-email-leaks.png)
+
+### Malware Scanner
+![Malware Scanner](docs/screenshots/08-malware-scanner.png)
 
 ---
 
@@ -507,7 +527,16 @@ public/
 └── images/     # General images — splash.jpg ...
 
 docs/
-└── dashboard-preview.png   # Dashboard screenshot (save here manually)
+├── dashboard-preview.png        # Legacy dashboard screenshot
+└── screenshots/                 # Platform screenshots for README
+    ├── 01-landing.png           # Public landing / sign-in page
+    ├── 02-dashboard.png         # Operations dashboard + sidebar
+    ├── 03-engagements.png       # Engagements center
+    ├── 04-cheatsheet.png        # Payload & Evasion Engineering Map
+    ├── 05-lab-configs.png       # Lab configurations (Ludus templates)
+    ├── 06-cve-feed.png          # CVE Feed (Shodan)
+    ├── 07-email-leaks.png       # Email Leaks (HIBP)
+    └── 08-malware-scanner.png   # Malware Scanner (VirusTotal)
 ```
 
 ---
