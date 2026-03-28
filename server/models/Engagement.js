@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
 
+const contentBlockSchema = new mongoose.Schema(
+  {
+    type:     { type: String, enum: ['text', 'code', 'image'], default: 'text' },
+    content:  { type: String, default: '' },
+    language: { type: String, default: '' },
+    caption:  { type: String, default: '' },
+  },
+  { _id: true }
+);
+
 const findingSchema = new mongoose.Schema(
   {
     title:          { type: String, required: true, trim: true },
@@ -8,6 +18,9 @@ const findingSchema = new mongoose.Schema(
     observation:    { type: String, default: '' },
     proofOfConcept: { type: String, default: '' },
     remediation:    { type: String, default: '' },
+    observationBlocks:    [contentBlockSchema],
+    proofOfConceptBlocks: [contentBlockSchema],
+    remediationBlocks:    [contentBlockSchema],
   },
   { timestamps: true, _id: true }
 );
