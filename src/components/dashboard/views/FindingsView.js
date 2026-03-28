@@ -439,7 +439,7 @@ const FindingsView = () => {
       <Flex justify="space-between" align="flex-start" mb={6} flexWrap="wrap" gap={3}>
         <Box>
           <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
-            Findings <Text as="span" color={ACCENT}>Vault</Text>
+            Findings <Text as="span" color="red.400">Vault</Text>
           </Heading>
           <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
             {eng.name} · log command outputs, screenshots and operational evidence

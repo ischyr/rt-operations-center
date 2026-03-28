@@ -41,6 +41,7 @@ app.use('/api/cleanup',   require('./routes/cleanup'));
 app.use('/api/vault',    require('./routes/vault'));
 app.use('/api/qr',      require('./routes/qr'));
 app.use('/api/phishing', require('./routes/phishing'));
+app.use('/api/portal',  require('./routes/portal'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

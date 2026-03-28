@@ -13,6 +13,7 @@ import About from './components/pages/About';
 import Operators from './components/pages/Operators';
 import Certifications from './components/pages/Certifications';
 import Pricing from './components/pages/Pricing';
+import ClientPortal from './components/portal/ClientPortal';
 
 const pageVariants = {
   initial: { opacity: 0, y: 14 },
@@ -25,6 +26,15 @@ function AppRoutes() {
   const { isLoggedIn, isLoading } = useAuth();
 
   if (isLoading) return null;
+
+  // Client portal — standalone, own auth, no operator login needed
+  if (location.pathname.startsWith('/portal')) {
+    return (
+      <Routes location={location}>
+        <Route path="/portal" element={<ClientPortal />} />
+      </Routes>
+    );
+  }
 
   // Dashboard — protected, own full-screen layout, no page transition wrapper
   if (location.pathname.startsWith('/dashboard')) {

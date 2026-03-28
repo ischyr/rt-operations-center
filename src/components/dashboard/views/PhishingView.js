@@ -1289,7 +1289,7 @@ const PhishingView = () => {
       <Flex justify="space-between" align="flex-start" mb={5} flexWrap="wrap" gap={3}>
         <Box>
           <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
-            Phishing <Text as="span" color={ACCENT}>Infrastructure</Text>
+            Phishing <Text as="span" color="red.400">Infrastructure</Text>
           </Heading>
           <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
             {eng.name} · web &amp; email templates, SMTP config, and framework integration

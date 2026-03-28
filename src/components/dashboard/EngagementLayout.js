@@ -21,6 +21,7 @@ import SubdomainsView from './views/SubdomainsView';
 import TeamVaultView from './views/TeamVaultView';
 import QRCodeView from './views/QRCodeView';
 import PhishingView from './views/PhishingView';
+import ClientPortalView from './views/ClientPortalView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -97,7 +98,7 @@ const EngagementLayout = () => {
       <Route path="reporting/reports"                  element={<PlaceholderView title="Reports" />} />
       <Route path="reporting/findings"                 element={<FindingsView />} />
       <Route path="reporting/findings/:findingId"      element={<FindingDetailView />} />
-      <Route path="reporting/client-portal"            element={<PlaceholderView title="Client Portal" />} />
+      <Route path="reporting/client-portal"            element={<ClientPortalView />} />
     </Routes>
   );
 };

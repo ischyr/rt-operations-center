@@ -619,7 +619,7 @@ const CleanupTrackerView = () => {
         borderBottom="1px solid var(--dash-card-border)">
         <Box>
           <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
-            Cleanup <Text as="span" color={ACCENT}>Tracker</Text>
+            Cleanup <Text as="span" color="red.400">Tracker</Text>
           </Heading>
           <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
             {eng.name} · track artifacts for removal and verify post-engagement cleanup

@@ -505,7 +505,7 @@ const TeamVaultView = () => {
       <Flex justify="space-between" align="flex-start" mb={5} flexWrap="wrap" gap={3}>
         <Box>
           <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
-            Team <Text as="span" color={ACCENT}>Vault</Text>
+            Team <Text as="span" color="red.400">Vault</Text>
           </Heading>
           <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
             {eng.name} · shared credential &amp; secret storage for the team
@@ -617,68 +617,77 @@ const TeamVaultView = () => {
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                 bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
-                borderRadius="14px" overflow="hidden">
+                borderRadius="14px" pos="relative">
+                <Box pos="absolute" top={0} left={0} right={0} h="2px" borderRadius="14px 14px 0 0"
+                  style={{ background: `linear-gradient(to right, transparent, ${ACCENT}80, transparent)` }} />
 
-                {/* Form header */}
-                <Flex align="center" gap={2} px={5} py={4}
-                  borderBottom="1px solid var(--dash-card-border)">
-                  <Box w="3px" h="16px" borderRadius="full" bg={ACCENT} />
-                  <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)" flex={1}>
-                    {mode === 'add' ? 'New Entry' : 'Edit Entry'}
-                  </Text>
-                  <Button size="xs" variant="ghost" color="var(--dash-text-muted)"
-                    onClick={cancelEdit}>Cancel</Button>
-                </Flex>
+                <Box px={6} py={5}>
+                  <Flex direction="column" gap={5}>
 
-                <Box px={5} py={4}>
-                  <Flex direction="column" gap={4}>
+                    {/* Title */}
+                    <Box>
+                      <Flex align="center" gap={2} mb={2}>
+                        <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                        <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                          textTransform="uppercase" letterSpacing="wider">Title *</Text>
+                      </Flex>
+                      <Input {...inputSx} placeholder="e.g. Domain Admin"
+                        value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                    </Box>
 
-                    {/* Title + category */}
-                    <SimpleGrid columns={2} gap={3}>
+                    {/* Category + Username */}
+                    <SimpleGrid columns={2} gap={4}>
                       <Box>
-                        <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                          textTransform="uppercase" letterSpacing="wider" mb={1.5}>Title *</Text>
-                        <Input {...inputSx} placeholder="e.g. Domain Admin"
-                          value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-                      </Box>
-                      <Box>
-                        <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                          textTransform="uppercase" letterSpacing="wider" mb={1.5}>Category</Text>
+                        <Flex align="center" gap={2} mb={2}>
+                          <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                          <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                            textTransform="uppercase" letterSpacing="wider">Category</Text>
+                        </Flex>
                         <Select {...selSx} value={form.category}
                           onChange={(e) => setForm({ ...form, category: e.target.value })}>
                           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                         </Select>
                       </Box>
-                    </SimpleGrid>
-
-                    {/* Username + password */}
-                    <SimpleGrid columns={2} gap={3}>
                       <Box>
-                        <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                          textTransform="uppercase" letterSpacing="wider" mb={1.5}>Username</Text>
+                        <Flex align="center" gap={2} mb={2}>
+                          <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                          <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                            textTransform="uppercase" letterSpacing="wider">Username</Text>
+                        </Flex>
                         <Input {...inputSx} placeholder="admin"
                           value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
                       </Box>
+                    </SimpleGrid>
+
+                    {/* Password + URL */}
+                    <SimpleGrid columns={2} gap={4}>
                       <Box>
-                        <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                          textTransform="uppercase" letterSpacing="wider" mb={1.5}>Password / Secret</Text>
+                        <Flex align="center" gap={2} mb={2}>
+                          <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                          <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                            textTransform="uppercase" letterSpacing="wider">Password / Secret</Text>
+                        </Flex>
                         <Input {...inputSx} placeholder="••••••••" type="password"
                           value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
                       </Box>
+                      <Box>
+                        <Flex align="center" gap={2} mb={2}>
+                          <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                          <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                            textTransform="uppercase" letterSpacing="wider">URL</Text>
+                        </Flex>
+                        <Input {...inputSx} placeholder="https://target.example.com/login"
+                          value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
+                      </Box>
                     </SimpleGrid>
-
-                    {/* URL */}
-                    <Box>
-                      <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                        textTransform="uppercase" letterSpacing="wider" mb={1.5}>URL</Text>
-                      <Input {...inputSx} placeholder="https://target.example.com/login"
-                        value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
-                    </Box>
 
                     {/* Notes */}
                     <Box>
-                      <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                        textTransform="uppercase" letterSpacing="wider" mb={1.5}>Notes</Text>
+                      <Flex align="center" gap={2} mb={2}>
+                        <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                        <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                          textTransform="uppercase" letterSpacing="wider">Notes</Text>
+                      </Flex>
                       <Textarea
                         value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
                         placeholder="Additional notes…"
@@ -687,14 +696,17 @@ const TeamVaultView = () => {
                         _placeholder={{ color: 'var(--dash-text-muted)' }}
                         _hover={{ borderColor: `${ACCENT}50` }}
                         _focus={{ borderColor: `${ACCENT}80`, boxShadow: `0 0 0 1px ${ACCENT}40` }}
-                        rows={3} resize="vertical"
+                        rows={4} resize="vertical"
                       />
                     </Box>
 
                     {/* Tags */}
                     <Box>
-                      <Text fontSize="10px" fontWeight="bold" color="var(--dash-text-muted)"
-                        textTransform="uppercase" letterSpacing="wider" mb={1.5}>Tags (comma-separated)</Text>
+                      <Flex align="center" gap={2} mb={2}>
+                        <Box w="3px" h="12px" borderRadius="full" bg={ACCENT} />
+                        <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)"
+                          textTransform="uppercase" letterSpacing="wider">Tags (comma-separated)</Text>
+                      </Flex>
                       <Input {...inputSx} placeholder="dc, admin, prod"
                         value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
                     </Box>
@@ -706,17 +718,19 @@ const TeamVaultView = () => {
                     />
 
                     {/* Actions */}
-                    <Flex gap={3} pt={2}>
+                    <Flex gap={3} pt={1}>
                       <Button
-                        flex={1} size="md" borderRadius="10px"
+                        size="sm" borderRadius="10px"
                         bg={`${ACCENT}20`} color={ACCENT} border={`1px solid ${ACCENT}50`}
-                        _hover={{ bg: `${ACCENT}35` }} fontWeight="bold" fontSize="13px"
+                        _hover={{ bg: `${ACCENT}35` }} fontWeight="bold" fontSize="12px"
                         isLoading={saving} loadingText="Saving…"
                         onClick={mode === 'add' ? handleAdd : handleUpdate}>
-                        {mode === 'add' ? 'Add Entry' : 'Save Changes'}
+                        {mode === 'add' ? 'Save' : 'Save Changes'}
                       </Button>
-                      <Button size="md" borderRadius="10px" variant="ghost"
-                        color="var(--dash-text-muted)" onClick={cancelEdit}>
+                      <Button size="sm" borderRadius="10px" variant="ghost"
+                        color="var(--dash-text-muted)" fontSize="12px"
+                        _hover={{ bg: 'rgba(255,255,255,0.05)' }}
+                        onClick={cancelEdit}>
                         Cancel
                       </Button>
                     </Flex>

@@ -167,12 +167,24 @@ export const EngagementProvider = ({ children }) => {
     });
     const resources = Object.values(resourceMap).filter((r) => r.total > 0);
 
-    // Team skills — take max pct per skill label across all engagements
+    // Team skills — auto-computed from operatorSkills per engagement
     const skillMap = {};
     engagements.forEach((e) => {
-      (e.teamSkills || []).forEach((s) => {
-        if (skillMap[s.label] === undefined || s.pct > skillMap[s.label]) {
-          skillMap[s.label] = s.pct;
+      const ops = (e.operators || []).map(String);
+      const opSkills = e.operatorSkills || {};
+      if (ops.length === 0) return;
+      // Collect all unique skills across operators in this engagement
+      const engSkills = new Set();
+      ops.forEach((uid) => {
+        (opSkills[uid] || []).forEach((s) => engSkills.add(s));
+      });
+      // Calculate coverage per skill: how many operators have it / total operators
+      engSkills.forEach((skill) => {
+        const count = ops.filter((uid) => (opSkills[uid] || []).includes(skill)).length;
+        const pct = Math.round((count / ops.length) * 100);
+        // Keep the highest coverage across engagements
+        if (skillMap[skill] === undefined || pct > skillMap[skill]) {
+          skillMap[skill] = pct;
         }
       });
     });

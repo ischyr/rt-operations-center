@@ -688,7 +688,7 @@ const PersonasView = () => {
       <Flex justify="space-between" align="flex-start" mb={6} flexWrap="wrap" gap={3}>
         <Box>
           <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
-            Personas <Text as="span" color={ACCENT}>Generator</Text>
+            Personas <Text as="span" color="red.400">Generator</Text>
           </Heading>
           <Text fontSize="12px" color="var(--dash-text-secondary)" mt={1}>
             {eng.name} · generate or manually create sock puppet identities

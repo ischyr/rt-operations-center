@@ -281,10 +281,18 @@ const EngagementDetailView = () => {
   const sc           = STATUS_COLORS[eng.status] || STATUS_COLORS['PREPARING'];
   const tc           = TYPE_COLORS[eng.type]     || '#9ca3af';
   const findings     = eng.findings       || [];
-  const skills       = (eng.teamSkills    || []).sort((a, b) => b.pct - a.pct);
   const resources    = (eng.resources     || []).filter(r => r.total > 0);
   const operators    = (eng.operators     || []).map(id => getUserById(id)).filter(Boolean);
   const opSkillsMap  = eng.operatorSkills || {};
+
+  // Auto-compute skill coverage from operator skills
+  const assignedIds = (eng.operators || []).map(String);
+  const skillSet = new Set();
+  assignedIds.forEach(uid => { (opSkillsMap[uid] || []).forEach(s => skillSet.add(s)); });
+  const skills = [...skillSet].map(skill => {
+    const count = assignedIds.filter(uid => (opSkillsMap[uid] || []).includes(skill)).length;
+    return { label: skill, pct: assignedIds.length > 0 ? Math.round((count / assignedIds.length) * 100) : 0 };
+  }).sort((a, b) => b.pct - a.pct);
 
   const findingCounts = SORDER.reduce((acc, s) => {
     acc[s] = findings.filter(f => f.severity === s).length;
