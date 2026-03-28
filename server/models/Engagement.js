@@ -316,6 +316,19 @@ const phishingEmailTemplateSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const ttpSchema = new mongoose.Schema(
+  {
+    title:       { type: String, required: true, trim: true },
+    category:    { type: String, enum: ['initial-access', 'windows', 'linux', 'active-directory', 'network'], required: true },
+    description: { type: String, default: '' },
+    tags:        [{ type: String }],
+    blocks:      [contentBlockSchema],
+    createdBy:         { type: String, default: '' },
+    createdByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true }
+);
+
 const phishingConfigSchema = new mongoose.Schema(
   {
     smtpHost:           { type: String, default: '' },
@@ -388,6 +401,7 @@ const engagementSchema = new mongoose.Schema(
     phishingWebTemplates:   [phishingWebTemplateSchema],
     phishingEmailTemplates: [phishingEmailTemplateSchema],
     phishingConfig:         { type: phishingConfigSchema, default: () => ({}) },
+    ttps:                   [ttpSchema],
   },
   { timestamps: true }
 );

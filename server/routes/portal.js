@@ -163,6 +163,14 @@ router.get('/engagement', protectTenant, async (req, res) => {
     const eng = await Engagement.findById(req.tenant.engagement);
     if (!eng) return res.status(404).json({ message: 'Engagement not found' });
 
+    // Resolve operator callsigns for People & Skills display
+    const User = require('../models/User');
+    const opIds = (eng.operators || []).map(String);
+    const users = opIds.length > 0
+      ? await User.find({ _id: { $in: opIds } }).select('callsign avatar').lean()
+      : [];
+    const usersMap = users.reduce((m, u) => { m[String(u._id)] = u; return m; }, {});
+
     // Return read-only engagement data (exclude sensitive fields)
     res.json({
       id: eng._id,
@@ -173,6 +181,7 @@ router.get('/engagement', protectTenant, async (req, res) => {
       type: eng.type,
       startDate: eng.startDate,
       endDate: eng.endDate,
+      progress: eng.progress || 0,
       scope: eng.scope,
       objectives: eng.objectives,
       findings: (eng.findings || []).map(f => ({
@@ -188,7 +197,7 @@ router.get('/engagement', protectTenant, async (req, res) => {
         remediationBlocks: f.remediationBlocks,
         createdAt: f.createdAt,
       })),
-      activityLogs: (eng.activityLogs || []).map(l => ({
+      activityLog: (eng.activityLog || []).map(l => ({
         _id: l._id,
         action: l.action,
         description: l.description,
@@ -196,9 +205,45 @@ router.get('/engagement', protectTenant, async (req, res) => {
         createdAt: l.createdAt,
       })),
       operators: eng.operators || [],
-      teamSkills: eng.teamSkills || [],
+      operatorDetails: opIds.map(uid => ({
+        _id: uid,
+        callsign: usersMap[uid]?.callsign || 'Unknown',
+        avatar: usersMap[uid]?.avatar || null,
+      })),
       operatorSkills: eng.operatorSkills || {},
-      resources: eng.resources || [],
+      resources: (eng.resources || []).map(r => ({
+        _id: r._id,
+        name: r.name,
+        category: r.category,
+        used: r.used,
+        total: r.total,
+        color: r.color,
+      })),
+      calendarEvents: (eng.calendarEvents || []).map(ev => ({
+        _id: ev._id,
+        type: ev.type,
+        title: ev.title,
+        date: ev.date,
+        startTime: ev.startTime,
+        endTime: ev.endTime,
+        createdByCallsign: ev.createdByCallsign,
+      })),
+      personas: (eng.personas || []).map(p => ({
+        _id: p._id,
+        fullName: p.fullName,
+        gender: p.gender,
+        nationality: p.nationality,
+        email: p.email,
+        username: p.username,
+        phone: p.phone,
+        occupation: p.occupation,
+        company: p.company,
+        city: p.city,
+        country: p.country,
+        notes: p.notes,
+        createdByCallsign: p.createdByCallsign,
+        createdAt: p.createdAt,
+      })),
       createdAt: eng.createdAt,
       updatedAt: eng.updatedAt,
     });

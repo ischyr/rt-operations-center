@@ -22,6 +22,8 @@ import TeamVaultView from './views/TeamVaultView';
 import QRCodeView from './views/QRCodeView';
 import PhishingView from './views/PhishingView';
 import ClientPortalView from './views/ClientPortalView';
+import TTPsView from './views/TTPsView';
+import TTPDetailView from './views/TTPDetailView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -80,11 +82,16 @@ const EngagementLayout = () => {
       <Route path="sockpuppets/social-media" element={<PlaceholderView title="Social Media" />} />
 
       {/* TTPs */}
-      <Route path="ttps/initial-access"   element={<PlaceholderView title="Initial Access" />} />
-      <Route path="ttps/windows"          element={<PlaceholderView title="Windows" />} />
-      <Route path="ttps/linux"            element={<PlaceholderView title="Linux" />} />
-      <Route path="ttps/active-directory" element={<PlaceholderView title="Active Directory" />} />
-      <Route path="ttps/network"          element={<PlaceholderView title="Network" />} />
+      <Route path="ttps/initial-access"            element={<TTPsView category="initial-access" />} />
+      <Route path="ttps/initial-access/:ttpId"     element={<TTPDetailView category="initial-access" />} />
+      <Route path="ttps/windows"                   element={<TTPsView category="windows" />} />
+      <Route path="ttps/windows/:ttpId"            element={<TTPDetailView category="windows" />} />
+      <Route path="ttps/linux"                     element={<TTPsView category="linux" />} />
+      <Route path="ttps/linux/:ttpId"              element={<TTPDetailView category="linux" />} />
+      <Route path="ttps/active-directory"          element={<TTPsView category="active-directory" />} />
+      <Route path="ttps/active-directory/:ttpId"   element={<TTPDetailView category="active-directory" />} />
+      <Route path="ttps/network"                   element={<TTPsView category="network" />} />
+      <Route path="ttps/network/:ttpId"            element={<TTPDetailView category="network" />} />
 
       {/* Pillaging */}
       <Route path="pillaging/subdomains"  element={<SubdomainsView />} />
