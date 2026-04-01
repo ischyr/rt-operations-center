@@ -103,10 +103,16 @@ const exportExcel = (scan) => {
 };
 
 const API = 'http://localhost:5000/api';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const authHeaders = () => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
+
+// ── Certificate Transparency cache (localStorage per engagement) ──────────────
+const ctCacheKey  = (slug) => `ct_cache_${slug}`;
+const loadCtCache = (slug) => { try { return JSON.parse(localStorage.getItem(ctCacheKey(slug)) || '{}'); } catch { return {}; } };
+const saveCtCache = (slug, data) => localStorage.setItem(ctCacheKey(slug), JSON.stringify(data));
 
 const inputStyles = {
   variant: 'unstyled',
@@ -273,10 +279,14 @@ const SubdomainList = ({ subs, title, color, accent }) => {
 };
 
 // ── Scan detail ───────────────────────────────────────────────────────────────
-const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete }) => {
+const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete, slug, onCtUpdate }) => {
   const [tab,        setTab]        = useState('all');
   const [liveState,  setLiveState]  = useState(null);
+  const [ctData,     setCtData]     = useState(null);
+  const [ctLoading,  setCtLoading]  = useState(false);
+  const [ctError,    setCtError]    = useState('');
   const pollRef                      = useRef(null);
+  const CT_COLOR                     = '#9F7AEA';
 
   const isRunning = scan.status === 'running';
 
@@ -303,6 +313,38 @@ const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete })
     return () => clearInterval(pollRef.current);
   }, [isRunning, poll]);
 
+  // CT: load from cache when domain changes
+  useEffect(() => {
+    const cached = loadCtCache(slug);
+    setCtData(cached[scan.domain] || null);
+    setCtError('');
+  }, [scan.domain, slug]);
+
+  const fetchCt = useCallback(async () => {
+    setCtLoading(true); setCtError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/recon/certs?domain=${encodeURIComponent(scan.domain)}`, { headers: authHeaders() });
+      const raw = await res.json();
+      if (!res.ok) throw new Error(raw.message || 'Lookup failed');
+      const arr = Array.isArray(raw) ? raw : [];
+      const subSet = new Set();
+      arr.forEach(c => {
+        const names = [c.common_name, ...(c.name_value ? c.name_value.split('\n') : [])];
+        names.forEach(n => {
+          if (!n) return;
+          const clean = n.trim().toLowerCase().replace(/^\*\./, '');
+          if (clean.endsWith(`.${scan.domain}`) || clean === scan.domain) subSet.add(clean);
+        });
+      });
+      const result = { domain: scan.domain, fetchedAt: new Date().toISOString(), subdomains: [...subSet].sort(), rawCount: arr.length };
+      const cache  = loadCtCache(slug);
+      saveCtCache(slug, { ...cache, [scan.domain]: result });
+      setCtData(result);
+      if (onCtUpdate) onCtUpdate();
+    } catch (e) { setCtError(e.message || 'Lookup failed'); }
+    finally { setCtLoading(false); }
+  }, [scan.domain, slug, onCtUpdate]);
+
   // Display data: prefer live state for running scans
   const toolStatus  = isRunning && liveState
     ? Object.fromEntries(Object.entries(liveState.tools || {}).map(([k, v]) => [k, v.status]))
@@ -314,12 +356,18 @@ const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete })
   const totalUnique = scan.totalUnique || [];
   const errors      = scan.errors   || {};
 
+  // Merge Subfinder + CT results for the All tab
+  const allSubs = ctData
+    ? [...new Set([...totalUnique, ...(ctData.subdomains || [])])].sort()
+    : totalUnique;
+
   const tabs = [
-    { key: 'all',      label: `All (${isRunning ? '…' : totalUnique.length})` },
+    { key: 'all',      label: `All (${isRunning ? '…' : allSubs.length})` },
     ...Object.entries(TOOLS).map(([k, meta]) => ({
       key: k, label: `${meta.label} (${toolCounts[k] ?? 0})`,
       color: meta.color,
     })),
+    { key: 'ct', label: `Cert Transparency${ctData ? ` (${ctData.subdomains.length})` : ''}`, color: CT_COLOR },
   ];
 
   return (
@@ -355,10 +403,10 @@ const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete })
           </Text>
         </Box>
         <Flex gap={2} align="center">
-          {!isRunning && totalUnique.length > 0 && (
+          {!isRunning && allSubs.length > 0 && (
             <Flex align="center" gap={1.5} px={2.5} py={1} borderRadius="7px"
               bg="rgba(104,211,145,0.08)" border="1px solid rgba(104,211,145,0.2)">
-              <Text fontSize="12px" fontWeight="700" color="#68D391">{totalUnique.length}</Text>
+              <Text fontSize="12px" fontWeight="700" color="#68D391">{allSubs.length}</Text>
               <Text fontSize="10px" color="var(--dash-text-muted)">unique</Text>
             </Flex>
           )}
@@ -410,15 +458,6 @@ const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete })
         </Flex>
       </Flex>
 
-      {/* Tool status pills — only when not running (running state shows full log cards) */}
-      {!isRunning && (
-        <Flex gap={2} mb={4} flexWrap="wrap">
-          {(scan.toolsUsed || Object.keys(TOOLS)).map(t => (
-            <ToolPill key={t} name={t} status={toolStatus[t] || 'done'} count={toolCounts[t]} />
-          ))}
-        </Flex>
-      )}
-
       {/* Tool errors */}
       {Object.entries(errors).length > 0 && (
         <Box mb={3} p={3} borderRadius="10px"
@@ -449,8 +488,66 @@ const ScanDetail = ({ scan, engId, onDelete, onRescan, rescanning, onComplete })
             ))}
           </Flex>
 
-          {tab === 'all'
-            ? <SubdomainList subs={totalUnique} title="All unique subdomains" color="#A0AEC0" />
+          {tab === 'ct' ? (
+            <Box>
+              {ctLoading && (
+                <Flex align="center" justify="center" h="80px" gap={3}>
+                  <Spinner size="sm" color={CT_COLOR} thickness="2px" />
+                  <Text fontSize="12px" color="var(--dash-text-muted)">Querying crt.sh…</Text>
+                </Flex>
+              )}
+              {ctError && !ctLoading && (
+                <Box mb={3} p={2.5} borderRadius="9px"
+                  bg="rgba(252,129,129,0.06)" border="1px solid rgba(252,129,129,0.25)">
+                  <Text fontSize="12px" color="#FC8181">{ctError}</Text>
+                </Box>
+              )}
+              {!ctLoading && !ctData && !ctError && (
+                <Flex align="center" justify="center" direction="column" gap={3} py={6}
+                  borderRadius="10px" bg="rgba(255,255,255,0.02)" border="1px solid var(--dash-card-border)">
+                  <Text fontSize="12px" color="var(--dash-text-muted)">No CT data yet for this domain</Text>
+                  <Button size="xs" onClick={fetchCt} borderRadius="8px" px={4}
+                    bg={`${CT_COLOR}15`} border={`1px solid ${CT_COLOR}40`}
+                    color={CT_COLOR} _hover={{ bg: `${CT_COLOR}25` }}
+                    leftIcon={<SearchIcon boxSize={3} />}>
+                    Lookup via crt.sh
+                  </Button>
+                </Flex>
+              )}
+              {!ctLoading && ctData && (
+                <Box>
+                  <Flex align="center" justify="space-between" mb={3}>
+                    <Flex align="center" gap={2}>
+                      <Box px={2} py="1px" borderRadius="5px" fontSize="11px" fontWeight="700"
+                        bg={`${CT_COLOR}12`} color={CT_COLOR} border={`1px solid ${CT_COLOR}30`}>
+                        {ctData.subdomains.length} subdomains
+                      </Box>
+                      <Box px={2} py="1px" borderRadius="5px" fontSize="10px"
+                        bg="rgba(255,255,255,0.05)" color="var(--dash-text-muted)"
+                        border="1px solid rgba(255,255,255,0.1)">
+                        {ctData.rawCount} certs
+                      </Box>
+                    </Flex>
+                    <Flex align="center" gap={2}>
+                      {ctData.fetchedAt && (
+                        <Text fontSize="10px" color="var(--dash-text-muted)">
+                          {new Date(ctData.fetchedAt).toLocaleString()}
+                        </Text>
+                      )}
+                      <Button size="xs" onClick={fetchCt} borderRadius="7px" px={3}
+                        bg="rgba(255,255,255,0.05)" border="1px solid rgba(255,255,255,0.1)"
+                        color="var(--dash-text-muted)" _hover={{ color: 'white', bg: 'rgba(255,255,255,0.09)' }}
+                        leftIcon={<RepeatIcon boxSize={2.5} />}>
+                        Re-run
+                      </Button>
+                    </Flex>
+                  </Flex>
+                  <SubdomainList subs={ctData.subdomains} title="Certificate Transparency subdomains" color={CT_COLOR} />
+                </Box>
+              )}
+            </Box>
+          ) : tab === 'all'
+            ? <SubdomainList subs={allSubs} title="All unique subdomains" color="#A0AEC0" />
             : <SubdomainList
                 subs={results[tab] || []}
                 title={`${TOOLS[tab]?.label} results`}
@@ -683,6 +780,10 @@ const SubdomainsView = () => {
 
   const SIDEBAR_PAGE_SIZE = 5;
 
+  // CT cache — re-read whenever slug changes so sidebar counts stay in sync
+  const [ctCache, setCtCache] = useState(() => loadCtCache(slug));
+  useEffect(() => { setCtCache(loadCtCache(slug)); }, [slug]);
+
   // Tool config
   const [toolsConfig, setToolsConfig] = useState(DEFAULT_TOOLS_CONFIG);
   const [apiKeys,     setApiKeys]     = useState({});
@@ -914,7 +1015,10 @@ const SubdomainsView = () => {
                 .map(scan => {
                   const isActive  = String(scan._id) === String(selected);
                   const isRunning = scan.status === 'running';
-                  const total     = scan.totalUnique?.length ?? 0;
+                  const ctSubs    = ctCache[scan.domain]?.subdomains || [];
+                  const total     = ctSubs.length > 0
+                    ? new Set([...(scan.totalUnique || []), ...ctSubs]).size
+                    : (scan.totalUnique?.length ?? 0);
                   return (
                     <Box key={String(scan._id)}
                       px={3} py={2.5} borderRadius="10px" cursor="pointer"
@@ -988,6 +1092,8 @@ const SubdomainsView = () => {
               onRescan={(d) => handleScan(d)}
               rescanning={rescanning}
               onComplete={fetchEngagements}
+              slug={slug}
+              onCtUpdate={() => setCtCache(loadCtCache(slug))}
             />
           ) : (
             <AllSubdomainsPanel scans={scans} />

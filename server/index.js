@@ -42,6 +42,9 @@ app.use('/api/vault',    require('./routes/vault'));
 app.use('/api/qr',      require('./routes/qr'));
 app.use('/api/phishing', require('./routes/phishing'));
 app.use('/api/portal',  require('./routes/portal'));
+app.use('/api/recon',   require('./routes/recon'));
+app.use('/api/emails',     require('./routes/emails'));
+app.use('/api/documents',  require('./routes/documents'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

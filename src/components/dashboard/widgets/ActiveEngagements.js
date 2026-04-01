@@ -148,7 +148,7 @@ const ActiveEngagements = () => {
         <Box w="3px" h="14px" borderRadius="full" bg={ACCENT} flexShrink={0} />
         <Text fontSize="11px" fontWeight="bold" letterSpacing="widest"
           color="var(--dash-text-muted)" textTransform="uppercase">
-          Active Engagements
+          My Engagements
         </Text>
         {activeEngagements.length > 0 && (
           <Box ml="auto" px="7px" py="1px" borderRadius="20px"
@@ -166,7 +166,7 @@ const ActiveEngagements = () => {
         ) : activeEngagements.length === 0 ? (
           <Flex h="100%" direction="column" align="center" justify="center" gap={2} color="var(--dash-text-muted)">
             <Text fontSize="2xl">⚡</Text>
-            <Text fontSize="sm">No active engagements.</Text>
+            <Text fontSize="sm">No engagements yet.</Text>
             <Text fontSize="11px">Create one from the Engagements page.</Text>
           </Flex>
         ) : (

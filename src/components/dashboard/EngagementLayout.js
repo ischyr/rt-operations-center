@@ -24,6 +24,12 @@ import PhishingView from './views/PhishingView';
 import ClientPortalView from './views/ClientPortalView';
 import TTPsView from './views/TTPsView';
 import TTPDetailView from './views/TTPDetailView';
+import ReverseShellView from './views/ReverseShellView';
+import DomainReconView from './views/DomainReconView';
+import UsernameGeneratorView from './views/UsernameGeneratorView';
+import TyposquatView from './views/TyposquatView';
+import EmailsView from './views/EmailsView';
+import DocumentsView from './views/DocumentsView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -75,7 +81,10 @@ const EngagementLayout = () => {
       <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PhishingView />} />
-      <Route path="intelligence/qr-codes"       element={<QRCodeView />} />
+      <Route path="intelligence/qr-codes"        element={<QRCodeView />} />
+      <Route path="intelligence/reverse-shells"  element={<ReverseShellView />} />
+      <Route path="intelligence/username-gen"    element={<UsernameGeneratorView />} />
+      <Route path="intelligence/typosquat"       element={<TyposquatView />} />
 
       {/* Sock Puppets */}
       <Route path="sockpuppets/personas"     element={<PersonasView />} />
@@ -94,12 +103,13 @@ const EngagementLayout = () => {
       <Route path="ttps/network/:ttpId"            element={<TTPDetailView category="network" />} />
 
       {/* Pillaging */}
-      <Route path="pillaging/subdomains"  element={<SubdomainsView />} />
+      <Route path="pillaging/domain-recon" element={<DomainReconView />} />
+      <Route path="pillaging/subdomains"   element={<SubdomainsView />} />
       <Route path="pillaging/services"    element={<PlaceholderView title="Services" />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
-      <Route path="pillaging/emails"      element={<PlaceholderView title="Emails" />} />
-      <Route path="pillaging/documents"   element={<PlaceholderView title="Documents" />} />
+      <Route path="pillaging/emails"      element={<EmailsView />} />
+      <Route path="pillaging/documents"   element={<DocumentsView />} />
 
       {/* Reporting */}
       <Route path="reporting/reports"                  element={<PlaceholderView title="Reports" />} />

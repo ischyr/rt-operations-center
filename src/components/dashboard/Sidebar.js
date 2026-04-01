@@ -78,7 +78,10 @@ const engagementNav = [
       { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
       { key: 'intelligence/c2',              label: 'C2 Infrastructure',       icon: LinkIcon   },
       { key: 'intelligence/phishing',        label: 'Phishing Infrastructure', icon: EmailIcon  },
-      { key: 'intelligence/qr-codes',       label: 'QR Code Generator',       icon: CopyIcon   },
+      { key: 'intelligence/qr-codes',        label: 'QR Code Generator',       icon: CopyIcon   },
+      { key: 'intelligence/reverse-shells',  label: 'Reverse Shells',          icon: ChevronRightIcon },
+      { key: 'intelligence/username-gen',    label: 'Username Generator',      icon: AtSignIcon },
+      { key: 'intelligence/typosquat',       label: 'Typosquat Generator',     icon: SearchIcon },
     ],
   },
   {
@@ -101,6 +104,7 @@ const engagementNav = [
   {
     section: 'PILLAGING',
     items: [
+      { key: 'pillaging/domain-recon', label: 'Domain Recon', icon: InfoIcon       },
       { key: 'pillaging/subdomains',  label: 'Subdomains',  icon: SearchIcon     },
       { key: 'pillaging/services',    label: 'Services',    icon: InfoIcon       },
       { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },

@@ -118,6 +118,9 @@ export const EngagementProvider = ({ children }) => {
   // ── Computed dashboard stats ─────────────────────────────────────────────
   const dashboardStats = useMemo(() => {
     const activeEngagements = engagements.filter((e) => ACTIVE_STATUSES.includes(e.status));
+    const allMyEngagements  = [...engagements].sort(
+      (a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status)
+    );
 
     // Soonest-closing active engagement
     const withDates = activeEngagements
@@ -193,7 +196,7 @@ export const EngagementProvider = ({ children }) => {
       .sort((a, b) => b.pct - a.pct);
 
     return {
-      activeEngagements,
+      activeEngagements: allMyEngagements,
       activeCount:       activeEngagements.length,
       soonestClosing,
       daysToClose,
