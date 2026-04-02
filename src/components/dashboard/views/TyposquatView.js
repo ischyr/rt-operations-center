@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
 import {
   Box, Flex, Text, Heading, Input, Button, IconButton,
-  SimpleGrid, Tooltip, Tag, TagLabel,
+  SimpleGrid, Tooltip, Tag, TagLabel, Spinner,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SearchIcon, CopyIcon, CheckIcon, DownloadIcon } from '@chakra-ui/icons';
+import { SearchIcon, CopyIcon, CheckIcon, DownloadIcon, LockIcon, UnlockIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { useEngagements } from '../../../contexts/EngagementContext';
 
@@ -57,6 +57,36 @@ const CopyBtn = ({ value, size = 'xs' }) => {
         borderRadius="6px"
         _hover={{ color: ok ? GREEN : 'white', bg: 'rgba(255,255,255,0.06)' }}
         aria-label="copy" onClick={copy} />
+    </Tooltip>
+  );
+};
+
+// ── Availability badge ────────────────────────────────────────────────────────
+const AvailBadge = ({ status }) => {
+  if (status === undefined) return null;
+  if (status === null) return (
+    <Flex align="center" gap={1} px={2} py="2px" borderRadius="5px"
+      bg="rgba(255,255,255,0.06)" border="1px solid rgba(255,255,255,0.1)" flexShrink={0}>
+      <Spinner size="xs" color="var(--dash-text-muted)" speed="0.8s" />
+      <Text fontSize="9px" fontWeight="bold" color="var(--dash-text-muted)">Checking</Text>
+    </Flex>
+  );
+  if (status === true) return (
+    <Tooltip label="Domain appears available" fontSize="10px">
+      <Flex align="center" gap={1} px={2} py="2px" borderRadius="5px"
+        bg={`${GREEN}15`} border={`1px solid ${GREEN}35`} flexShrink={0}>
+        <UnlockIcon boxSize={2} color={GREEN} />
+        <Text fontSize="9px" fontWeight="bold" color={GREEN}>Available</Text>
+      </Flex>
+    </Tooltip>
+  );
+  return (
+    <Tooltip label="Domain is registered" fontSize="10px">
+      <Flex align="center" gap={1} px={2} py="2px" borderRadius="5px"
+        bg={`${RED}15`} border={`1px solid ${RED}35`} flexShrink={0}>
+        <LockIcon boxSize={2} color={RED} />
+        <Text fontSize="9px" fontWeight="bold" color={RED}>Taken</Text>
+      </Flex>
     </Tooltip>
   );
 };
@@ -114,12 +144,14 @@ const TyposquatView = () => {
   const { getBySlug } = useEngagements();
   const eng = getBySlug(slug);
 
-  const [domainInput, setDomainInput] = useState('');
-  const [results,     setResults]     = useState(null);
-  const [parsed,      setParsed]      = useState(null);
-  const [enabled,     setEnabled]     = useState(new Set(CATEGORIES.map(c => c.id)));
-  const [filter,      setFilter]      = useState('');
-  const [activeTab,   setActiveTab]   = useState('all');
+  const [domainInput,    setDomainInput]    = useState('');
+  const [results,        setResults]        = useState(null);
+  const [parsed,         setParsed]         = useState(null);
+  const [enabled,        setEnabled]        = useState(new Set(CATEGORIES.map(c => c.id)));
+  const [filter,         setFilter]         = useState('');
+  const [activeTab,      setActiveTab]      = useState('all');
+  const [availability,   setAvailability]   = useState({});   // { domain: true|false|null }
+  const [checking,       setChecking]       = useState(false);
 
   const toggle = (id) => setEnabled(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
@@ -130,7 +162,47 @@ const TyposquatView = () => {
     const cats = {};
     CATEGORIES.forEach(cat => { cats[cat.id] = enabled.has(cat.id) ? cat.fn(p).filter(d => d !== p.full) : []; });
     setResults(cats); setActiveTab('all'); setFilter('');
+    setAvailability({}); // reset availability when regenerating
   }, [domainInput, enabled]);
+
+  const checkAvailability = useCallback(async (domainsToCheck) => {
+    if (checking) return;
+    setChecking(true);
+
+    // Mark all as pending immediately
+    const pending = {};
+    domainsToCheck.forEach(d => { pending[d] = null; });
+    setAvailability(prev => ({ ...prev, ...pending }));
+
+    // Check each domain via Cloudflare DoH directly from the browser — fully parallel
+    const checkOne = async (domain) => {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(
+          `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=A`,
+          { headers: { Accept: 'application/dns-json' }, signal: controller.signal }
+        );
+        clearTimeout(timer);
+        const data = await res.json();
+        // Status 3 = NXDOMAIN = available; Status 0 with Answer = taken
+        const available = data.Status === 3 || (data.Status === 0 && (!data.Answer || data.Answer.length === 0));
+        return { domain, available };
+      } catch {
+        return { domain, available: null };
+      }
+    };
+
+    // Run all in parallel, update state as each resolves
+    const promises = domainsToCheck.map(d =>
+      checkOne(d).then(result => {
+        setAvailability(prev => ({ ...prev, [result.domain]: result.available }));
+        return result;
+      })
+    );
+    await Promise.all(promises);
+    setChecking(false);
+  }, [checking]);
 
   const allDomains = results ? uniq(Object.values(results).flat()) : [];
   const filteredAll = filter ? allDomains.filter(d => d.includes(filter.toLowerCase())) : allDomains;
@@ -303,6 +375,19 @@ const TyposquatView = () => {
                     aria-label="copy all"
                     onClick={() => navigator.clipboard.writeText(allDomains.join('\n'))} />
                 </Tooltip>
+                <Button
+                  leftIcon={checking ? <Spinner size="xs" /> : <UnlockIcon boxSize={3} />}
+                  size="sm" fontSize="11px" fontWeight="bold" borderRadius="7px"
+                  bg={`${CYAN}15`} border={`1px solid ${CYAN}40`}
+                  color={CYAN} _hover={{ bg: `${CYAN}25` }}
+                  isLoading={false}
+                  isDisabled={checking}
+                  onClick={() => {
+                    const visible = activeTab === 'all' ? filteredAll : (results[activeTab] || []);
+                    checkAvailability(visible);
+                  }}>
+                  {checking ? 'Checking…' : 'Check Availability'}
+                </Button>
                 <Button leftIcon={<DownloadIcon boxSize={3} />} size="sm" fontSize="11px"
                   fontWeight="bold" borderRadius="7px"
                   bg={`${GREEN}15`} border={`1px solid ${GREEN}40`}
@@ -340,13 +425,14 @@ const TyposquatView = () => {
                   <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={1}>
                     {filteredAll.map((d, i) => {
                       const cats = CATEGORIES.filter(c => results[c.id]?.includes(d));
+                      const avail = availability[d];
                       return (
                         <Flex key={i} align="center" justify="space-between"
                           px={3} py={2} borderRadius="7px"
-                          bg="rgba(255,255,255,0.02)"
-                          border="1px solid transparent"
-                          _hover={{ bg: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)' }}
-                          role="group" gap={1} transition="all 0.12s">
+                          bg={avail === true ? `${GREEN}08` : avail === false ? `${RED}08` : 'rgba(255,255,255,0.02)'}
+                          border={`1px solid ${avail === true ? GREEN + '20' : avail === false ? RED + '15' : 'transparent'}`}
+                          _hover={{ bg: avail === true ? `${GREEN}12` : avail === false ? `${RED}12` : 'rgba(255,255,255,0.05)', borderColor: avail === true ? GREEN + '30' : avail === false ? RED + '25' : 'rgba(255,255,255,0.08)' }}
+                          role="group" gap={2} transition="all 0.12s">
                           <Box minW={0} flex={1}>
                             <Text fontSize="11px" fontFamily="mono" color="var(--dash-text-primary)" noOfLines={1}>{d}</Text>
                             <Flex gap={1} mt="2px">
@@ -355,9 +441,12 @@ const TyposquatView = () => {
                               ))}
                             </Flex>
                           </Box>
-                          <Box opacity={0} _groupHover={{ opacity: 1 }}>
-                            <CopyBtn value={d} />
-                          </Box>
+                          <Flex align="center" gap={1} flexShrink={0}>
+                            {d in availability && <AvailBadge status={avail} />}
+                            <Box opacity={0} _groupHover={{ opacity: 1 }}>
+                              <CopyBtn value={d} />
+                            </Box>
+                          </Flex>
                         </Flex>
                       );
                     })}
@@ -382,19 +471,25 @@ const TyposquatView = () => {
                       <Text fontSize="12px" color="var(--dash-text-muted)">No variants in this category.</Text>
                     ) : (
                       <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={1}>
-                        {list.map((d, i) => (
-                          <Flex key={i} align="center" justify="space-between"
-                            px={3} py={2} borderRadius="7px"
-                            bg="rgba(255,255,255,0.02)"
-                            border="1px solid transparent"
-                            _hover={{ bg: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)' }}
-                            role="group" transition="all 0.12s">
-                            <Text fontSize="11px" fontFamily="mono" color="var(--dash-text-primary)" noOfLines={1} flex={1}>{d}</Text>
-                            <Box opacity={0} _groupHover={{ opacity: 1 }}>
-                              <CopyBtn value={d} />
-                            </Box>
-                          </Flex>
-                        ))}
+                        {list.map((d, i) => {
+                          const avail = availability[d];
+                          return (
+                            <Flex key={i} align="center" justify="space-between"
+                              px={3} py={2} borderRadius="7px"
+                              bg={avail === true ? `${GREEN}08` : avail === false ? `${RED}08` : 'rgba(255,255,255,0.02)'}
+                              border={`1px solid ${avail === true ? GREEN + '20' : avail === false ? RED + '15' : 'transparent'}`}
+                              _hover={{ bg: avail === true ? `${GREEN}12` : avail === false ? `${RED}12` : 'rgba(255,255,255,0.05)', borderColor: avail === true ? GREEN + '30' : avail === false ? RED + '25' : 'rgba(255,255,255,0.08)' }}
+                              role="group" gap={2} transition="all 0.12s">
+                              <Text fontSize="11px" fontFamily="mono" color="var(--dash-text-primary)" noOfLines={1} flex={1}>{d}</Text>
+                              <Flex align="center" gap={1} flexShrink={0}>
+                                {d in availability && <AvailBadge status={avail} />}
+                                <Box opacity={0} _groupHover={{ opacity: 1 }}>
+                                  <CopyBtn value={d} />
+                                </Box>
+                              </Flex>
+                            </Flex>
+                          );
+                        })}
                       </SimpleGrid>
                     )}
                   </Box>

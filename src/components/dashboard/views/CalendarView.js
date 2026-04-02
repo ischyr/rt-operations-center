@@ -3,7 +3,7 @@ import {
   Box, Flex, Text, Heading, Button, IconButton, Input, Select, SimpleGrid,
   Modal, ModalOverlay, ModalContent, ModalBody,
 } from '@chakra-ui/react';
-import { AddIcon, ChevronLeftIcon, ChevronRightIcon, DeleteIcon, CloseIcon } from '@chakra-ui/icons';
+import { AddIcon, ChevronLeftIcon, ChevronRightIcon, DeleteIcon, CloseIcon, CheckIcon, WarningIcon, CalendarIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -458,7 +458,9 @@ const CalendarView = () => {
                   bg={filterType === f ? 'rgba(255,255,255,0.08)' : 'transparent'}
                   color={filterType === f ? 'var(--dash-text-primary)' : 'var(--dash-text-muted)'}
                   onClick={() => setFilterType(f)}>
-                  {f === 'all' ? 'All' : f === 'task' ? '✓ Tasks' : '⚠ Blockers'}
+                  {f === 'all' ? 'All' : f === 'task'
+                    ? <Flex align="center" gap={1.5}><CheckIcon boxSize={2.5} />Tasks</Flex>
+                    : <Flex align="center" gap={1.5}><WarningIcon boxSize={2.5} />Blockers</Flex>}
                 </Box>
               ))}
             </Flex>
@@ -484,7 +486,11 @@ const CalendarView = () => {
           <Flex align="center" justify="center" py={12} direction="column" gap={2}
             bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
             borderRadius="16px">
-            <Text fontSize="28px">📭</Text>
+            <Flex w="44px" h="44px" borderRadius="12px"
+              bg="rgba(99,179,237,0.1)" border="1px solid rgba(99,179,237,0.25)"
+              align="center" justify="center">
+              <CalendarIcon boxSize={5} color="#63B3ED" />
+            </Flex>
             <Text fontSize="13px" color="var(--dash-text-muted)">
               {search.trim() ? `No events matching "${search}"` : 'No events yet'}
             </Text>
@@ -690,7 +696,12 @@ const CalendarView = () => {
                         transition="all 0.15s" cursor="pointer"
                         _hover={{ borderColor: c.border, color: c.text }}
                         onClick={() => setForm(p => ({ ...p, type }))}>
-                        {type === 'task' ? '✓  Task' : '⚠  Blocker'}
+                        <Flex align="center" justify="center" gap={1.5}>
+                          {type === 'task'
+                            ? <CheckIcon boxSize={3} />
+                            : <WarningIcon boxSize={3} />}
+                          {type === 'task' ? 'Task' : 'Blocker'}
+                        </Flex>
                       </Box>
                     );
                   })}

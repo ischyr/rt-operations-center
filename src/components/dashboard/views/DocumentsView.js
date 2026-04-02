@@ -5,7 +5,7 @@ import {
 } from '@chakra-ui/react';
 import {
   SearchIcon, CloseIcon, DeleteIcon, DownloadIcon, AttachmentIcon,
-  AddIcon, InfoIcon,
+  AddIcon, InfoIcon, EditIcon, LockIcon,
 } from '@chakra-ui/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
@@ -20,25 +20,25 @@ const ACCENT     = '#FC8181';
 
 const SECTIONS = [
   {
-    key:         'official',
-    label:       'Official Documents',
-    desc:        'Contracts, scope documents, rules of engagement, NDAs',
-    color:       '#63B3ED',
-    icon:        '📋',
+    key:   'official',
+    label: 'Official Documents',
+    desc:  'Contracts, scope documents, rules of engagement, NDAs',
+    color: '#63B3ED',
+    Icon:  AttachmentIcon,
   },
   {
-    key:         'created',
-    label:       'Created Documents',
-    desc:        'Reports, notes, scripts, tools you produced during this engagement',
-    color:       '#68D391',
-    icon:        '✍️',
+    key:   'created',
+    label: 'Created Documents',
+    desc:  'Reports, notes, scripts, tools you produced during this engagement',
+    color: '#68D391',
+    Icon:  EditIcon,
   },
   {
-    key:         'pillaged',
-    label:       'Pillaged Documents',
-    desc:        'Files exfiltrated or discovered from target systems',
-    color:       '#FC8181',
-    icon:        '🔓',
+    key:   'pillaged',
+    label: 'Pillaged Documents',
+    desc:  'Files exfiltrated or discovered from target systems',
+    color: '#FC8181',
+    Icon:  LockIcon,
   },
 ];
 
@@ -254,8 +254,8 @@ const SectionPanel = ({ section, docs, onUpload, onDownload, onDelete, downloadi
       <Flex align="center" gap={3} px={5} pt={5} pb={3}>
         <Flex w="36px" h="36px" borderRadius="10px" flexShrink={0}
           bg={`${section.color}18`} border={`1px solid ${section.color}40`}
-          align="center" justify="center" fontSize="18px">
-          {section.icon}
+          align="center" justify="center">
+          <section.Icon boxSize={4} color={section.color} />
         </Flex>
         <Box flex={1} minW={0}>
           <Flex align="center" gap={2}>

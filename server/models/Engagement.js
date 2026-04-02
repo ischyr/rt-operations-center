@@ -316,6 +316,34 @@ const phishingEmailTemplateSchema = new mongoose.Schema(
   { timestamps: true, _id: true }
 );
 
+const abStepSchema = new mongoose.Schema(
+  {
+    title:     { type: String, default: '' },
+    technique: { type: String, default: '' },
+    tactic:    { type: String, default: '' },
+    status:    { type: String, enum: ['pending', 'progress', 'succeeded', 'failed', 'blocked'], default: 'pending' },
+    notes:     { type: String, default: '' },
+    order:     { type: Number, default: 0 },
+  },
+  { _id: true },
+);
+
+const assumedBreachSchema = new mongoose.Schema(
+  {
+    name:              { type: String, required: true, trim: true },
+    startingPoint:     { type: String, default: 'workstation-user' },
+    startingDesc:      { type: String, default: '' },
+    objective:         { type: String, default: 'Domain Admin' },
+    objectiveDesc:     { type: String, default: '' },
+    steps:             [abStepSchema],
+    status:            { type: String, enum: ['active', 'completed', 'blocked'], default: 'active' },
+    notes:             { type: String, default: '' },
+    createdBy:         { type: String, default: '' },
+    createdByCallsign: { type: String, default: '' },
+  },
+  { timestamps: true, _id: true },
+);
+
 const documentSchema = new mongoose.Schema(
   {
     name:                { type: String, required: true, trim: true },
@@ -417,6 +445,7 @@ const engagementSchema = new mongoose.Schema(
     phishingConfig:         { type: phishingConfigSchema, default: () => ({}) },
     ttps:                   [ttpSchema],
     documents:              [documentSchema],
+    assumedBreachScenarios: [assumedBreachSchema],
   },
   { timestamps: true }
 );

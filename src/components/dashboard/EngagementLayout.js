@@ -26,6 +26,7 @@ import TTPsView from './views/TTPsView';
 import TTPDetailView from './views/TTPDetailView';
 import ReverseShellView from './views/ReverseShellView';
 import DomainReconView from './views/DomainReconView';
+import AssumedBreachView from './views/AssumedBreachView';
 import UsernameGeneratorView from './views/UsernameGeneratorView';
 import TyposquatView from './views/TyposquatView';
 import EmailsView from './views/EmailsView';
@@ -70,6 +71,7 @@ const EngagementLayout = () => {
       <Route path="operations/skill-requests" element={<SkillRequestsView />} />
       <Route path="operations/ttx"            element={<TTXPlannerView />} />
       <Route path="operations/team-vault"     element={<TeamVaultView />} />
+      <Route path="operations/assumed-breach" element={<AssumedBreachView />} />
 
       {/* Team */}
       <Route path="team/people"    element={<PeopleSkillsView />} />

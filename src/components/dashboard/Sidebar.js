@@ -61,6 +61,7 @@ const engagementNav = [
       { key: 'operations/skill-requests', label: 'Skill Requests',     icon: StarIcon         },
       { key: 'operations/ttx',            label: 'TTX Planner',        icon: EditIcon         },
       { key: 'operations/team-vault',     label: 'Team Vault',         icon: LockIcon         },
+      { key: 'operations/assumed-breach', label: 'Assumed Breach',     icon: ChevronRightIcon },
     ],
   },
   {
@@ -109,7 +110,7 @@ const engagementNav = [
       { key: 'pillaging/services',    label: 'Services',    icon: InfoIcon       },
       { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
       { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
-      { key: 'pillaging/emails',      label: 'Emails',      icon: EmailIcon      },
+      { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },
       { key: 'pillaging/documents',   label: 'Documents',   icon: AttachmentIcon },
     ],
   },

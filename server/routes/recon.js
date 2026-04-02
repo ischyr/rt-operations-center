@@ -98,4 +98,29 @@ router.get('/certs', protect, async (req, res) => {
   }
 });
 
+// ── Batch domain availability check ─────────────────────────────────────────
+// POST /api/recon/availability  body: { domains: ['foo.com', ...] }
+// Returns: [{ domain, available }]
+const dnsPromises = require('dns').promises;
+
+const checkOne = (domain) => new Promise((resolve) => {
+  const timer = setTimeout(() => resolve({ domain, available: null }), 3000);
+  dnsPromises.resolve(domain, 'A')
+    .then(() => { clearTimeout(timer); resolve({ domain, available: false }); }) // resolved = taken
+    .catch((err) => {
+      clearTimeout(timer);
+      // ENOTFOUND = NXDOMAIN = domain not registered = available
+      resolve({ domain, available: err.code === 'ENOTFOUND' ? true : null });
+    });
+});
+
+router.post('/availability', protect, async (req, res) => {
+  const { domains } = req.body;
+  if (!Array.isArray(domains) || domains.length === 0)
+    return res.status(400).json({ message: 'domains array required' });
+
+  const results = await Promise.all(domains.slice(0, 200).map(checkOne));
+  res.json(results);
+});
+
 module.exports = router;
