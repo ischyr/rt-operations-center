@@ -31,6 +31,8 @@ import UsernameGeneratorView from './views/UsernameGeneratorView';
 import TyposquatView from './views/TyposquatView';
 import EmailsView from './views/EmailsView';
 import DocumentsView from './views/DocumentsView';
+import FileMetaView from './views/FileMetaView';
+import WordlistView from './views/WordlistView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -83,10 +85,13 @@ const EngagementLayout = () => {
       <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PhishingView />} />
-      <Route path="intelligence/qr-codes"        element={<QRCodeView />} />
       <Route path="intelligence/reverse-shells"  element={<ReverseShellView />} />
-      <Route path="intelligence/username-gen"    element={<UsernameGeneratorView />} />
-      <Route path="intelligence/typosquat"       element={<TyposquatView />} />
+
+      {/* Builders */}
+      <Route path="builders/username-gen"  element={<UsernameGeneratorView />} />
+      <Route path="builders/typosquat"     element={<TyposquatView />} />
+      <Route path="builders/qr-codes"      element={<QRCodeView />} />
+      <Route path="builders/wordlist-gen"  element={<WordlistView />} />
 
       {/* Sock Puppets */}
       <Route path="sockpuppets/personas"     element={<PersonasView />} />
@@ -112,6 +117,7 @@ const EngagementLayout = () => {
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
       <Route path="pillaging/emails"      element={<EmailsView />} />
       <Route path="pillaging/documents"   element={<DocumentsView />} />
+      <Route path="pillaging/file-meta"   element={<FileMetaView />} />
 
       {/* Reporting */}
       <Route path="reporting/reports"                  element={<PlaceholderView title="Reports" />} />

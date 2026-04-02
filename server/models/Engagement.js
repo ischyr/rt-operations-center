@@ -344,6 +344,17 @@ const assumedBreachSchema = new mongoose.Schema(
   { timestamps: true, _id: true },
 );
 
+const fileMetaSchema = new mongoose.Schema(
+  {
+    name:          { type: String, required: true, trim: true },
+    size:          { type: Number, default: 0 },
+    mimeType:      { type: String, default: 'application/octet-stream' },
+    extractedMeta: { type: mongoose.Schema.Types.Mixed, default: {} },
+    uploadedBy:    { type: String, default: '' },
+  },
+  { timestamps: true, _id: true },
+);
+
 const documentSchema = new mongoose.Schema(
   {
     name:                { type: String, required: true, trim: true },
@@ -445,6 +456,7 @@ const engagementSchema = new mongoose.Schema(
     phishingConfig:         { type: phishingConfigSchema, default: () => ({}) },
     ttps:                   [ttpSchema],
     documents:              [documentSchema],
+    fileMetaEntries:        [fileMetaSchema],
     assumedBreachScenarios: [assumedBreachSchema],
   },
   { timestamps: true }

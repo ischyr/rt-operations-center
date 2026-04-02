@@ -20,6 +20,8 @@ import DiagramEditorView from './views/DiagramEditorView';
 import DiagramLibraryView from './views/DiagramLibraryView';
 import ToolsView from './views/ToolsView';
 import MalwareScannerView from './views/MalwareScannerView';
+import LolbinView from './views/LolbinView';
+import DomainCatView from './views/DomainCatView';
 
 const MotionFlex = motion(Flex);
 
@@ -55,6 +57,8 @@ const DashboardLayout = () => (
           <Route path="resources/cve-feed"    element={<CVEFeedView />} />
           <Route path="resources/ransom-feed"   element={<RansomFeedView />} />
           <Route path="resources/email-leaks"  element={<EmailLeaksView />} />
+          <Route path="resources/lolbins"      element={<LolbinView />} />
+          <Route path="resources/domain-cat"   element={<DomainCatView />} />
           {/* Malware Analysis routes */}
           <Route path="malware/scanner" element={<MalwareScannerView />} />
           <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />

@@ -37,6 +37,8 @@ const resourcesNav = [
   { key: 'resources/cve-feed',     label: 'CVE Feed',     icon: WarningTwoIcon },
   { key: 'resources/ransom-feed',  label: 'Ransom Feed',  icon: LockIcon       },
   { key: 'resources/email-leaks',  label: 'Email Leaks',  icon: EmailIcon      },
+  { key: 'resources/lolbins',      label: 'LOLBIN / LOLBAS', icon: SearchIcon  },
+  { key: 'resources/domain-cat',   label: 'Domain Cat Checker', icon: SearchIcon },
 ];
 
 // ── Malware Analysis nav (always visible, global) ─────────────────────────────
@@ -79,10 +81,16 @@ const engagementNav = [
       { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
       { key: 'intelligence/c2',              label: 'C2 Infrastructure',       icon: LinkIcon   },
       { key: 'intelligence/phishing',        label: 'Phishing Infrastructure', icon: EmailIcon  },
-      { key: 'intelligence/qr-codes',        label: 'QR Code Generator',       icon: CopyIcon   },
       { key: 'intelligence/reverse-shells',  label: 'Reverse Shells',          icon: ChevronRightIcon },
-      { key: 'intelligence/username-gen',    label: 'Username Generator',      icon: AtSignIcon },
-      { key: 'intelligence/typosquat',       label: 'Typosquat Generator',     icon: SearchIcon },
+    ],
+  },
+  {
+    section: 'BUILDERS',
+    items: [
+      { key: 'builders/username-gen',  label: 'Username Generator',  icon: AtSignIcon },
+      { key: 'builders/typosquat',     label: 'Typosquat Generator', icon: SearchIcon },
+      { key: 'builders/qr-codes',      label: 'QR Code Generator',   icon: CopyIcon   },
+      { key: 'builders/wordlist-gen',  label: 'Wordlist Generator',  icon: EditIcon   },
     ],
   },
   {
@@ -111,7 +119,8 @@ const engagementNav = [
       { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
       { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
       { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },
-      { key: 'pillaging/documents',   label: 'Documents',   icon: AttachmentIcon },
+      { key: 'pillaging/documents',     label: 'Documents',        icon: AttachmentIcon },
+      { key: 'pillaging/file-meta',     label: 'File Metadata',    icon: SearchIcon     },
     ],
   },
   {

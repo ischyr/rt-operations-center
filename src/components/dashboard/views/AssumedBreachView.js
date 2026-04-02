@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box, Flex, Text, Heading, Input, Textarea, IconButton,
   Button, SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody,
-  Badge,
+  Badge, Spinner,
 } from '@chakra-ui/react';
 import {
   AddIcon, DeleteIcon, CloseIcon, CheckIcon, WarningIcon,
@@ -179,8 +179,8 @@ const StepCard = ({ step, index, total, onChange, onDelete }) => {
 
       {/* Card */}
       <MotionBox
-        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.18, delay: index * 0.04 }}
+        initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.15 }}
         flex={1} mb={index < total - 1 ? 2 : 0}
         borderRadius="10px" bg="var(--dash-card-bg)"
         border={`1px solid ${step.status === 'succeeded' ? `${GREEN}30` : step.status === 'failed' ? `${RED}30` : 'rgba(255,255,255,0.07)'}`}
@@ -321,9 +321,19 @@ const AssumedBreachView = () => {
   const [selectedId,  setSelectedId]  = useState(null);
   const [creating,    setCreating]    = useState(false);
   const [saving,      setSaving]      = useState(false);
+  const [booting,     setBooting]     = useState(true);
   const [newForm,     setNewForm]     = useState({ name: '', startingPoint: 'workstation-user', objective: 'Domain Admin' });
 
-  const saveTimer = useRef(null);
+  const saveTimer    = useRef(null);
+  const scenariosRef = useRef(scenarios);
+  useEffect(() => { scenariosRef.current = scenarios; }, [scenarios]);
+
+  // Always fetch fresh on mount so navigating back shows saved data
+  useEffect(() => {
+    setBooting(true);
+    fetchEngagements().finally(() => setBooting(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (eng?.assumedBreachScenarios) setScenarios(eng.assumedBreachScenarios);
@@ -333,29 +343,42 @@ const AssumedBreachView = () => {
   const sp       = selected ? (SP_MAP[selected.startingPoint] || SP_MAP['workstation-user']) : null;
 
   // ── Server calls ─────────────────────────────────────────────────────────
-  const saveScenario = useCallback(async (scenarioId, updates) => {
+  // Always reads full latest state from ref so debounce never sends stale partial patches
+  const saveScenario = useCallback(async (scenarioId) => {
+    const current = scenariosRef.current.find(s => s._id === scenarioId);
+    if (!current) return;
+    const { name, startingPoint, startingDesc, objective, objectiveDesc, steps, status, notes } = current;
     try {
       const res = await fetch(`${API_BASE}/api/assumed-breach/${eng._id}/scenarios/${scenarioId}`, {
-        method: 'PUT', headers: authHeaders(), body: JSON.stringify(updates),
+        method: 'PUT', headers: authHeaders(),
+        body: JSON.stringify({ name, startingPoint, startingDesc, objective, objectiveDesc, steps, status, notes }),
       });
       if (res.ok) {
-        // Replace local state with server response so temp _ids become real ObjectIds
         const updated = await res.json();
-        setScenarios(prev => prev.map(s => s._id === scenarioId ? updated : s));
+        // Only merge server-assigned _ids into steps — don't replace user's in-progress edits
+        setScenarios(prev => prev.map(s => {
+          if (s._id !== scenarioId) return s;
+          const mergedSteps = (s.steps || []).map((step, i) => {
+            const serverStep = updated.steps?.[i];
+            if (!step._id && serverStep?._id) return { ...step, _id: serverStep._id };
+            return step;
+          });
+          return { ...s, steps: mergedSteps };
+        }));
       }
     } catch (e) { console.error(e); }
   }, [eng]);
 
-  const debouncedSave = useCallback((scenarioId, updates) => {
+  const debouncedSave = useCallback((scenarioId) => {
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => saveScenario(scenarioId, updates), 600);
+    saveTimer.current = setTimeout(() => saveScenario(scenarioId), 600);
   }, [saveScenario]);
 
   const updateSelected = useCallback((patch) => {
     setScenarios(prev => prev.map(s =>
       s._id === selectedId ? { ...s, ...patch } : s
     ));
-    debouncedSave(selectedId, patch);
+    debouncedSave(selectedId);
   }, [selectedId, debouncedSave]);
 
   const createScenario = async () => {
@@ -423,7 +446,12 @@ const AssumedBreachView = () => {
     pending:   (selected.steps || []).filter(s => s.status === 'pending').length,
   } : null;
 
-  if (!eng) return null;
+  if (!eng || booting) return (
+    <Flex align="center" justify="center" h="60vh" gap={3}>
+      <Spinner size="sm" color={ACCENT} thickness="2px" />
+      <Text fontSize="13px" color="var(--dash-text-muted)">Loading scenarios…</Text>
+    </Flex>
+  );
 
   return (
     <Box px={6} pb={12}>
@@ -494,11 +522,11 @@ const AssumedBreachView = () => {
           )}
 
           {/* Scenario builder */}
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {selected && (
               <MotionBox key={selected._id}
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
 
                 {/* Scenario header */}
                 <Box mb={4} px={5} py={4} borderRadius="14px"
@@ -640,7 +668,7 @@ const AssumedBreachView = () => {
                     <Box>
                       {(selected.steps || []).map((step, idx) => (
                         <StepCard
-                          key={step._id || `step-${idx}`}
+                          key={idx}
                           step={step}
                           index={idx}
                           total={(selected.steps || []).length}

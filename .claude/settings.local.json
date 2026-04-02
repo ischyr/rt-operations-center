@@ -24,7 +24,10 @@
       "Read(//tmp/**)",
       "Bash(curl -sL \"https://docs.google.com/spreadsheets/d/1b4mUxa6cDQuTV2BPC6aA-GR4zGZi0ooPYtBe4IgPsSc/export?format=csv\" -o c2matrix_raw.csv)",
       "Bash(npx react-scripts:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

@@ -46,6 +46,8 @@ app.use('/api/recon',   require('./routes/recon'));
 app.use('/api/emails',     require('./routes/emails'));
 app.use('/api/documents',      require('./routes/documents'));
 app.use('/api/assumed-breach', require('./routes/assumedBreach'));
+app.use('/api/file-meta',     require('./routes/fileMeta'));
+app.use('/api/domain-cat',    require('./routes/domainCat'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 
