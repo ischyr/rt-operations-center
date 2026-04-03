@@ -8,6 +8,7 @@ import { ChevronLeftIcon, AddIcon, DeleteIcon, CheckIcon, ChevronDownIcon } from
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
+import DeleteConfirmModal from '../DeleteConfirmModal';
 
 const MotionBox = motion(Box);
 
@@ -314,9 +315,10 @@ const TTPDetailView = ({ category }) => {
 
   const meta = CATEGORY_META[category];
 
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [editing,       setEditing]       = useState(false);
+  const [form,          setForm]          = useState(null);
+  const [saving,        setSaving]        = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (ttp && !form) {
@@ -378,8 +380,8 @@ const TTPDetailView = ({ category }) => {
     setSaving(false);
   };
 
-  const deleteTTP = async () => {
-    if (!window.confirm(`Delete "${ttp.title}"? This cannot be undone.`)) return;
+  const deleteTTP = () => setConfirmDelete(true);
+  const confirmDeleteAction = async () => {
     await updateEngagement(eng.id, {
       ttps: (eng.ttps || []).filter(t => (t._id || t.id) !== ttpId),
     });
@@ -586,6 +588,13 @@ const TTPDetailView = ({ category }) => {
           )}
         </Box>
       </Box>
+      <DeleteConfirmModal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={confirmDeleteAction}
+        title="Delete TTP"
+        itemName={ttp?.title}
+      />
     </MotionBox>
   );
 };

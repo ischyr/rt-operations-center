@@ -7,6 +7,7 @@ import { EditIcon, CheckIcon, DeleteIcon, AddIcon, TriangleUpIcon, WarningIcon, 
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
+import DeleteConfirmModal from '../DeleteConfirmModal';
 
 const MotionBox = motion(Box);
 
@@ -237,9 +238,10 @@ const EngagementDetailView = () => {
 
   const eng = getBySlug(slug);
 
-  const [editing,     setEditing]     = useState(false);
-  const [error,       setError]       = useState('');
-  const [showFinding, setShowFinding] = useState(false);
+  const [editing,       setEditing]       = useState(false);
+  const [error,         setError]         = useState('');
+  const [showFinding,   setShowFinding]   = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [newF,        setNewF]        = useState({ title: '', severity: 'High', description: '' });
 
   const resolvePhase = (e) => {
@@ -331,11 +333,10 @@ const EngagementDetailView = () => {
     setEditing(false);
   };
 
-  const handleDelete = () => {
-    if (window.confirm(`Delete "${eng.name}"? This cannot be undone.`)) {
-      deleteEngagement(eng.id);
-      navigate('/dashboard/engagements');
-    }
+  const handleDelete = () => setConfirmDelete(true);
+  const confirmDeleteAction = () => {
+    deleteEngagement(eng.id);
+    navigate('/dashboard/engagements');
   };
 
   const addFinding = () => {
@@ -775,6 +776,14 @@ const EngagementDetailView = () => {
         </SCard>
 
       </SimpleGrid>
+
+      <DeleteConfirmModal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={confirmDeleteAction}
+        title="Delete Engagement"
+        itemName={eng.name}
+      />
     </Box>
   );
 };

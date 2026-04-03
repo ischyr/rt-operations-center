@@ -61,7 +61,7 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 │   Sidebar   ├──────────────────────────────────────────┤
 │             │                                          │
 │  CHEATSHEET │           Active View                    │
-│  RED LAB    │    (DashboardView / PlaceholderView)     │
+│  RED LAB    │    (DashboardView / EngagementView)      │
 │  RESOURCES  │                                          │
 │  MALWARE    │                                          │
 │  DIAGRAMS   │                                          │
@@ -82,7 +82,7 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 | *(top)* | Dashboard, Engagements |
 | **CHEATSHEET** | Red Team Ops Map, AD Attack Map, Payload & Evasion Map |
 | **RED LAB** | Lab Configs, Lab Connectivity |
-| **RESOURCES & MATERIALS** | Tools, CVE Feed |
+| **RESOURCES & MATERIALS** | Tools, CVE Feed, Ransom Feed, Email Leaks, LOLBIN / LOLBAS, Domain Cat Checker |
 | **MALWARE ANALYSIS** | Scanner, Reports |
 | **DIAGRAM DRAWING** | Editor, My Diagrams |
 
@@ -90,12 +90,14 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 
 | Section | Items |
 |---|---|
-| **OPERATIONS** | Activity Log, Calendar, Skill Requests, TTX Planner, Campaign Builder |
+| **OPERATIONS** | Activity Log, Calendar, Skill Requests, TTX Planner, Team Vault, Assumed Breach |
 | **TEAM** | People & Skills, Resources |
-| **INTELLIGENCE** | Loot Tracker, Evidence Vault, Cleanup Tracker, C2 Infrastructure, Phishing Infrastructure |
+| **INTELLIGENCE** | Loot Tracker, Evidence Vault, Cleanup Tracker, Reverse Shells |
+| **INFRASTRUCTURE** | C2 Infrastructure, Phishing Infrastructure, Device Code Phishing, Pass-the-Cookie, Evil OAuth Generator |
+| **BUILDERS** | Username Generator, Typosquat Generator, QR Code Generator, Wordlist Generator |
 | **SOCK PUPPETS** | Personas, Social Media |
 | **TTPs** | Initial Access, Windows, Linux, Active Directory, Network |
-| **PILLAGING** | Subdomains, Services, Leaks, Credentials, Emails, Documents |
+| **PILLAGING** | Domain Recon, Subdomains, Services, Leaks, Credentials, Emails Harvester, Documents, File Metadata |
 | **REPORTING** | Reports, Findings, Client Portal |
 
 - Active item is highlighted with a red left border + red tinted background
@@ -135,7 +137,170 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 
 **Team Skill Coverage** — skill bars with color thresholds (green ≥80% · yellow ≥65% · orange <65%)
 
-### Dashboard Routes
+---
+
+## Key Features
+
+### Device Code Phishing
+
+The Device Code Phishing module (`/intelligence/device-code-phishing`) automates the OAuth 2.0 Device Authorization Grant flow to harvest Microsoft 365 tokens without requiring a redirect URI — ideal for phishing target users over chat, email, or social engineering.
+
+**How it works:**
+
+1. **Generate a device code** — the server calls `https://login.microsoftonline.com/common/oauth2/v2.0/devicecode` and receives a short `user_code` (e.g. `ABC-12345`) and a `device_code`. The user_code is valid for ~15 minutes.
+
+2. **Deliver the lure** — the operator sends the victim a convincing message instructing them to visit `https://microsoft.com/devicelogin` and enter the user_code. This is a legitimate Microsoft page, so it passes browser security checks.
+
+3. **Poll for completion** — the server continuously polls the token endpoint using the `device_code`. Once the victim authenticates and approves the requested scopes, Microsoft returns an access token + refresh token.
+
+4. **Token vault** — captured tokens are stored in localStorage under `dc_tokens` and displayed in the Token Vault tab with the victim's UPN (extracted from the id_token JWT), scopes, and capture time.
+
+5. **Graph enumeration** — the operator can run pre-built Microsoft Graph API queries directly from the tool (user info, mailbox, OneDrive, Teams, SharePoint, conditional access policies, devices, etc.) using the captured token. Results are shown in a dedicated Graph Result view.
+
+**Scopes supported:** The tool ships with pre-built scope sets for Microsoft Graph (`Mail.Read`, `Files.Read`, `User.Read.All`, `Directory.Read.All`, etc.) and Azure management APIs. Custom scopes can be entered manually.
+
+**Backend routes:** `/api/device-code/*` — all protected by JWT.
+
+---
+
+### Evil OAuth App Generator
+
+The Evil OAuth App Generator (`/intelligence/evil-oauth`) is a consent phishing toolkit for Azure AD. It builds convincing Azure App Registration personas, generates consent phishing URLs, and auto-exchanges authorization codes for access tokens — all without ever exposing credentials.
+
+**How it works:**
+
+1. **Build the app** — select one of 12 pre-built Microsoft app presets (Teams Meeting Add-in, SharePoint Site Sync, OneDrive Backup Agent, Entra ID Governance, Power Automate Bridge, etc.) or customize the App Name, Client ID, Tenant ID, and Redirect URI. Each preset comes with recommended high-value scopes.
+
+2. **Generate the consent URL** — the server builds an OAuth 2.0 Authorization Code Flow URL pointing to `https://login.microsoftonline.com/<tenant>/oauth2/v2.0/authorize` with your chosen scopes and a `state` parameter for tracking.
+
+3. **Deliver the lure** — use the Phishing Lures tab to generate ready-made email/Teams message templates referencing your app persona. The victim clicks the URL, is taken to a real Microsoft consent page under your app's name, and approves the requested delegated permissions.
+
+4. **Callback capture** — when the victim approves, Microsoft redirects to your configured callback URI (`/api/evil-oauth/callback`). The server captures the `code` + `state`, returns a convincing Microsoft "Staying signed in?" HTML splash page to avoid suspicion, and stores the capture in memory.
+
+5. **Auto-exchange** — the Capture Tracker tab shows all pending captures. One click triggers a server-side token exchange (`POST /api/evil-oauth/exchange`) using the `authorization_code` grant against the Microsoft token endpoint — never exposing the client secret to the browser.
+
+6. **Token vault integration** — successfully exchanged tokens are pushed directly into the Device Code Phishing Token Vault (`dc_tokens` in localStorage) so Graph enumeration queries can be run against them immediately.
+
+**Important:** You must register an Azure App Registration with `http://localhost:5000/api/evil-oauth/callback` as an allowed redirect URI and set `response_type=code` in the app manifest. The Client Secret is stored server-side only.
+
+**Tabs:**
+- **App Builder** — select preset or build custom app + scope picker
+- **Phishing Lures** — copy-ready email and Teams message templates
+- **Capture Tracker** — live list of pending codes, exchange status, victim UPN
+- **Reference** — OAuth 2.0 flow diagram + scope reference table
+
+**Backend routes:** `/api/evil-oauth/*` — callback is public (no auth), all other routes protected.
+
+---
+
+### Pass-the-Cookie Dashboard
+
+The Pass-the-Cookie Dashboard (`/intelligence/pass-cookie`) is a session hijacking toolkit for storing, managing, and replaying captured browser cookies against known SaaS targets.
+
+**How it works:**
+
+1. **Add cookies** — paste raw cookie strings (from XSS output, infostealer logs, MITM captures, or manual browser extraction) into the Add to Vault modal. The parser auto-detects the number of cookies and associates the entry with a target app (Microsoft 365, Google Workspace, GitHub, AWS Console, Okta, or custom).
+
+2. **Vault management** — all entries are stored in localStorage under `ptc_entries`. Each entry shows target app, session label, cookie count, and capture time. Entries can be deleted individually or cleared in bulk.
+
+3. **Replay session** — a "Use Cookies" button opens a new browser tab to the target app's URL. The workflow guides the operator through injecting the cookies via DevTools to hijack the session — bypassing MFA since the cookie already contains an authenticated session.
+
+---
+
+### Reports View
+
+The Reports module (`/reporting/reports`) provides structured engagement report management per operation:
+
+- Create reports with type (Pentest, Red Team, Purple Team, Assumed Breach, Social Engineering), status (Draft, In Review, Finalized, Delivered), and classification (TLP:WHITE, TLP:GREEN, TLP:AMBER, TLP:RED)
+- Rich text sections: Executive Summary, Methodology, Attack Narrative, Recommendations
+- Track creation date, last updated, and assigned author
+- All reports are stored in MongoDB and scoped to the engagement
+
+---
+
+### LOLBIN / LOLBAS Reference
+
+The LOLBIN / LOLBAS reference (`/resources/lolbins`) is a searchable, filterable encyclopedia of Living-Off-the-Land Binaries and Scripts for Windows and Linux.
+
+- Search by binary name, description, or ATT&CK technique ID
+- Filter by OS (Windows / Linux / macOS) and category (Execute, Download, Bypass, Lateral Movement, etc.)
+- Each entry shows the binary, usage examples, detection notes, and MITRE ATT&CK mapping
+- Copy-to-clipboard on all command examples
+
+---
+
+### Domain Category Checker
+
+The Domain Category Checker (`/resources/domain-cat`) lets operators verify whether a newly registered domain has been categorized by web filtering vendors before using it in phishing infrastructure.
+
+- Submit a domain and check its category across multiple reputation sources
+- Uncategorized or "Unknown" domains are ideal for phishing C2 since they bypass category-based URL filtering
+- Shows content category, risk score, and first/last seen dates
+
+---
+
+### Assumed Breach Simulation
+
+The Assumed Breach view (`/operations/assumed-breach`) tracks the starting conditions and scope for assumed breach engagements:
+
+- Document the assumed access level (workstation user, DA, cloud admin, etc.)
+- Track what credentials, certificates, or tokens are in scope from day 1
+- Log the narrative starting point for the red team engagement
+
+---
+
+### File Metadata Extractor
+
+The File Metadata view (`/pillaging/file-meta`) extracts and analyzes metadata from uploaded documents:
+
+- Upload Office documents (DOCX, XLSX, PPTX), PDFs, and images
+- Extracts author, organization, creation/modification timestamps, GPS coordinates (images), software version, and revision history
+- Flags high-value metadata fields useful for OSINT and target profiling
+
+---
+
+### Emails Harvester
+
+The Emails Harvester (`/pillaging/emails`) collects and organizes email addresses found during reconnaissance:
+
+- Add email addresses with associated name, department, and source
+- Import bulk email lists from paste format
+- Export collected emails for use in phishing campaigns or password spraying
+
+---
+
+### Documents
+
+The Documents view (`/pillaging/documents`) tracks documents discovered or exfiltrated during an engagement:
+
+- Store document metadata: filename, type, source path, classification, and notes
+- Tag documents with sensitivity level and relevance to the engagement
+- Link documents to findings for evidence trail
+
+---
+
+### Domain Recon
+
+The Domain Recon view (`/pillaging/domain-recon`) aggregates passive reconnaissance data for target domains:
+
+- DNS record enumeration (A, MX, TXT, NS, CNAME)
+- WHOIS data including registrar, registration date, and expiry
+- Mail security posture: SPF, DKIM, DMARC presence + policy analysis
+- Results stored per engagement for reporting
+
+---
+
+### TTPs Tracker
+
+The TTPs module provides per-engagement technique tracking across five MITRE ATT&CK categories: Initial Access, Windows, Linux, Active Directory, and Network.
+
+- Each TTP entry records: technique ID (e.g. T1566.001), title, description, status (Planned / In Progress / Success / Failed / Detected), and notes
+- Detailed TTP view shows full narrative, timeline, and evidence links
+- Delete with themed confirmation modal (no native browser dialogs)
+
+---
+
+## Dashboard Routes
 
 All routes under `/dashboard/*` are protected — unauthenticated users are redirected to `/signin`.
 
@@ -151,9 +316,13 @@ All routes under `/dashboard/*` are protected — unauthenticated users are redi
 | `/dashboard/cheatsheet/payload-map` | Payload & Evasion Map | Built |
 | `/dashboard/lab/configs` | Lab Configs | Built |
 | `/dashboard/lab/connectivity` | Lab Connectivity (Twingate) | Built |
-| `/dashboard/resources/tools` | Tools | Placeholder |
+| `/dashboard/resources/tools` | Tools | Built |
 | `/dashboard/resources/cve-feed` | CVE Feed | Built |
-| `/dashboard/malware/scanner` | Malware Scanner | Placeholder |
+| `/dashboard/resources/ransom-feed` | Ransomware Feed | Built |
+| `/dashboard/resources/email-leaks` | Email Leaks (HIBP) | Built |
+| `/dashboard/resources/lolbins` | LOLBIN / LOLBAS Reference | Built |
+| `/dashboard/resources/domain-cat` | Domain Category Checker | Built |
+| `/dashboard/malware/scanner` | Malware Scanner | Built |
 | `/dashboard/malware/reports` | Analysis Reports | Placeholder |
 | `/dashboard/diagrams/editor` | Diagram Editor (draw.io embed) | Built |
 | `/dashboard/diagrams/library` | My Diagrams | Built |
@@ -164,27 +333,55 @@ All routes under `/dashboard/*` are protected — unauthenticated users are redi
 |---|---|---|
 | `/:slug` | Engagement Detail | Built |
 | `/:slug/operations/activity` | Activity Log | Built |
-| `/:slug/operations/calendar` | Calendar | Placeholder |
-| `/:slug/operations/skill-requests` | Skill Requests | Placeholder |
-| `/:slug/operations/ttx` | TTX Planner | Placeholder |
-| `/:slug/operations/campaign` | Campaign Builder | Placeholder |
+| `/:slug/operations/calendar` | Calendar | Built |
+| `/:slug/operations/skill-requests` | Skill Requests | Built |
+| `/:slug/operations/ttx` | TTX Planner | Built |
+| `/:slug/operations/team-vault` | Team Vault | Built |
+| `/:slug/operations/assumed-breach` | Assumed Breach | Built |
 | `/:slug/team/people` | People & Skills | Built |
 | `/:slug/team/resources` | Resources | Built |
-| `/:slug/intelligence/loot-tracker` | Loot Tracker | Placeholder |
-| `/:slug/intelligence/evidence-vault` | Evidence Vault | Placeholder |
-| `/:slug/intelligence/cleanup-tracker` | Cleanup Tracker | Placeholder |
-| `/:slug/intelligence/c2` | C2 Infrastructure | Placeholder |
-| `/:slug/intelligence/phishing` | Phishing Infrastructure | Placeholder |
-| `/:slug/sockpuppets/personas` | Personas | Placeholder |
+| `/:slug/intelligence/loot-tracker` | Loot Tracker | Built |
+| `/:slug/intelligence/evidence-vault` | Evidence Vault | Built |
+| `/:slug/intelligence/cleanup-tracker` | Cleanup Tracker | Built |
+| `/:slug/intelligence/reverse-shells` | Reverse Shells | Built |
+| `/:slug/intelligence/c2` | C2 Infrastructure | Built |
+| `/:slug/intelligence/phishing` | Phishing Infrastructure | Built |
+| `/:slug/intelligence/device-code-phishing` | Device Code Phishing | Built |
+| `/:slug/intelligence/device-code-phishing/:category/:querySlug` | Graph Result | Built |
+| `/:slug/intelligence/pass-cookie` | Pass-the-Cookie | Built |
+| `/:slug/intelligence/evil-oauth` | Evil OAuth Generator | Built |
+| `/:slug/builders/username-gen` | Username Generator | Built |
+| `/:slug/builders/typosquat` | Typosquat Generator | Built |
+| `/:slug/builders/qr-codes` | QR Code Generator | Built |
+| `/:slug/builders/wordlist-gen` | Wordlist Generator | Built |
+| `/:slug/sockpuppets/personas` | Personas | Built |
 | `/:slug/sockpuppets/social-media` | Social Media | Placeholder |
-| `/:slug/ttps/*` | TTPs (5 pages) | Placeholder |
-| `/:slug/pillaging/*` | Pillaging (6 pages) | Placeholder |
-| `/:slug/reporting/reports` | Reports | Placeholder |
+| `/:slug/ttps/initial-access` | Initial Access TTPs | Built |
+| `/:slug/ttps/initial-access/:ttpId` | TTP Detail | Built |
+| `/:slug/ttps/windows` | Windows TTPs | Built |
+| `/:slug/ttps/windows/:ttpId` | TTP Detail | Built |
+| `/:slug/ttps/linux` | Linux TTPs | Built |
+| `/:slug/ttps/linux/:ttpId` | TTP Detail | Built |
+| `/:slug/ttps/active-directory` | Active Directory TTPs | Built |
+| `/:slug/ttps/active-directory/:ttpId` | TTP Detail | Built |
+| `/:slug/ttps/network` | Network TTPs | Built |
+| `/:slug/ttps/network/:ttpId` | TTP Detail | Built |
+| `/:slug/pillaging/domain-recon` | Domain Recon | Built |
+| `/:slug/pillaging/subdomains` | Subdomains | Built |
+| `/:slug/pillaging/services` | Services | Placeholder |
+| `/:slug/pillaging/leaks` | Leaks | Placeholder |
+| `/:slug/pillaging/credentials` | Credentials | Placeholder |
+| `/:slug/pillaging/emails` | Emails Harvester | Built |
+| `/:slug/pillaging/documents` | Documents | Built |
+| `/:slug/pillaging/file-meta` | File Metadata | Built |
+| `/:slug/reporting/reports` | Reports | Built |
 | `/:slug/reporting/findings` | Findings | Built |
-| `/:slug/reporting/findings/:id` | Finding Detail | Built |
-| `/:slug/reporting/client-portal` | Client Portal | Placeholder |
+| `/:slug/reporting/findings/:findingId` | Finding Detail | Built |
+| `/:slug/reporting/client-portal` | Client Portal | Built |
 
-### Dashboard File Structure
+---
+
+## Dashboard File Structure
 
 ```
 src/components/dashboard/
@@ -192,6 +389,7 @@ src/components/dashboard/
 ├── EngagementLayout.js             # Per-engagement route wrapper
 ├── Sidebar.js                      # Left nav — global + per-engagement sections
 ├── TopBar.js                       # Search + notifications + @callsign chip
+├── DeleteConfirmModal.js           # Shared themed delete confirmation modal
 ├── views/
 │   ├── DashboardView.js            # Operations Overview — stat cards + all widgets
 │   ├── PlaceholderView.js          # Reusable "under construction" view
@@ -204,13 +402,50 @@ src/components/dashboard/
 │   ├── LabConfigsView.js           # Red Lab — Ludus template cards + deploy modal
 │   ├── LabConnectivityView.js      # Red Lab — Twingate VPN walkthrough
 │   ├── CVEFeedView.js              # Resources — live CVE feed + CVE ID search
+│   ├── RansomFeedView.js           # Resources — ransomware group feed
+│   ├── EmailLeaksView.js           # Resources — HIBP breach lookup
+│   ├── LolbinView.js               # Resources — LOLBIN/LOLBAS reference
+│   ├── DomainCatView.js            # Resources — domain category checker
+│   ├── ToolsView.js                # Resources — red team tools reference
+│   ├── MalwareScannerView.js       # Malware — VirusTotal scanner
 │   ├── DiagramEditorView.js        # Diagrams — draw.io embed with save to DB
 │   ├── DiagramLibraryView.js       # Diagrams — grid of saved diagrams
+│   ├── ActivityView.js             # Operations — activity log
+│   ├── CalendarView.js             # Operations — engagement calendar
+│   ├── SkillRequestsView.js        # Operations — skill requests tracker
+│   ├── TTXPlannerView.js           # Operations — tabletop exercise planner
+│   ├── TeamVaultView.js            # Operations — shared team credential vault
+│   ├── AssumedBreachView.js        # Operations — assumed breach starting conditions
 │   ├── PeopleSkillsView.js         # Team — operator list + skill assignment
 │   ├── ResourcesView.js            # Team — resource tracking
-│   ├── ActivityView.js             # Operations — activity log
+│   ├── LootTrackerView.js          # Intelligence — loot tracker
+│   ├── EvidenceVaultView.js        # Intelligence — evidence vault
+│   ├── CleanupTrackerView.js       # Intelligence — cleanup tracker
+│   ├── ReverseShellView.js         # Intelligence — reverse shell generator
+│   ├── C2View.js                   # Infrastructure — C2 infrastructure manager
+│   ├── PhishingView.js             # Infrastructure — phishing infrastructure
+│   ├── DeviceCodePhishingView.js   # Infrastructure — device code phishing + token vault
+│   ├── graphEnumCatalog.js         # Infrastructure — Graph API query catalog
+│   ├── GraphResultView.js          # Infrastructure — Graph enumeration results
+│   ├── PassCookieView.js           # Infrastructure — pass-the-cookie vault
+│   ├── EvilOAuthView.js            # Infrastructure — Evil OAuth consent phishing
+│   ├── UsernameGeneratorView.js    # Builders — username permutation generator
+│   ├── TyposquatView.js            # Builders — typosquat domain generator
+│   ├── QRCodeView.js               # Builders — QR code generator
+│   ├── WordlistView.js             # Builders — custom wordlist builder
+│   ├── PersonasView.js             # Sock Puppets — persona manager
+│   ├── TTPsView.js                 # TTPs — technique list per category
+│   ├── TTPDetailView.js            # TTPs — single technique detail + edit
+│   ├── DomainReconView.js          # Pillaging — DNS/WHOIS/mail security recon
+│   ├── SubdomainsView.js           # Pillaging — subdomain enumeration
+│   ├── EmailsView.js               # Pillaging — emails harvester
+│   ├── DocumentsView.js            # Pillaging — exfiltrated document tracker
+│   ├── FileMetaView.js             # Pillaging — file metadata extractor
+│   ├── LeakIXView.js               # Pillaging — LeakIX service search
+│   ├── ReportsView.js              # Reporting — engagement report manager
 │   ├── FindingsView.js             # Reporting — findings list
-│   └── FindingDetailView.js        # Reporting — single finding detail
+│   ├── FindingDetailView.js        # Reporting — single finding detail + edit
+│   └── ClientPortalView.js         # Reporting — client portal
 └── widgets/
     ├── StatCard.js                 # Colored-accent stat card
     ├── EngagementCard.js           # Individual operation card with progress + findings
@@ -235,20 +470,60 @@ red-team-operations-center/
 │   │   ├── db.js                       # Mongoose connection to MongoDB
 │   │   └── passport.js                 # Passport Google + GitHub OAuth strategies
 │   ├── models/
-│   │   ├── User.js                     # User schema — callsign, email, password, OAuth fields
-│   │   ├── Engagement.js               # Engagement schema — full op data + operator skills
+│   │   ├── User.js                     # User schema
+│   │   ├── Engagement.js               # Engagement schema — full op data
 │   │   └── Diagram.js                  # Diagram schema — name, XML, thumbnail, owner
 │   ├── controllers/
 │   │   ├── authController.js           # register(), login(), 2FA business logic
 │   │   ├── engagementController.js     # Engagement CRUD
-│   │   └── userController.js           # Profile + password update
+│   │   ├── userController.js           # Profile + password update
+│   │   ├── c2Controller.js             # C2 droplet CRUD
+│   │   ├── phishingController.js       # Phishing campaign CRUD
+│   │   ├── deviceCodeController.js     # Device code flow — generate, poll, exchange
+│   │   ├── passCookieController.js     # Pass-the-cookie vault CRUD
+│   │   ├── evilOAuthController.js      # Evil OAuth — URL gen, callback capture, exchange
+│   │   ├── lootController.js           # Loot tracker CRUD
+│   │   ├── evidenceController.js       # Evidence vault CRUD
+│   │   ├── cleanupController.js        # Cleanup tracker CRUD
+│   │   ├── vaultController.js          # Team vault CRUD
+│   │   ├── documentsController.js      # Document tracker CRUD
+│   │   ├── assumedBreachController.js  # Assumed breach entries CRUD
+│   │   ├── fileMetaController.js       # File metadata extraction
+│   │   ├── reportController.js         # Engagement reports CRUD
+│   │   ├── leakxController.js          # LeakIX proxy
+│   │   ├── subdomainsController.js     # Subdomain enumeration proxy
+│   │   └── qrController.js             # QR code generation
 │   ├── routes/
-│   │   ├── auth.js                     # /api/auth/* — register, login, 2FA
-│   │   ├── oauth.js                    # /api/oauth/* — Google + GitHub OAuth
-│   │   ├── engagements.js              # /api/engagements/* — CRUD
-│   │   ├── users.js                    # /api/users/* — profile
-│   │   ├── cve.js                      # /api/cve/* — Shodan CVE DB proxy
-│   │   └── diagrams.js                 # /api/diagrams/* — diagram CRUD
+│   │   ├── auth.js                     # /api/auth/*
+│   │   ├── oauth.js                    # /api/oauth/*
+│   │   ├── engagements.js              # /api/engagements/*
+│   │   ├── users.js                    # /api/users/*
+│   │   ├── cve.js                      # /api/cve/*
+│   │   ├── diagrams.js                 # /api/diagrams/*
+│   │   ├── c2.js                       # /api/c2/*
+│   │   ├── phishing.js                 # /api/phishing/*
+│   │   ├── deviceCode.js               # /api/device-code/*
+│   │   ├── passCookie.js               # /api/pass-cookie/*
+│   │   ├── evilOAuth.js                # /api/evil-oauth/*
+│   │   ├── loot.js                     # /api/loot/*
+│   │   ├── evidence.js                 # /api/evidence/*
+│   │   ├── cleanup.js                  # /api/cleanup/*
+│   │   ├── vault.js                    # /api/vault/*
+│   │   ├── documents.js                # /api/documents/*
+│   │   ├── assumedBreach.js            # /api/assumed-breach/*
+│   │   ├── fileMeta.js                 # /api/file-meta/*
+│   │   ├── reports.js                  # /api/reports/*
+│   │   ├── recon.js                    # /api/recon/*
+│   │   ├── domainCat.js                # /api/domain-cat/*
+│   │   ├── subdomains.js               # /api/subdomains/*
+│   │   ├── leakx.js                    # /api/leakx/*
+│   │   ├── emailleaks.js               # /api/email-leaks/*
+│   │   ├── malware.js                  # /api/malware/*
+│   │   ├── ransom.js                   # /api/ransom/*
+│   │   ├── portal.js                   # /api/portal/*
+│   │   ├── emails.js                   # /api/emails/*
+│   │   ├── qr.js                       # /api/qr/*
+│   │   └── tools.js                    # /api/tools/*
 │   ├── middleware/
 │   │   ├── validate.js                 # express-validator input rules per route
 │   │   └── authMiddleware.js           # protect() — JWT verification
@@ -278,6 +553,7 @@ red-team-operations-center/
         │   ├── EngagementLayout.js
         │   ├── Sidebar.js
         │   ├── TopBar.js
+        │   ├── DeleteConfirmModal.js   # Shared delete confirmation modal (used by Engagement/Finding/TTP)
         │   ├── views/                  # (see Dashboard File Structure above)
         │   └── widgets/
         └── pages/
@@ -349,6 +625,43 @@ red-team-operations-center/
 | POST | `/api/engagements` | Yes | Create engagement |
 | PUT | `/api/engagements/:id` | Yes | Update engagement |
 | DELETE | `/api/engagements/:id` | Yes | Delete engagement |
+
+**Device Code Phishing**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/device-code/generate` | Yes | Generate device code + user code from Microsoft |
+| POST | `/api/device-code/poll` | Yes | Poll token endpoint for completion |
+| POST | `/api/device-code/graph` | Yes | Run a Graph API query with a captured token |
+
+**Evil OAuth**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/evil-oauth/generate-url` | Yes | Build consent phishing URL |
+| GET | `/api/evil-oauth/callback` | **No** | Public — receives auth code from Microsoft redirect |
+| POST | `/api/evil-oauth/exchange` | Yes | Server-side code → token exchange |
+| GET | `/api/evil-oauth/captures` | Yes | List all captured codes |
+| DELETE | `/api/evil-oauth/captures/:id` | Yes | Delete a single capture |
+| DELETE | `/api/evil-oauth/captures` | Yes | Clear all captures |
+
+**Pass-the-Cookie**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/pass-cookie` | Yes | List all cookie vault entries |
+| POST | `/api/pass-cookie` | Yes | Add a new cookie entry |
+| DELETE | `/api/pass-cookie/:id` | Yes | Delete a single entry |
+| DELETE | `/api/pass-cookie` | Yes | Clear all entries |
+
+**Reports**
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/api/reports` | Yes | List reports (filtered by engagement) |
+| POST | `/api/reports` | Yes | Create a new report |
+| PUT | `/api/reports/:id` | Yes | Update report content/status |
+| DELETE | `/api/reports/:id` | Yes | Delete a report |
 
 **CVE Proxy**
 
@@ -484,6 +797,11 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 # Callback URL: http://localhost:5000/api/oauth/github/callback
 GITHUB_CLIENT_ID=your_github_client_id_here
 GITHUB_CLIENT_SECRET=your_github_client_secret_here
+
+# Evil OAuth App Generator
+# Register an app at https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps
+# Set redirect URI to: http://localhost:5000/api/evil-oauth/callback
+EVIL_OAUTH_CLIENT_SECRET=your_azure_app_client_secret_here
 ```
 
 ---
@@ -578,6 +896,29 @@ docs/
 import { commonCard } from '../../styles/cardStyles';
 ```
 
+### Delete Confirmation Modal
+
+All destructive delete actions use the shared `DeleteConfirmModal` component instead of the native browser `window.confirm`:
+
+```jsx
+import DeleteConfirmModal from '../DeleteConfirmModal';
+
+// state
+const [confirmDelete, setConfirmDelete] = useState(false);
+
+// trigger
+<Button onClick={() => setConfirmDelete(true)}>Delete</Button>
+
+// modal
+<DeleteConfirmModal
+  isOpen={confirmDelete}
+  onClose={() => setConfirmDelete(false)}
+  onConfirm={handleDelete}
+  title="Delete Engagement"
+  itemName={engagement.name}
+/>
+```
+
 ---
 
 ## TODO
@@ -597,18 +938,12 @@ Curated red team tooling reference at `/dashboard/resources/tools`.
 - Static or DB-backed list of tools per category (recon, exploitation, post-exploitation, C2, reporting)
 - Copy-to-clipboard install commands, links to repos, brief descriptions
 
-### Malware Analysis (Global Sidebar Section)
+### Malware Analysis — Reports Page
 
-VirusTotal integration at `/dashboard/malware/*` — both pages currently placeholder.
+History of VirusTotal scan results at `/dashboard/malware/reports`.
 
-| Page | Route | Notes |
-|---|---|---|
-| **Scanner** | `/dashboard/malware/scanner` | Submit file, hash (MD5/SHA1/SHA256), or URL |
-| **Reports** | `/dashboard/malware/reports` | History of past scans per operator |
-
-- VirusTotal API key stored in Settings
-- Scanner: detection ratio, AV engine results table, threat category + tags
-- Reports: DB-backed scan history, filterable by type/verdict
+- DB-backed scan history, filterable by file type / verdict
+- Links back to individual scan reports with full AV engine breakdown
 
 ### Decorative Side Shapes (Public Pages)
 

@@ -8,6 +8,7 @@ import { ChevronLeftIcon, AddIcon, DeleteIcon, CheckIcon, ChevronDownIcon } from
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
+import DeleteConfirmModal from '../DeleteConfirmModal';
 
 const MotionBox = motion(Box);
 
@@ -500,9 +501,10 @@ const FindingDetailView = () => {
   const eng     = getBySlug(slug);
   const finding = (eng?.findings || []).find(f => (f._id || f.id) === findingId);
 
-  const [editing, setEditing] = useState(false);
-  const [form,    setForm]    = useState(null);
-  const [saving,  setSaving]  = useState(false);
+  const [editing,       setEditing]       = useState(false);
+  const [form,          setForm]          = useState(null);
+  const [saving,        setSaving]        = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (finding && !form) {
@@ -549,8 +551,8 @@ const FindingDetailView = () => {
     setSaving(false);
   };
 
-  const deleteFinding = async () => {
-    if (!window.confirm(`Delete "${finding.title}"? This cannot be undone.`)) return;
+  const deleteFinding = () => setConfirmDelete(true);
+  const confirmDeleteAction = async () => {
     await updateEngagement(eng.id, {
       findings: (eng.findings || []).filter(f => (f._id || f.id) !== findingId),
     });
@@ -701,6 +703,14 @@ const FindingDetailView = () => {
           legacyContent={finding.remediation}
         />
       </Stack>
+
+      <DeleteConfirmModal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={confirmDeleteAction}
+        title="Delete Finding"
+        itemName={finding?.title}
+      />
     </MotionBox>
   );
 };
