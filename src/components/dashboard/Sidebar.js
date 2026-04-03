@@ -79,9 +79,17 @@ const engagementNav = [
       { key: 'intelligence/loot-tracker',    label: 'Loot Tracker',           icon: UnlockIcon },
       { key: 'intelligence/evidence-vault',  label: 'Evidence Vault',          icon: LockIcon   },
       { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
-      { key: 'intelligence/c2',              label: 'C2 Infrastructure',       icon: LinkIcon   },
-      { key: 'intelligence/phishing',        label: 'Phishing Infrastructure', icon: EmailIcon  },
       { key: 'intelligence/reverse-shells',  label: 'Reverse Shells',          icon: ChevronRightIcon },
+    ],
+  },
+  {
+    section: 'INFRASTRUCTURE',
+    items: [
+      { key: 'intelligence/c2',              label: 'C2 Infrastructure',       icon: LinkIcon        },
+      { key: 'intelligence/phishing',        label: 'Phishing Infrastructure', icon: EmailIcon       },
+      { key: 'intelligence/device-code-phishing', label: 'Device Code Phishing', icon: ExternalLinkIcon },
+      { key: 'intelligence/pass-cookie',          label: 'Pass-the-Cookie',      icon: CopyIcon         },
+      { key: 'intelligence/evil-oauth',           label: 'Evil OAuth Generator', icon: UnlockIcon       },
     ],
   },
   {

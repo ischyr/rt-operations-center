@@ -48,6 +48,10 @@ app.use('/api/documents',      require('./routes/documents'));
 app.use('/api/assumed-breach', require('./routes/assumedBreach'));
 app.use('/api/file-meta',     require('./routes/fileMeta'));
 app.use('/api/domain-cat',    require('./routes/domainCat'));
+app.use('/api/reports',       require('./routes/reports'));
+app.use('/api/device-code',   require('./routes/deviceCode'));
+app.use('/api/pass-cookie',   require('./routes/passCookie'));
+app.use('/api/evil-oauth',    require('./routes/evilOAuth'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

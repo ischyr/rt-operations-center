@@ -33,6 +33,11 @@ import EmailsView from './views/EmailsView';
 import DocumentsView from './views/DocumentsView';
 import FileMetaView from './views/FileMetaView';
 import WordlistView from './views/WordlistView';
+import DeviceCodePhishingView from './views/DeviceCodePhishingView';
+import GraphResultView from './views/GraphResultView';
+import PassCookieView from './views/PassCookieView';
+import EvilOAuthView from './views/EvilOAuthView';
+import ReportsView from './views/ReportsView';
 import PlaceholderView from './views/PlaceholderView';
 
 const NotFound = ({ slug }) => {
@@ -85,7 +90,11 @@ const EngagementLayout = () => {
       <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PhishingView />} />
-      <Route path="intelligence/reverse-shells"  element={<ReverseShellView />} />
+      <Route path="intelligence/reverse-shells"        element={<ReverseShellView />} />
+      <Route path="intelligence/device-code-phishing"                          element={<DeviceCodePhishingView />} />
+      <Route path="intelligence/device-code-phishing/:category/:querySlug"    element={<GraphResultView />} />
+      <Route path="intelligence/pass-cookie"                                   element={<PassCookieView />} />
+      <Route path="intelligence/evil-oauth"                                    element={<EvilOAuthView />} />
 
       {/* Builders */}
       <Route path="builders/username-gen"  element={<UsernameGeneratorView />} />
@@ -120,7 +129,7 @@ const EngagementLayout = () => {
       <Route path="pillaging/file-meta"   element={<FileMetaView />} />
 
       {/* Reporting */}
-      <Route path="reporting/reports"                  element={<PlaceholderView title="Reports" />} />
+      <Route path="reporting/reports"                  element={<ReportsView />} />
       <Route path="reporting/findings"                 element={<FindingsView />} />
       <Route path="reporting/findings/:findingId"      element={<FindingDetailView />} />
       <Route path="reporting/client-portal"            element={<ClientPortalView />} />

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   Box, Flex, Text, Heading, Input, InputGroup, InputLeftElement,
-  InputRightElement, IconButton, SimpleGrid, Tag, TagLabel, Tooltip,
+  InputRightElement, IconButton, SimpleGrid, Tooltip,
 } from '@chakra-ui/react';
 import { SearchIcon, CloseIcon, CopyIcon, CheckIcon } from '@chakra-ui/icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -539,7 +539,6 @@ const LolCard = ({ entry }) => {
 
   return (
     <MotionBox
-      layout
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.18 }}
       borderRadius="12px" overflow="hidden"
@@ -785,7 +784,7 @@ const LolbinView = () => {
             <Text fontSize="13px" color="var(--dash-text-muted)">No entries match your filters.</Text>
           </MotionBox>
         ) : (
-          <SimpleGrid key="grid" columns={{ base: 1, lg: 2, xl: 3 }} gap={4}>
+          <SimpleGrid key="grid" columns={{ base: 1, lg: 2, xl: 3 }} gap={4} alignItems="start">
             {filtered.map(e => <LolCard key={e.name} entry={e} />)}
           </SimpleGrid>
         )}
