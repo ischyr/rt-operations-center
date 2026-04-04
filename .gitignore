@@ -15,6 +15,9 @@
 # production
 /build
 
+# WhatsApp sessions — never commit (contains auth credentials)
+/server/wa-sessions/
+
 # misc
 .DS_Store
 .env.local

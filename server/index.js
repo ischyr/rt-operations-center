@@ -52,6 +52,8 @@ app.use('/api/reports',       require('./routes/reports'));
 app.use('/api/device-code',   require('./routes/deviceCode'));
 app.use('/api/pass-cookie',   require('./routes/passCookie'));
 app.use('/api/evil-oauth',    require('./routes/evilOAuth'));
+app.use('/api/mfa-push',     require('./routes/mfaPush'));
+app.use('/api/white-team',  require('./routes/whiteTeam'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

@@ -1,3 +1,40 @@
+const mongoose = require('mongoose');
+
+// ── Mongoose Schemas ──────────────────────────────────────────────────────────
+
+// DcToken — captured access/refresh tokens
+const dcTokenSchema = new mongoose.Schema({
+  engagementId:  { type: String, required: true, index: true },
+  access_token:  { type: String },
+  refresh_token: { type: String },
+  id_token:      { type: String },
+  expires_at:    { type: Number },  // Unix ms
+  scope:         { type: String },
+  claims:        { type: mongoose.Schema.Types.Mixed, default: {} },
+  label:         { type: String },  // UPN
+}, { timestamps: true });
+
+// DcHistory — log of every initiated device code
+const dcHistorySchema = new mongoose.Schema({
+  engagementId:   { type: String, required: true, index: true },
+  user_code:      { type: String },
+  device_code:    { type: String },
+  client_id:      { type: String },
+  client_label:   { type: String },
+  tenant_id:      { type: String },
+  scope:          { type: String },
+  generated_at:   { type: String },
+  expires_at:     { type: String },
+  last_polled_at: { type: String, default: null },
+  status:         { type: String, default: 'PENDING' },
+  captured_upn:   { type: String, default: null },
+}, { timestamps: true });
+
+const DcToken   = mongoose.models.DcToken   || mongoose.model('DcToken',   dcTokenSchema);
+const DcHistory = mongoose.models.DcHistory || mongoose.model('DcHistory', dcHistorySchema);
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const https = require('https');
 
 // ── HTTPS helper ─────────────────────────────────────────────────────────────
@@ -207,4 +244,100 @@ exports.openOutlook = (req, res) => {
 </html>`;
   res.setHeader('Content-Type', 'text/html');
   res.send(html);
+};
+
+// ── Token CRUD ────────────────────────────────────────────────────────────────
+
+// GET /api/device-code/tokens?engagementId=<id>
+exports.getTokens = async (req, res) => {
+  try {
+    const { engagementId } = req.query;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const tokens = await DcToken.find({
+      engagementId,
+      expires_at: { $gt: Date.now() },
+    }).sort({ createdAt: -1 });
+    res.json(tokens);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// POST /api/device-code/tokens
+exports.createToken = async (req, res) => {
+  try {
+    const { engagementId, access_token, refresh_token, id_token, expires_at, scope, claims, label } = req.body;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const token = await DcToken.create({ engagementId, access_token, refresh_token, id_token, expires_at, scope, claims, label });
+    res.status(201).json(token);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// DELETE /api/device-code/tokens/:id
+exports.deleteToken = async (req, res) => {
+  try {
+    const deleted = await DcToken.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Token not found' });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// DELETE /api/device-code/tokens?engagementId=<id>
+exports.clearTokens = async (req, res) => {
+  try {
+    const { engagementId } = req.query;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const result = await DcToken.deleteMany({ engagementId });
+    res.json({ deleted: result.deletedCount });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// ── History CRUD ──────────────────────────────────────────────────────────────
+
+// GET /api/device-code/history?engagementId=<id>
+exports.getHistory = async (req, res) => {
+  try {
+    const { engagementId } = req.query;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const history = await DcHistory.find({ engagementId }).sort({ createdAt: -1 }).limit(200);
+    res.json(history);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// POST /api/device-code/history
+exports.createHistory = async (req, res) => {
+  try {
+    const {
+      engagementId, user_code, device_code, client_id, client_label,
+      tenant_id, scope, generated_at, expires_at, last_polled_at, status, captured_upn,
+    } = req.body;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const entry = await DcHistory.create({
+      engagementId, user_code, device_code, client_id, client_label,
+      tenant_id, scope, generated_at, expires_at, last_polled_at, status, captured_upn,
+    });
+    res.status(201).json(entry);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// PUT /api/device-code/history/:id
+exports.updateHistory = async (req, res) => {
+  try {
+    const { status, last_polled_at, captured_upn } = req.body;
+    const update = {};
+    if (status        !== undefined) update.status        = status;
+    if (last_polled_at !== undefined) update.last_polled_at = last_polled_at;
+    if (captured_upn  !== undefined) update.captured_upn  = captured_upn;
+    const entry = await DcHistory.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
+    if (!entry) return res.status(404).json({ error: 'History entry not found' });
+    res.json(entry);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// DELETE /api/device-code/history?engagementId=<id>
+exports.clearHistory = async (req, res) => {
+  try {
+    const { engagementId } = req.query;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const result = await DcHistory.deleteMany({ engagementId });
+    res.json({ deleted: result.deletedCount });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 };

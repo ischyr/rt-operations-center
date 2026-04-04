@@ -5,7 +5,7 @@ import {
   AtSignIcon, AttachmentIcon, UnlockIcon, LockIcon,
   RepeatIcon, LinkIcon, EmailIcon, CopyIcon,
   WarningTwoIcon, ExternalLinkIcon, SettingsIcon,
-  SearchIcon, InfoIcon, ChevronRightIcon,
+  SearchIcon, InfoIcon, ChevronRightIcon, ChatIcon,
 } from '@chakra-ui/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -90,6 +90,7 @@ const engagementNav = [
       { key: 'intelligence/device-code-phishing', label: 'Device Code Phishing', icon: ExternalLinkIcon },
       { key: 'intelligence/pass-cookie',          label: 'Pass-the-Cookie',      icon: CopyIcon         },
       { key: 'intelligence/evil-oauth',           label: 'Evil OAuth Generator', icon: UnlockIcon       },
+      { key: 'intelligence/mfa-push',            label: 'MFA Push Fatigue',     icon: WarningTwoIcon   },
     ],
   },
   {
@@ -129,6 +130,12 @@ const engagementNav = [
       { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },
       { key: 'pillaging/documents',     label: 'Documents',        icon: AttachmentIcon },
       { key: 'pillaging/file-meta',     label: 'File Metadata',    icon: SearchIcon     },
+    ],
+  },
+  {
+    section: 'COMMS',
+    items: [
+      { key: 'comms/white-team', label: 'White Team', icon: ChatIcon },
     ],
   },
   {

@@ -37,8 +37,10 @@ import DeviceCodePhishingView from './views/DeviceCodePhishingView';
 import GraphResultView from './views/GraphResultView';
 import PassCookieView from './views/PassCookieView';
 import EvilOAuthView from './views/EvilOAuthView';
+import MfaPushView from './views/MfaPushView';
 import ReportsView from './views/ReportsView';
 import PlaceholderView from './views/PlaceholderView';
+import WhiteTeamView from './views/WhiteTeamView';
 
 const NotFound = ({ slug }) => {
   const navigate = useNavigate();
@@ -95,6 +97,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/device-code-phishing/:category/:querySlug"    element={<GraphResultView />} />
       <Route path="intelligence/pass-cookie"                                   element={<PassCookieView />} />
       <Route path="intelligence/evil-oauth"                                    element={<EvilOAuthView />} />
+      <Route path="intelligence/mfa-push"                                     element={<MfaPushView />} />
 
       {/* Builders */}
       <Route path="builders/username-gen"  element={<UsernameGeneratorView />} />
@@ -127,6 +130,9 @@ const EngagementLayout = () => {
       <Route path="pillaging/emails"      element={<EmailsView />} />
       <Route path="pillaging/documents"   element={<DocumentsView />} />
       <Route path="pillaging/file-meta"   element={<FileMetaView />} />
+
+      {/* COMMS */}
+      <Route path="comms/white-team" element={<WhiteTeamView />} />
 
       {/* Reporting */}
       <Route path="reporting/reports"                  element={<ReportsView />} />

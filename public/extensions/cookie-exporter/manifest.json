@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Cookie Exporter — Red Ops",
+  "version": "1.0.0",
+  "description": "Export cookies from the current tab as JSON for the Pass-the-Cookie vault.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "96": "icons/icon96.png"
+    },
+    "default_title": "Cookie Exporter"
+  },
+  "permissions": [
+    "cookies",
+    "activeTab",
+    "tabs",
+    "<all_urls>"
+  ]
+}

@@ -1,3 +1,94 @@
+const mongoose = require('mongoose');
+
+// ── CookieEntry Schema ────────────────────────────────────────────────────────
+const cookieEntrySchema = new mongoose.Schema(
+  {
+    engagementId: { type: String, required: true, index: true },
+    app:          { type: String },
+    label:        { type: String },
+    cookieString: { type: String },
+    extra:        { type: mongoose.Schema.Types.Mixed, default: {} },
+    status:       { type: String, default: null },   // valid | invalid | testing | null
+    user:         { type: mongoose.Schema.Types.Mixed, default: null },
+    detail:       { type: String, default: null },
+    testedAt:     { type: Date, default: null },
+  },
+  { timestamps: true }
+);
+
+const CookieEntry = mongoose.model('CookieEntry', cookieEntrySchema);
+
+// ── CRUD exports ──────────────────────────────────────────────────────────────
+
+// GET /api/pass-cookie/entries?engagementId=
+exports.getEntries = async (req, res) => {
+  try {
+    const { engagementId } = req.query;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const entries = await CookieEntry.find({ engagementId }).sort({ createdAt: -1 });
+    res.json(entries);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// POST /api/pass-cookie/entries
+exports.createEntry = async (req, res) => {
+  try {
+    const { engagementId, app, label, cookieString, extra } = req.body;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const entry = await CookieEntry.create({ engagementId, app, label, cookieString, extra });
+    res.status(201).json(entry);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// PUT /api/pass-cookie/entries/:id
+exports.updateEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, user, detail, testedAt, label } = req.body;
+    const update = {};
+    if (status    !== undefined) update.status   = status;
+    if (user      !== undefined) update.user     = user;
+    if (detail    !== undefined) update.detail   = detail;
+    if (testedAt  !== undefined) update.testedAt = testedAt;
+    if (label     !== undefined) update.label    = label;
+    const entry = await CookieEntry.findByIdAndUpdate(id, { $set: update }, { new: true });
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    res.json(entry);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// DELETE /api/pass-cookie/entries/:id
+exports.deleteEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const entry = await CookieEntry.findByIdAndDelete(id);
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// DELETE /api/pass-cookie/entries?engagementId=
+exports.clearEntries = async (req, res) => {
+  try {
+    const { engagementId } = req.query;
+    if (!engagementId) return res.status(400).json({ error: 'engagementId is required' });
+    const result = await CookieEntry.deleteMany({ engagementId });
+    res.json({ deleted: result.deletedCount });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const https = require('https');
 
 // ── HTTPS helper ─────────────────────────────────────────────────────────────
@@ -215,7 +306,7 @@ exports.openSession = (req, res) => {
   <div class="msg" id="msg">Injecting cookies...</div>
   <div class="info" id="info">Setting ${cookies.length} cookie(s) for ${targetUrl}</div>
   <div class="cookies" id="cookie-list">
-    ${cookies.map((c) => `<div class="cookie-row">🍪 ${c.name} = ${c.value.slice(0, 40)}${c.value.length > 40 ? '…' : ''}</div>`).join('')}
+    ${cookies.map((c) => `<div class="cookie-row">▸ ${c.name} = ${c.value.slice(0, 40)}${c.value.length > 40 ? '…' : ''}</div>`).join('')}
   </div>
   <script>
     const COOKIES = ${JSON.stringify(cookies)};

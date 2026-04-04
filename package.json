@@ -16,6 +16,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
     "framer-motion": "^11.3.0",
+    "jszip": "^3.10.1",
     "multer": "^2.1.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.4",

@@ -4,6 +4,16 @@ const https       = require('https');
 const { protect } = require('../middleware/authMiddleware');
 const AppSettings = require('../models/AppSettings');
 
+const mongoose = require('mongoose');
+const emailsCacheSchema = new mongoose.Schema({
+  engagementId: { type: String, required: true, index: true },
+  domain:       { type: String, required: true },
+  emails:       { type: [String], default: [] },
+  fetchedAt:    { type: String },
+}, { timestamps: true });
+emailsCacheSchema.index({ engagementId: 1, domain: 1 }, { unique: true });
+const EmailsCache = mongoose.models.EmailsCache || mongoose.model('EmailsCache', emailsCacheSchema);
+
 const INTELX_BASE = '2.intelx.io';
 
 // ── API key management ────────────────────────────────────────────────────────
@@ -170,6 +180,66 @@ router.get('/result', protect, async (req, res) => {
     res.json({ emails, status: finalStatus, total: emails.length });
   } catch (e) {
     res.status(502).json({ error: e.message });
+  }
+});
+
+// ── Emails cache (MongoDB-backed, shared across operators) ───────────────────
+
+// GET /api/emails/cache?engagementId=  — return { [domain]: { emails, fetchedAt } }
+router.get('/cache', protect, async (req, res) => {
+  const { engagementId } = req.query;
+  if (!engagementId) return res.status(400).json({ error: 'engagementId required' });
+  try {
+    const entries = await EmailsCache.find({ engagementId }).lean();
+    const cache = {};
+    for (const entry of entries) {
+      cache[entry.domain] = { emails: entry.emails, fetchedAt: entry.fetchedAt };
+    }
+    res.json(cache);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load emails cache', message: err.message });
+  }
+});
+
+// POST /api/emails/cache — upsert a single domain's emails
+// Body: { engagementId, domain, emails, fetchedAt }
+router.post('/cache', protect, async (req, res) => {
+  const { engagementId, domain, emails, fetchedAt } = req.body;
+  if (!engagementId || !domain) return res.status(400).json({ error: 'engagementId and domain required' });
+  try {
+    const entry = await EmailsCache.findOneAndUpdate(
+      { engagementId, domain },
+      { engagementId, domain, emails: emails ?? [], fetchedAt },
+      { upsert: true, new: true },
+    );
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save emails cache', message: err.message });
+  }
+});
+
+// DELETE /api/emails/cache/:domain?engagementId=  — delete a single domain entry
+router.delete('/cache/:domain', protect, async (req, res) => {
+  const { engagementId } = req.query;
+  const { domain } = req.params;
+  if (!engagementId) return res.status(400).json({ error: 'engagementId required' });
+  try {
+    await EmailsCache.deleteOne({ engagementId, domain });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete emails cache entry', message: err.message });
+  }
+});
+
+// DELETE /api/emails/cache?engagementId=  — clear all cached emails for an engagement
+router.delete('/cache', protect, async (req, res) => {
+  const { engagementId } = req.query;
+  if (!engagementId) return res.status(400).json({ error: 'engagementId required' });
+  try {
+    await EmailsCache.deleteMany({ engagementId });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clear emails cache', message: err.message });
   }
 });
 

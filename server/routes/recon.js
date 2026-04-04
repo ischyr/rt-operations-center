@@ -2,6 +2,16 @@ const router  = require('express').Router();
 const https   = require('https');
 const { protect } = require('../middleware/authMiddleware');
 
+const mongoose = require('mongoose');
+const reconCacheSchema = new mongoose.Schema({
+  engagementId: { type: String, required: true, index: true },
+  domain:       { type: String, required: true },
+  results:      { type: mongoose.Schema.Types.Mixed, default: {} },
+  fetchedAt:    { type: String },
+}, { timestamps: true });
+reconCacheSchema.index({ engagementId: 1, domain: 1 }, { unique: true });
+const ReconCache = mongoose.models.ReconCache || mongoose.model('ReconCache', reconCacheSchema);
+
 // ── Helper — fetch JSON over HTTPS ───────────────────────────────────────────
 function fetchJSON(url, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
@@ -121,6 +131,66 @@ router.post('/availability', protect, async (req, res) => {
 
   const results = await Promise.all(domains.slice(0, 200).map(checkOne));
   res.json(results);
+});
+
+// ── Recon cache (MongoDB-backed, shared across operators) ────────────────────
+
+// GET /api/recon/cache?engagementId=  — return all cached results as { [domain]: results }
+router.get('/cache', protect, async (req, res) => {
+  const { engagementId } = req.query;
+  if (!engagementId) return res.status(400).json({ message: 'engagementId required' });
+  try {
+    const entries = await ReconCache.find({ engagementId }).lean();
+    const cache = {};
+    for (const entry of entries) {
+      cache[entry.domain] = { results: entry.results, fetchedAt: entry.fetchedAt };
+    }
+    res.json(cache);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to load recon cache', error: err.message });
+  }
+});
+
+// POST /api/recon/cache — upsert a single domain's results
+// Body: { engagementId, domain, results, fetchedAt }
+router.post('/cache', protect, async (req, res) => {
+  const { engagementId, domain, results, fetchedAt } = req.body;
+  if (!engagementId || !domain) return res.status(400).json({ message: 'engagementId and domain required' });
+  try {
+    const entry = await ReconCache.findOneAndUpdate(
+      { engagementId, domain },
+      { engagementId, domain, results: results ?? {}, fetchedAt },
+      { upsert: true, new: true },
+    );
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to save recon cache', error: err.message });
+  }
+});
+
+// DELETE /api/recon/cache/:domain?engagementId=  — delete a single domain entry
+router.delete('/cache/:domain', protect, async (req, res) => {
+  const { engagementId } = req.query;
+  const { domain } = req.params;
+  if (!engagementId) return res.status(400).json({ message: 'engagementId required' });
+  try {
+    await ReconCache.deleteOne({ engagementId, domain });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete recon cache entry', error: err.message });
+  }
+});
+
+// DELETE /api/recon/cache?engagementId=  — clear all cached results for an engagement
+router.delete('/cache', protect, async (req, res) => {
+  const { engagementId } = req.query;
+  if (!engagementId) return res.status(400).json({ message: 'engagementId required' });
+  try {
+    await ReconCache.deleteMany({ engagementId });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to clear recon cache', error: err.message });
+  }
 });
 
 module.exports = router;

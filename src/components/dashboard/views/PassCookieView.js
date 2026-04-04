@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box, Flex, Text, Heading, Button, Input, Textarea,
-  SimpleGrid, Spinner, Modal, ModalOverlay, ModalContent, ModalBody, IconButton,
+  SimpleGrid, Spinner, Modal, ModalOverlay, ModalContent, ModalBody, IconButton, useToast,
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AddIcon, DeleteIcon, CopyIcon, CheckIcon, RepeatIcon, CloseIcon, InfoIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, CopyIcon, CheckIcon, RepeatIcon, CloseIcon, InfoIcon, DownloadIcon, AttachmentIcon } from '@chakra-ui/icons';
+import JSZip from 'jszip';
 
 const MotionBox = motion(Box);
 
@@ -331,6 +332,49 @@ function AddCookieModal({ onClose, onAdd }) {
   const [cookieString, setCookieString] = useState('');
   const [label, setLabel] = useState('');
   const [extraVals, setExtraVals] = useState({});
+  const [importStatus, setImportStatus] = useState(null); // { ok, msg }
+  const fileInputRef = useRef(null);
+
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.cookies || !Array.isArray(data.cookies))
+          throw new Error('Invalid format — missing "cookies" array');
+
+        // Convert to raw cookie string
+        const raw = data.cookies.map(c => `${c.name}=${c.value}`).join('; ');
+        setCookieString(raw);
+
+        // Auto-detect app from hostname
+        if (data.hostname) {
+          const h = data.hostname.toLowerCase();
+          const match = SAAS_APPS.find(a =>
+            h.includes('microsoft') || h.includes('office') || h.includes('live') ? a.key === 'microsoft365' :
+            h.includes('google') || h.includes('gmail') ? a.key === 'google' :
+            h.includes('github') ? a.key === 'github' :
+            h.includes('aws') || h.includes('amazon') ? a.key === 'aws' :
+            h.includes('slack') ? a.key === 'slack' :
+            h.includes('gitlab') ? a.key === 'gitlab' :
+            h.includes('atlassian') || h.includes('jira') || h.includes('confluence') ? a.key === 'atlassian' :
+            h.includes('okta') ? a.key === 'okta' :
+            false
+          );
+          if (match) setSelectedApp(match);
+          if (!label) setLabel(`${data.hostname} — ${new Date(data.exportedAt || Date.now()).toLocaleTimeString()}`);
+        }
+
+        setImportStatus({ ok: true, msg: `✓ Imported ${data.cookies.length} cookies from ${data.hostname || 'file'}` });
+      } catch (err) {
+        setImportStatus({ ok: false, msg: `✗ ${err.message}` });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // allow re-import of same file
+  };
 
   const appDef     = SAAS_APPS.find((a) => a.key === selectedApp.key);
   const cookieCount = parseCookieString(cookieString).length;
@@ -382,6 +426,39 @@ function AddCookieModal({ onClose, onAdd }) {
                 _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
                 onClick={onClose} aria-label="Close" />
             </Flex>
+
+            {/* Import from extension */}
+            <Flex align="center" gap={2} mb={4} p={3}
+              bg="rgba(255,255,255,0.03)" borderRadius="10px"
+              border="1px solid rgba(255,255,255,0.08)">
+              <Box as="svg" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8"
+                strokeLinecap="round" strokeLinejoin="round" w="15px" h="15px" flexShrink={0}>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                <polyline points="8 12 12 16 16 12"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+              </Box>
+              <Text fontSize="11px" color="var(--dash-text-muted)" flex={1}>
+                Import JSON from Firefox extension
+              </Text>
+              <input ref={fileInputRef} type="file" accept=".json,application/json"
+                style={{ display: 'none' }} onChange={handleImportFile} />
+              <Button size="xs" h="26px" px={3} borderRadius="7px"
+                bg={`${GREEN}18`} color={GREEN} border={`1px solid ${GREEN}35`}
+                _hover={{ bg: `${GREEN}28` }} fontSize="11px" fontWeight="semibold"
+                leftIcon={<AttachmentIcon boxSize={2.5} />}
+                onClick={() => fileInputRef.current?.click()}>
+                Import .json
+              </Button>
+            </Flex>
+
+            {/* Import status */}
+            {importStatus && (
+              <Box mb={4} px={3} py={2} borderRadius="8px"
+                bg={importStatus.ok ? `${GREEN}10` : `${RED}10`}
+                border={`1px solid ${importStatus.ok ? GREEN : RED}30`}>
+                <Text fontSize="11px" color={importStatus.ok ? GREEN : RED}>{importStatus.msg}</Text>
+              </Box>
+            )}
 
             {/* Target App */}
             <Box mb={4}>
@@ -486,9 +563,46 @@ function AddCookieModal({ onClose, onAdd }) {
   );
 }
 
+// ── Extension ZIP download ────────────────────────────────────────────────────
+async function downloadExtensionZip() {
+  const zip = new JSZip();
+  const folder = zip.folder('cookie-exporter');
+
+  // Fetch each file from public/
+  const files = [
+    'manifest.json',
+    'popup.html',
+    'popup.js',
+    'icons/icon16.png',
+    'icons/icon48.png',
+    'icons/icon96.png',
+  ];
+
+  await Promise.all(files.map(async (f) => {
+    const res = await fetch(`/extensions/cookie-exporter/${f}`);
+    const blob = await res.blob();
+    if (f.startsWith('icons/')) {
+      folder.folder('icons').file(f.replace('icons/', ''), blob);
+    } else {
+      folder.file(f, blob);
+    }
+  }));
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(content);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cookie-exporter-firefox.zip';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 const PassCookieView = () => {
   const [tab, setTab]           = useState('vault');
+  const toast = useToast();
   const [entries, setEntries]   = useState(() => {
     try { return JSON.parse(localStorage.getItem('ptc_entries') || '[]'); } catch { return []; }
   });
@@ -531,19 +645,23 @@ const PassCookieView = () => {
   };
 
   const openSession = async (entry) => {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `${API}/pass-cookie/open-session?app=${entry.app}&t=${localStorage.getItem('token') || ''}`;
-    form.target = '_blank';
-    const field = document.createElement('input');
-    field.type = 'hidden'; field.name = 'cookieString'; field.value = entry.cookieString;
-    const extraField = document.createElement('input');
-    extraField.type = 'hidden'; extraField.name = 'extra'; extraField.value = JSON.stringify(entry.extra || {});
-    form.appendChild(field);
-    form.appendChild(extraField);
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
+    try {
+      const res = await fetch(`${API}/pass-cookie/open-session?app=${entry.app}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
+        body: JSON.stringify({ cookieString: entry.cookieString, extra: entry.extra || {} }),
+      });
+      const html = await res.text();
+      const blob = new Blob([html], { type: 'text/html' });
+      const url  = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      toast({ title: 'Failed to open session', description: err.message, status: 'error', duration: 4000 });
+    }
   };
 
   const filtered = filterApp === 'all' ? entries : entries.filter((e) => e.app === filterApp);
@@ -591,6 +709,7 @@ const PassCookieView = () => {
           <Flex gap={2}>
             <TabBtn label="Cookie Vault" active={tab === 'vault'} color={GREEN} onClick={() => setTab('vault')} />
             <TabBtn label="App Reference" active={tab === 'reference'} color={BLUE} onClick={() => setTab('reference')} />
+            <TabBtn label="Firefox Extension" active={tab === 'extension'} color={ORANGE} onClick={() => setTab('extension')} />
           </Flex>
           <Flex gap={2}>
             {entries.length > 0 && (
@@ -746,6 +865,231 @@ const PassCookieView = () => {
                 </MotionBox>
               ))}
             </SimpleGrid>
+          </MotionBox>
+        )}
+
+        {/* ── Extension tab ──────────────────────────────────────────────── */}
+        {tab === 'extension' && (
+          <MotionBox key="extension" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <Flex gap={5} direction={{ base: 'column', lg: 'row' }} align="flex-start">
+
+              {/* Download card */}
+              <Box flex={1}>
+                <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+                  borderRadius="16px" overflow="hidden" mb={4}>
+                  <Box h="2px" style={{ background: `linear-gradient(to right, transparent, ${ORANGE}80, transparent)` }} />
+                  <Box p={5}>
+                    <Flex align="center" gap={3} mb={4}>
+                      <Flex w="42px" h="42px" borderRadius="11px" bg={`${ORANGE}15`}
+                        border={`1px solid ${ORANGE}35`} align="center" justify="center" flexShrink={0}>
+                        <Box as="svg" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.8"
+                          strokeLinecap="round" strokeLinejoin="round" w="20px" h="20px">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                          <polyline points="8 12 12 16 16 12"/>
+                          <line x1="12" y1="8" x2="12" y2="16"/>
+                        </Box>
+                      </Flex>
+                      <Box>
+                        <Text fontSize="14px" fontWeight="bold" color="var(--dash-text-primary)">
+                          Cookie Exporter — Firefox Extension
+                        </Text>
+                        <Text fontSize="11px" color="var(--dash-text-muted)" mt="2px">
+                          v1.0.0 · Manifest V2 · No external requests
+                        </Text>
+                      </Box>
+                    </Flex>
+
+                    <Text fontSize="12px" color="var(--dash-text-secondary)" mb={4} lineHeight="1.7">
+                      A lightweight Firefox extension that reads all cookies for the current tab and exports
+                      them as a structured <Text as="span" color={ORANGE} fontWeight="semibold">.json</Text> file.
+                      Import the file directly into the Add Cookie Session modal — app and label are auto-detected.
+                    </Text>
+
+                    {/* Feature pills */}
+                    <Flex gap={2} flexWrap="wrap" mb={5}>
+                      {[
+                        {
+                          color: GREEN,
+                          text: 'No data leaves your machine',
+                          svg: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
+                        },
+                        {
+                          color: YELLOW,
+                          text: 'One-click export',
+                          svg: <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>,
+                        },
+                        {
+                          color: BLUE,
+                          text: 'Auto-detects app type',
+                          svg: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+                        },
+                        {
+                          color: PURPLE,
+                          text: 'Includes httpOnly cookies',
+                          svg: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+                        },
+                      ].map((f, i) => (
+                        <Flex key={i} align="center" gap={2} px={3} py="5px" borderRadius="8px"
+                          bg="rgba(255,255,255,0.04)" border="1px solid rgba(255,255,255,0.08)">
+                          <Flex w="16px" h="16px" align="center" justify="center" flexShrink={0}>
+                            <Box as="svg" viewBox="0 0 24 24" fill="none" stroke={f.color}
+                              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                              w="13px" h="13px">
+                              {f.svg}
+                            </Box>
+                          </Flex>
+                          <Text fontSize="11px" color="var(--dash-text-secondary)">{f.text}</Text>
+                        </Flex>
+                      ))}
+                    </Flex>
+
+                    <Button w="100%" h="42px" borderRadius="11px" fontWeight="semibold"
+                      bg={`${ORANGE}20`} color={ORANGE} border={`1px solid ${ORANGE}45`}
+                      _hover={{ bg: `${ORANGE}30` }} fontSize="13px"
+                      leftIcon={<DownloadIcon />}
+                      onClick={async () => {
+                        try {
+                          await downloadExtensionZip();
+                        } catch(e) {
+                          toast({ title: 'Download failed', description: e.message, status: 'error', duration: 4000 });
+                        }
+                      }}>
+                      Download Extension ZIP
+                    </Button>
+                  </Box>
+                </Box>
+
+                {/* What gets exported */}
+                <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+                  borderRadius="14px" overflow="hidden">
+                  <Box h="2px" style={{ background: `linear-gradient(to right, transparent, ${BLUE}60, transparent)` }} />
+                  <Box p={4}>
+                    <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)" mb={3}>
+                      Export JSON Format
+                    </Text>
+                    <Box p={3} bg="rgba(0,0,0,0.3)" borderRadius="9px"
+                      border="1px solid rgba(255,255,255,0.06)"
+                      sx={{ '&::-webkit-scrollbar': { h: '3px' }, '&::-webkit-scrollbar-thumb': { bg: 'rgba(255,255,255,0.1)', borderRadius: '3px' } }}>
+                      <Text fontSize="10px" fontFamily="monospace" color="var(--dash-text-secondary)"
+                        whiteSpace="pre" lineHeight="1.7">{`{
+  "exportedAt": "2025-04-04T12:00:00.000Z",
+  "tabUrl": "https://outlook.office.com/mail",
+  "hostname": "outlook.office.com",
+  "cookieCount": 6,
+  "cookies": [
+    {
+      "name": "ESTSAUTH",
+      "value": "0.AS8A...",
+      "domain": ".login.microsoftonline.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": true,
+      "sameSite": "no_restriction",
+      "session": false,
+      "expirationDate": 1743800400
+    }
+  ]
+}`}
+                      </Text>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Walkthrough */}
+              <Box w={{ base: '100%', lg: '320px' }} flexShrink={0}>
+                <Box bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
+                  borderRadius="14px" overflow="hidden">
+                  <Box h="2px" style={{ background: `linear-gradient(to right, transparent, ${GREEN}70, transparent)` }} />
+                  <Box p={4}>
+                    <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)" mb={4}>
+                      Installation &amp; Usage
+                    </Text>
+
+                    {[
+                      {
+                        step: '01',
+                        color: ORANGE,
+                        title: 'Download the ZIP',
+                        desc: 'Click "Download Extension ZIP" on the left. Save it anywhere on your machine.',
+                      },
+                      {
+                        step: '02',
+                        color: ORANGE,
+                        title: 'Extract the ZIP',
+                        desc: 'Unzip the file to a permanent folder — Firefox loads extensions from disk, so don\'t delete it.',
+                      },
+                      {
+                        step: '03',
+                        color: BLUE,
+                        title: 'Open about:debugging',
+                        desc: 'In Firefox, type about:debugging in the address bar and press Enter.',
+                      },
+                      {
+                        step: '04',
+                        color: BLUE,
+                        title: 'Load Temporary Add-on',
+                        desc: 'Click "This Firefox" → "Load Temporary Add-on…" → navigate into the unzipped folder and select manifest.json.',
+                      },
+                      {
+                        step: '05',
+                        color: GREEN,
+                        title: 'Extension is active',
+                        desc: 'A cookie icon appears in the toolbar. The extension reloads on every Firefox restart — repeat step 4 if needed.',
+                      },
+                      {
+                        step: '06',
+                        color: GREEN,
+                        title: 'Export cookies',
+                        desc: 'Visit your target site while authenticated. Click the extension icon → select the cookies you want → click "Export JSON".',
+                      },
+                      {
+                        step: '07',
+                        color: PURPLE,
+                        title: 'Import into vault',
+                        desc: 'Click "Add Cookies" on this page → click "Import .json" in the modal → select your exported file. App and label are auto-filled.',
+                      },
+                    ].map((s, i, arr) => (
+                      <Flex key={i} gap={3} mb={i < arr.length - 1 ? 0 : 0} pos="relative">
+                        {/* Vertical line */}
+                        {i < arr.length - 1 && (
+                          <Box pos="absolute" left="15px" top="30px" bottom="-8px" w="1px"
+                            bg="rgba(255,255,255,0.07)" />
+                        )}
+                        {/* Step badge */}
+                        <Flex w="30px" h="30px" borderRadius="8px" flexShrink={0}
+                          bg={`${s.color}18`} border={`1px solid ${s.color}35`}
+                          align="center" justify="center" zIndex={1}>
+                          <Text fontSize="9px" fontWeight="bold" color={s.color}>{s.step}</Text>
+                        </Flex>
+                        <Box pb={i < arr.length - 1 ? 4 : 0}>
+                          <Text fontSize="12px" fontWeight="semibold" color="var(--dash-text-primary)" mb="2px">
+                            {s.title}
+                          </Text>
+                          <Text fontSize="11px" color="var(--dash-text-muted)" lineHeight="1.6">
+                            {s.desc}
+                          </Text>
+                        </Box>
+                      </Flex>
+                    ))}
+
+                    <Box mt={4} p={3} bg={`${YELLOW}08`} borderRadius="9px"
+                      border={`1px solid ${YELLOW}25`}>
+                      <Text fontSize="10px" color={YELLOW} fontWeight="semibold" mb={1}>
+                        Permanent Install (Optional)
+                      </Text>
+                      <Text fontSize="10px" color="var(--dash-text-muted)" lineHeight="1.6">
+                        To persist across restarts without about:debugging, sign the extension via{' '}
+                        <Text as="span" color={YELLOW}>addons.mozilla.org</Text> using a free developer account,
+                        or set <Text as="span" fontFamily="monospace">xpinstall.signatures.required</Text> to{' '}
+                        <Text as="span" fontFamily="monospace">false</Text> in about:config (Firefox Developer Edition / Nightly only).
+                      </Text>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+
+            </Flex>
           </MotionBox>
         )}
 
