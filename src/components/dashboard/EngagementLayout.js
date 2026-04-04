@@ -41,6 +41,7 @@ import MfaPushView from './views/MfaPushView';
 import ReportsView from './views/ReportsView';
 import PlaceholderView from './views/PlaceholderView';
 import WhiteTeamView from './views/WhiteTeamView';
+import BloodHoundView from './views/BloodHoundView';
 
 const NotFound = ({ slug }) => {
   const navigate = useNavigate();
@@ -130,6 +131,7 @@ const EngagementLayout = () => {
       <Route path="pillaging/emails"      element={<EmailsView />} />
       <Route path="pillaging/documents"   element={<DocumentsView />} />
       <Route path="pillaging/file-meta"   element={<FileMetaView />} />
+      <Route path="pillaging/bloodhound" element={<BloodHoundView />} />
 
       {/* COMMS */}
       <Route path="comms/white-team" element={<WhiteTeamView />} />

@@ -18,6 +18,9 @@
 # WhatsApp sessions — never commit (contains auth credentials)
 /server/wa-sessions/
 
+# BloodHound uploaded ZIPs/JSONs — temp processing files, can be large
+/server/uploads/bloodhound/
+
 # misc
 .DS_Store
 .env.local

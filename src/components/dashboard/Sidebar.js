@@ -130,6 +130,7 @@ const engagementNav = [
       { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },
       { key: 'pillaging/documents',     label: 'Documents',        icon: AttachmentIcon },
       { key: 'pillaging/file-meta',     label: 'File Metadata',    icon: SearchIcon     },
+      { key: 'pillaging/bloodhound',     label: 'BloodHound',       icon: SearchIcon     },
     ],
   },
   {

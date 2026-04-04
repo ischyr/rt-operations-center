@@ -564,24 +564,22 @@ const WhiteTeamView = () => {
         borderBottom={`1px solid ${BORDER}`} flexShrink={0} gap={3}>
 
         {/* Left */}
-        <Flex align="center" gap={3} minW={0}>
-          <Box w="32px" h="32px" borderRadius="8px" bg={GREEN_S} border={`1px solid ${GREEN}30`}
-            display="flex" alignItems="center" justifyContent="center" flexShrink={0}>
-            <WaIcon size="17px"/>
-          </Box>
-          <Box minW={0}>
-            <Flex align="center" gap={2}>
-              <Text fontSize="14px" fontWeight="bold" color="white">White Team</Text>
-              {hasGroup && (
-                <Badge fontSize="10px" bg={GREEN_S} color={GREEN}
-                  border={`1px solid ${GREEN}40`} borderRadius="full" px={2} py="1px" noOfLines={1}>
-                  {selGroupName}
-                </Badge>
-              )}
-            </Flex>
-            <Text fontSize="10px" color={MUTED}>WhatsApp group monitor</Text>
-          </Box>
-        </Flex>
+        <Box minW={0}>
+          <Flex align="center" gap={2}>
+            <Heading fontSize="2xl" fontWeight="bold" color="var(--dash-text-primary)" lineHeight={1.2}>
+              White <Text as="span" color="red.400">Team</Text>
+            </Heading>
+            {hasGroup && (
+              <Badge fontSize="10px" bg={GREEN_S} color={GREEN}
+                border={`1px solid ${GREEN}40`} borderRadius="full" px={2} py="1px" noOfLines={1}>
+                {selGroupName}
+              </Badge>
+            )}
+          </Flex>
+          <Text fontSize="12px" color="var(--dash-text-secondary)" mt={0.5}>
+            {eng?.name} · WhatsApp group monitor
+          </Text>
+        </Box>
 
         {/* Right */}
         <Flex align="center" gap={2} flexShrink={0}>
