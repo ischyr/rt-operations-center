@@ -55,7 +55,8 @@ app.use('/api/evil-oauth',    require('./routes/evilOAuth'));
 app.use('/api/mfa-push',     require('./routes/mfaPush'));
 app.use('/api/white-team',   require('./routes/whiteTeam'));
 app.use('/api/bloodhound',  require('./routes/bloodhound'));
-app.use('/api/social-media', require('./routes/socialMedia'));
+app.use('/api/social-media',    require('./routes/socialMedia'));
+app.use('/api/network-scanner', require('./routes/networkScanner'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

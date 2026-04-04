@@ -129,7 +129,7 @@ const engagementNav = [
     items: [
       { key: 'pillaging/domain-recon', label: 'Domain Recon', icon: InfoIcon       },
       { key: 'pillaging/subdomains',  label: 'Subdomains',  icon: SearchIcon     },
-      { key: 'pillaging/services',    label: 'Services',    icon: InfoIcon       },
+      { key: 'pillaging/services',    label: 'Network Scanning', icon: SearchIcon },
       { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
       { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
       { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },

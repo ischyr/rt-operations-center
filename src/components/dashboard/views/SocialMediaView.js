@@ -360,12 +360,10 @@ const SocialMediaView = () => {
 
         <Button
           h="42px" px={6} borderRadius="10px" fontSize="13px" fontWeight="bold"
-          variant="outline"
-          color="red.400"
-          borderColor={scanning ? 'rgba(252,129,129,0.35)' : 'red.400'}
-          bg={scanning ? 'rgba(252,129,129,0.08)' : 'transparent'}
+          bg="rgba(153,27,27,0.30)" color="red.400"
+          border="1px solid rgba(239,68,68,0.45)"
           leftIcon={scanning ? <Spinner size="xs" color="red.400" /> : <SearchIcon boxSize={3} />}
-          _hover={{ bg: 'rgba(252,129,129,0.12)', borderColor: 'red.300', color: 'red.300' }}
+          _hover={{ bg:'rgba(153,27,27,0.5)', color:'red.300' }}
           transition="all 0.2s" onClick={handleScan}>
           {scanning ? 'Stop' : 'Scan'}
         </Button>

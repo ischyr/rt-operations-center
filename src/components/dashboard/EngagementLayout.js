@@ -42,6 +42,7 @@ import ReportsView from './views/ReportsView';
 import PlaceholderView from './views/PlaceholderView';
 import WhiteTeamView from './views/WhiteTeamView';
 import SocialMediaView from './views/SocialMediaView';
+import NetworkScannerView from './views/NetworkScannerView';
 import BloodHoundView from './views/BloodHoundView';
 
 const NotFound = ({ slug }) => {
@@ -126,7 +127,7 @@ const EngagementLayout = () => {
       {/* Pillaging */}
       <Route path="pillaging/domain-recon" element={<DomainReconView />} />
       <Route path="pillaging/subdomains"   element={<SubdomainsView />} />
-      <Route path="pillaging/services"    element={<PlaceholderView title="Services" />} />
+      <Route path="pillaging/services"    element={<NetworkScannerView />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
       <Route path="pillaging/emails"      element={<EmailsView />} />
