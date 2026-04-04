@@ -41,6 +41,11 @@ const resourcesNav = [
   { key: 'resources/domain-cat',   label: 'Domain Cat Checker', icon: SearchIcon },
 ];
 
+// ── Cloning nav (always visible, global) ──────────────────────────────────────
+const cloningNav = [
+  { key: 'cloning/voice-cloner', label: 'Voice Cloner', icon: AttachmentIcon },
+];
+
 // ── Malware Analysis nav (always visible, global) ─────────────────────────────
 const malwareNav = [
   { key: 'malware/scanner', label: 'Scanner',  icon: SearchIcon   },
@@ -316,6 +321,31 @@ const Sidebar = () => {
           Resources &amp; Materials
         </Text>
         {resourcesNav.map((item) => {
+          const isActive = afterDash === item.key;
+          return (
+            <NavItem
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              isActive={isActive}
+              itemPy={itemPy}
+              onClick={() => goTo(`/dashboard/${item.key}`)}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Cloning section — always visible */}
+      <Box px={3} mb={groupGap}>
+        <Divider borderColor="var(--dash-divider)" mb={groupGap} />
+        <Text
+          fontSize="9px" fontWeight="bold" letterSpacing="widest"
+          color="var(--dash-section-label)" textTransform="uppercase"
+          px={2} mb={1}
+        >
+          Cloning
+        </Text>
+        {cloningNav.map((item) => {
           const isActive = afterDash === item.key;
           return (
             <NavItem

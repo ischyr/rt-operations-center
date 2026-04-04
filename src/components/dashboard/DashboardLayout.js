@@ -20,6 +20,7 @@ import DiagramEditorView from './views/DiagramEditorView';
 import DiagramLibraryView from './views/DiagramLibraryView';
 import ToolsView from './views/ToolsView';
 import MalwareScannerView from './views/MalwareScannerView';
+import VoiceClonerView from './views/VoiceClonerView';
 import LolbinView from './views/LolbinView';
 import DomainCatView from './views/DomainCatView';
 
@@ -59,6 +60,8 @@ const DashboardLayout = () => (
           <Route path="resources/email-leaks"  element={<EmailLeaksView />} />
           <Route path="resources/lolbins"      element={<LolbinView />} />
           <Route path="resources/domain-cat"   element={<DomainCatView />} />
+          {/* Cloning routes */}
+          <Route path="cloning/voice-cloner" element={<VoiceClonerView />} />
           {/* Malware Analysis routes */}
           <Route path="malware/scanner" element={<MalwareScannerView />} />
           <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />

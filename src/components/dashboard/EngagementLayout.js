@@ -41,6 +41,7 @@ import MfaPushView from './views/MfaPushView';
 import ReportsView from './views/ReportsView';
 import PlaceholderView from './views/PlaceholderView';
 import WhiteTeamView from './views/WhiteTeamView';
+import SocialMediaView from './views/SocialMediaView';
 import BloodHoundView from './views/BloodHoundView';
 
 const NotFound = ({ slug }) => {
@@ -108,7 +109,7 @@ const EngagementLayout = () => {
 
       {/* Sock Puppets */}
       <Route path="sockpuppets/personas"     element={<PersonasView />} />
-      <Route path="sockpuppets/social-media" element={<PlaceholderView title="Social Media" />} />
+      <Route path="sockpuppets/social-media" element={<SocialMediaView />} />
 
       {/* TTPs */}
       <Route path="ttps/initial-access"            element={<TTPsView category="initial-access" />} />
