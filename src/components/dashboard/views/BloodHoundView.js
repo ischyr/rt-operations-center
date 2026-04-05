@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Box, Flex, Text, Heading, Button, IconButton, Input,
   SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody,
@@ -408,6 +408,470 @@ const DropZone = ({ onFiles, uploading, progress }) => {
   );
 };
 
+// ── Node icon ─────────────────────────────────────────────────────────────────
+const NODE_COLORS = { user:'#63B3ED', computer:'#68D391', group:'#9F7AEA', domain:'#F97316', ou:'#ECC94B', gpo:'#FC8181' };
+const NodeIcon = ({ type, size = '16px' }) => {
+  const color = NODE_COLORS[type] || MUTED;
+  const icons = {
+    user: 'M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z',
+    computer: 'M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z',
+    group: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+    domain: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
+    ou: 'M20 6h-2.18c.07-.44.18-.86.18-1.3C18 2.1 15.9 0 13.3 0c-1.7 0-3.1.9-3.9 2.2L12 4.5l2.6-2.3c.4-.4 1-.6 1.4-.2.5.4.5 1.1.1 1.5l-5.4 5-1.4-1.3L12 5.4l-1.1-1L12 3.1 9 .6c-.8 1.3-2.3 2.2-4 2.2C2.7 2.8 1 4.5 1 6.6c0 1.2.6 2.3 1.5 3L12 18l9.5-8.4c.9-.7 1.5-1.8 1.5-3 0-1.4-.8-2.7-2-3.3L20 6z',
+    gpo: 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
+  };
+  return (
+    <Box as="svg" viewBox="0 0 24 24" w={size} h={size} fill={color} flexShrink={0}>
+      <path d={icons[type] || icons.user} />
+    </Box>
+  );
+};
+
+// ── Graph tab ─────────────────────────────────────────────────────────────────
+const GraphTab = ({ engId, isReady }) => {
+  const [query,      setQuery]      = useState('');
+  const [searching,  setSearching]  = useState(false);
+  const [results,    setResults]    = useState([]);
+  const [graphData,  setGraphData]  = useState(null);
+  const [loading,    setLoading]    = useState(false);
+  const [selected,   setSelected]   = useState(null);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [rebuilding, setRebuilding] = useState(false);
+  const [nodeCount,  setNodeCount]  = useState(null); // null = unknown
+  const graphRef     = useRef(null);
+  const fgRef        = useRef(null);
+  const [FG,         setFG]         = useState(null);
+  const toast        = useToast();
+
+  // Dynamically import react-force-graph-2d
+  useEffect(() => {
+    import('react-force-graph-2d').then(m => setFG(() => m.default));
+  }, []);
+
+  // Check if graph nodes exist (probe with a broad search)
+  useEffect(() => {
+    if (!engId || !isReady) return;
+    const tok = localStorage.getItem('token');
+    // Search for common AD chars to estimate node coverage
+    Promise.all([
+      fetch(`/api/bloodhound/${engId}/graph/search?q=.`, { headers: { Authorization: `Bearer ${tok}` } }).then(r => r.json()).catch(() => []),
+      fetch(`/api/bloodhound/${engId}/graph/search?q=@`, { headers: { Authorization: `Bearer ${tok}` } }).then(r => r.json()).catch(() => []),
+    ]).then(([a, b]) => {
+      const combined = new Set([...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].map(n => n.objectId));
+      setNodeCount(combined.size);
+    });
+  }, [engId, isReady]);
+
+  const handleRebuild = async () => {
+    setRebuilding(true);
+    try {
+      const tok = localStorage.getItem('token');
+      const data = await fetch(`/api/bloodhound/${engId}/graph/rebuild`, {
+        method: 'POST', headers: { Authorization: `Bearer ${tok}` },
+      }).then(r => r.json());
+      if (data.error) throw new Error(data.error);
+      setNodeCount(data.nodes);
+      toast({ title: `Graph built — ${data.nodes} nodes, ${data.edges} edges`, status: 'success', duration: 3000, isClosable: true });
+    } catch (e) {
+      toast({ title: 'Build failed', description: e.message, status: 'error', duration: 4000, isClosable: true });
+    }
+    setRebuilding(false);
+  };
+
+  const search = useCallback(async (q) => {
+    if (!q.trim() || !engId) { setResults([]); return; }
+    setSearching(true);
+    try {
+      const tok = localStorage.getItem('token');
+      const url = `/api/bloodhound/${engId}/graph/search?q=${encodeURIComponent(q)}${typeFilter ? `&type=${typeFilter}` : ''}`;
+      const data = await fetch(url, { headers: { Authorization: `Bearer ${tok}` } }).then(r => r.json());
+      setResults(Array.isArray(data) ? data : []);
+    } catch { setResults([]); }
+    setSearching(false);
+  }, [engId, typeFilter]);
+
+  useEffect(() => {
+    const t = setTimeout(() => search(query), 300);
+    return () => clearTimeout(t);
+  }, [query, search]);
+
+  const loadNode = async (node) => {
+    setLoading(true);
+    setResults([]);
+    setQuery(node.name);
+    try {
+      const tok = localStorage.getItem('token');
+      const data = await fetch(`/api/bloodhound/${engId}/graph/node/${encodeURIComponent(node.objectId)}`, {
+        headers: { Authorization: `Bearer ${tok}` }
+      }).then(r => r.json());
+      setGraphData(data);
+      setSelected(data.center);
+    } catch {}
+    setLoading(false);
+  };
+
+  // Build vis data for ForceGraph2D
+  const visData = useMemo(() => {
+    if (!graphData) return { nodes: [], links: [] };
+    const { center, neighbors, edges } = graphData;
+
+    const allNodes = [center, ...neighbors].map(n => ({
+      id:    n.objectId,
+      name:  n.name,
+      type:  n.objectType,
+      props: n.props,
+      isCenter: n.objectId === center.objectId,
+    }));
+
+    // Only keep edges where BOTH endpoints exist in the nodes array
+    const nodeIds = new Set(allNodes.map(n => n.id));
+    const links = edges
+      .filter(e => nodeIds.has(e.fromId) && nodeIds.has(e.toId))
+      .map(e => ({
+        source: e.fromId,
+        target: e.toId,
+        label:  e.label,
+      }));
+
+    return { nodes: allNodes, links };
+  }, [graphData]);
+
+  // Node color by type
+  const nodeColor = (node) => {
+    if (node.isCenter) return '#F97316';
+    const colors = { user:'#63B3ED', computer:'#68D391', group:'#9F7AEA', domain:'#F97316', ou:'#ECC94B', gpo:'#FC8181' };
+    return colors[node.type] || '#9ca3af';
+  };
+
+  const NODE_TYPES = [
+    { value: '', label: 'All' },
+    { value: 'user', label: 'Users' },
+    { value: 'computer', label: 'Computers' },
+    { value: 'group', label: 'Groups' },
+    { value: 'domain', label: 'Domains' },
+  ];
+
+  // Format property value for display
+  const fmtProp = (v) => {
+    if (v === null || v === undefined) return '—';
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+    if (typeof v === 'number') {
+      if (v > 1000000000 && v < 9999999999) return new Date(v * 1000).toLocaleDateString();
+      return String(v);
+    }
+    if (Array.isArray(v)) return v.length > 0 ? v.join(', ') : '—';
+    return String(v) || '—';
+  };
+
+  const KEY_PROPS = ['name','domain','enabled','admincount','description','distinguishedname','lastlogon','pwdlastset','pwdneverexpires','hasspn','serviceprincipalnames','operatingsystem','unconstraineddelegation','allowedtodelegate','objectsid','objectid'];
+
+  if (!isReady) {
+    return (
+      <Flex align="center" justify="center" h="100%" direction="column" gap={3} opacity={0.5}>
+        <Text fontSize="13px" color={MUTED}>Import BloodHound data first to use the graph viewer</Text>
+      </Flex>
+    );
+  }
+
+  return (
+    <Flex h="100%" overflow="hidden">
+      {/* ── Graph canvas ──────────────────────────────────────────────── */}
+      <Box flex="1" minW={0} position="relative" bg="#0d0d0d" overflow="hidden" ref={graphRef}>
+        {/* Search bar overlay */}
+        <Box position="absolute" top={4} left={4} zIndex={10} w="340px">
+
+          {/* Input row — its own relative container so icon centres on the input only */}
+          <Box position="relative" w="100%">
+            {/* Icon — centred vertically to the 38px input */}
+            <Flex
+              position="absolute" left="12px" top={0} bottom={0}
+              align="center" zIndex={2} pointerEvents="none">
+              {searching
+                ? <Spinner size="xs" color={ACCENT} />
+                : <SearchIcon boxSize="12px" color="rgba(255,255,255,0.35)" />}
+            </Flex>
+            <Input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search nodes by name…"
+              pl="34px" pr="12px" h="38px" fontSize="13px"
+              bg="rgba(15,15,15,0.95)" color="white" borderRadius="10px"
+              border={`1px solid rgba(249,115,22,0.35)`}
+              _placeholder={{ color: 'rgba(255,255,255,0.25)' }}
+              _focus={{ borderColor: ACCENT, boxShadow: `0 0 0 1px ${ACCENT}45` }}
+              sx={{ '&:focus': { outline: 'none' } }}
+            />
+          </Box>
+
+          {/* Type filter pills — below the input, separate from the relative container */}
+          <Flex gap={1} mt="8px">
+            {NODE_TYPES.map(t => (
+              <Box key={t.value}
+                px="10px" py="3px" borderRadius="full" fontSize="10px" fontWeight="bold"
+                cursor="pointer" userSelect="none" transition="all 0.12s"
+                bg={typeFilter === t.value ? `${ACCENT}22` : 'rgba(10,10,10,0.75)'}
+                border={`1px solid ${typeFilter === t.value ? ACCENT + '55' : 'rgba(255,255,255,0.12)'}`}
+                color={typeFilter === t.value ? ACCENT : 'rgba(255,255,255,0.38)'}
+                onClick={() => setTypeFilter(t.value)}>
+                {t.label}
+              </Box>
+            ))}
+          </Flex>
+
+          {/* Search results dropdown */}
+          <AnimatePresence>
+            {query.trim() && !searching && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+                {results.length > 0 ? (
+                  <Box mt="8px" borderRadius="10px" overflow="hidden"
+                    bg="rgba(12,12,12,0.97)" border={`1px solid rgba(249,115,22,0.22)`}
+                    maxH="240px" overflowY="auto"
+                    css={{ '&::-webkit-scrollbar': { width:'3px' }, '&::-webkit-scrollbar-thumb': { background:'rgba(249,115,22,0.3)', borderRadius:'3px' } }}>
+                    {results.map(r => (
+                      <Flex key={r.objectId} align="center" gap={2.5} px={3} py="9px"
+                        cursor="pointer" _hover={{ bg:'rgba(249,115,22,0.1)' }} transition="background 0.1s"
+                        onClick={() => loadNode(r)} borderBottom="1px solid rgba(255,255,255,0.04)">
+                        <NodeIcon type={r.objectType} size="14px" />
+                        <Box flex="1" minW={0}>
+                          <Text fontSize="12px" color="white" fontWeight="semibold" noOfLines={1}>{r.name}</Text>
+                          <Text fontSize="10px" color="rgba(255,255,255,0.3)" noOfLines={1}>{r.domain}</Text>
+                        </Box>
+                        <TypeBadge type={r.objectType} />
+                      </Flex>
+                    ))}
+                  </Box>
+                ) : (
+                  <Box mt="8px" px={3} py="10px" borderRadius="10px"
+                    bg="rgba(12,12,12,0.97)" border="1px solid rgba(255,255,255,0.08)">
+                    <Text fontSize="11px" color="rgba(255,255,255,0.3)">No nodes found for "{query}"</Text>
+                    <Text fontSize="10px" color="rgba(249,115,22,0.55)" mt={1}>
+                      Re-import your BloodHound data to index all users & computers
+                    </Text>
+                  </Box>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Box>
+
+        {/* Loading overlay */}
+        {loading && (
+          <Flex position="absolute" inset={0} align="center" justify="center" zIndex={5}
+            bg="rgba(0,0,0,0.6)" backdropFilter="blur(4px)">
+            <Flex direction="column" align="center" gap={3}>
+              <Spinner color={ACCENT} size="xl" thickness="3px" />
+              <Text fontSize="12px" color={MUTED}>Loading graph…</Text>
+            </Flex>
+          </Flex>
+        )}
+
+        {/* Empty state */}
+        {!graphData && !loading && (
+          <Flex position="absolute" inset={0} align="center" justify="center" direction="column" gap={3}>
+            <Box opacity={0.2}>
+              <Box as="svg" viewBox="0 0 100 100" w="56px" h="56px" fill="none" stroke={ACCENT} strokeWidth="2">
+                <circle cx="50" cy="18" r="8"/><circle cx="18" cy="72" r="8"/><circle cx="82" cy="72" r="8"/>
+                <line x1="50" y1="26" x2="18" y2="64"/><line x1="50" y1="26" x2="82" y2="64"/>
+                <line x1="26" y1="72" x2="74" y2="72"/>
+              </Box>
+            </Box>
+            <Text fontSize="12px" color="rgba(255,255,255,0.2)">
+              Search for a node above to visualize its connections
+            </Text>
+            {/* Show rebuild hint when graph data may be incomplete */}
+            {nodeCount !== null && nodeCount < 20 && (
+              <Flex direction="column" align="center" gap={2} mt={2}
+                px={5} py={3} borderRadius="10px"
+                bg="rgba(249,115,22,0.06)" border="1px solid rgba(249,115,22,0.2)">
+                <Text fontSize="11px" color="rgba(249,115,22,0.8)" textAlign="center" maxW="280px">
+                  Graph index is limited ({nodeCount} nodes). Re-import your BloodHound ZIP for full user/computer coverage.
+                </Text>
+                <Button size="xs" bg={A_S} color={ACCENT} border={`1px solid ${A_B}`}
+                  fontWeight="semibold" fontSize="10px" borderRadius="6px"
+                  _hover={{ bg: ACCENT, color: 'black' }} transition="all 0.2s"
+                  isLoading={rebuilding} onClick={handleRebuild}>
+                  Rebuild from Findings
+                </Button>
+              </Flex>
+            )}
+          </Flex>
+        )}
+
+        {/* Force graph */}
+        {FG && graphData && !loading && (
+          <FG
+            ref={fgRef}
+            graphData={visData}
+            width={graphRef.current?.offsetWidth || 800}
+            height={graphRef.current?.offsetHeight || 600}
+            backgroundColor="#0d0d0d"
+            nodeLabel={n => n.name}
+            nodeColor={nodeColor}
+            nodeRelSize={6}
+            linkColor={() => 'rgba(249,115,22,0.35)'}
+            linkWidth={1.5}
+            linkDirectionalArrowLength={6}
+            linkDirectionalArrowRelPos={1}
+            linkLabel={l => l.label}
+            linkCurvature={0.1}
+            onNodeClick={node => setSelected(node)}
+            nodeCanvasObjectMode={() => 'after'}
+            nodeCanvasObject={(node, ctx, globalScale) => {
+              const label = node.name;
+              const fontSize = Math.max(10, 14 / globalScale);
+              ctx.font = `${fontSize}px Sans-Serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = node.isCenter ? '#F97316' : 'rgba(255,255,255,0.85)';
+              ctx.fillText(label.split('@')[0].slice(0, 20), node.x, node.y + 10 + 6 / globalScale);
+            }}
+            cooldownTicks={120}
+            onEngineStop={() => fgRef.current?.zoomToFit(400, 60)}
+          />
+        )}
+
+        {/* Legend */}
+        {graphData && (
+          <Flex position="absolute" bottom={4} left={4} gap={3} p={2.5} borderRadius="8px"
+            bg="rgba(0,0,0,0.7)" border="1px solid rgba(255,255,255,0.08)" backdropFilter="blur(8px)">
+            {[{ type:'user', label:'User' }, { type:'computer', label:'Computer' }, { type:'group', label:'Group' }, { type:'domain', label:'Domain' }].map(i => {
+              const colors = { user:'#63B3ED', computer:'#68D391', group:'#9F7AEA', domain:'#F97316' };
+              return (
+                <Flex key={i.type} align="center" gap={1.5}>
+                  <Box w="8px" h="8px" borderRadius="full" bg={colors[i.type]} />
+                  <Text fontSize="10px" color="rgba(255,255,255,0.5)">{i.label}</Text>
+                </Flex>
+              );
+            })}
+            <Box w="1px" bg="rgba(255,255,255,0.1)" mx={1} />
+            <Flex align="center" gap={1.5}>
+              <Box w="8px" h="8px" borderRadius="full" bg={ACCENT} />
+              <Text fontSize="10px" color="rgba(255,255,255,0.5)">Selected</Text>
+            </Flex>
+          </Flex>
+        )}
+
+        {/* Node count */}
+        {graphData && (
+          <Flex position="absolute" bottom={4} right={4} gap={2} p={2} borderRadius="8px"
+            bg="rgba(0,0,0,0.7)" border="1px solid rgba(255,255,255,0.08)" backdropFilter="blur(8px)">
+            <Text fontSize="10px" color="rgba(255,255,255,0.4)">
+              {visData.nodes.length} nodes · {visData.links.length} edges
+            </Text>
+          </Flex>
+        )}
+      </Box>
+
+      {/* ── Right info panel ──────────────────────────────────────────── */}
+      <Box w="280px" flexShrink={0} borderLeft={`1px solid ${BORDER}`}
+        display="flex" flexDirection="column" overflow="hidden" bg="var(--dash-card-bg)">
+        {!selected ? (
+          <Flex flex="1" align="center" justify="center" direction="column" gap={3} px={5} opacity={0.4}>
+            <NodeIcon type="user" size="28px" />
+            <Text fontSize="11px" color={MUTED} textAlign="center">Click a node to see its properties</Text>
+          </Flex>
+        ) : (
+          <>
+            {/* Node header */}
+            <Box px={4} py={3} borderBottom={`1px solid ${BORDER}`} flexShrink={0}>
+              <Flex align="center" gap={2} mb={1}>
+                <NodeIcon type={selected.type || selected.objectType} size="16px" />
+                <TypeBadge type={selected.type || selected.objectType} />
+              </Flex>
+              <Text fontSize="13px" fontWeight="bold" color="white" noOfLines={2} mt={1}>
+                {selected.name}
+              </Text>
+              {(selected.props?.domain || selected.domain) && (
+                <Text fontSize="10px" color={MUTED} mt={0.5} fontFamily="mono">
+                  {selected.props?.domain || selected.domain}
+                </Text>
+              )}
+            </Box>
+
+            {/* Properties */}
+            <Box flex="1" overflowY="auto" px={4} py={3}
+              css={{ '&::-webkit-scrollbar': { width:'3px' }, '&::-webkit-scrollbar-thumb': { background:'rgba(255,255,255,0.08)', borderRadius:'3px' } }}>
+
+              <Text fontSize="10px" color={MUTED} fontWeight="bold" textTransform="uppercase" letterSpacing="wider" mb={2}>
+                Object Information
+              </Text>
+
+              {/* Top line: Object ID / SID */}
+              {(selected.props?.objectsid || selected.props?.objectid || selected.objectId) && (
+                <Box mb={2} p={2} borderRadius="6px" bg="rgba(255,255,255,0.03)" border={`1px solid ${BORDER}`}>
+                  <Text fontSize="9px" color={MUTED} textTransform="uppercase" letterSpacing="wider">Object ID</Text>
+                  <Text fontSize="10px" color="white" fontFamily="mono" wordBreak="break-all" mt={0.5}>
+                    {selected.props?.objectsid || selected.props?.objectid || selected.objectId}
+                  </Text>
+                </Box>
+              )}
+
+              {/* Key properties */}
+              {KEY_PROPS.filter(k => {
+                const v = selected.props?.[k];
+                return v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && v.length === 0);
+              }).map(k => {
+                const v = selected.props[k];
+                const isFlag = typeof v === 'boolean';
+                return (
+                  <Flex key={k} justify="space-between" align="flex-start" py={1.5}
+                    borderBottom={`1px solid rgba(255,255,255,0.03)`} gap={2}>
+                    <Text fontSize="10px" color={MUTED} flexShrink={0} textTransform="capitalize">
+                      {k.replace(/([A-Z])/g,' $1').replace(/_/g,' ')}
+                    </Text>
+                    <Text fontSize="10px" color={isFlag ? (v ? GREEN : RED) : 'white'}
+                      fontFamily={typeof v === 'string' && v.includes('S-1') ? 'mono' : 'inherit'}
+                      textAlign="right" wordBreak="break-word" maxW="140px">
+                      {fmtProp(v)}
+                    </Text>
+                  </Flex>
+                );
+              })}
+
+              {/* Connections summary */}
+              {graphData && (
+                <>
+                  <Text fontSize="10px" color={MUTED} fontWeight="bold" textTransform="uppercase" letterSpacing="wider" mt={4} mb={2}>
+                    Connections
+                  </Text>
+                  {/* Outgoing */}
+                  {graphData.edges.filter(e => e.fromId === selected.objectId || e.fromId === selected.id).map((e, i) => (
+                    <Flex key={`out${i}`} align="center" gap={2} py={1} borderBottom={`1px solid rgba(255,255,255,0.03)`}>
+                      <Box w="5px" h="5px" borderRadius="full" bg={ACCENT} flexShrink={0} />
+                      <Box flex="1" minW={0}>
+                        <Text fontSize="10px" color="white" noOfLines={1}>{e.toName || e.toId}</Text>
+                        <Text fontSize="9px" color={MUTED}>{e.label}</Text>
+                      </Box>
+                      <Box as="svg" viewBox="0 0 16 16" w="10px" h="10px" fill={MUTED} flexShrink={0}>
+                        <path d="M8 2l6 6-6 6V2z"/>
+                      </Box>
+                    </Flex>
+                  ))}
+                  {/* Incoming */}
+                  {graphData.edges.filter(e => e.toId === selected.objectId || e.toId === selected.id).map((e, i) => (
+                    <Flex key={`in${i}`} align="center" gap={2} py={1} borderBottom={`1px solid rgba(255,255,255,0.03)`}>
+                      <Box w="5px" h="5px" borderRadius="full" bg={BLUE} flexShrink={0} />
+                      <Box flex="1" minW={0}>
+                        <Text fontSize="10px" color="white" noOfLines={1}>{e.fromName || e.fromId}</Text>
+                        <Text fontSize="9px" color={MUTED}>{e.label}</Text>
+                      </Box>
+                      <Box as="svg" viewBox="0 0 16 16" w="10px" h="10px" fill={MUTED} flexShrink={0} transform="rotate(180deg)">
+                        <path d="M8 2l6 6-6 6V2z"/>
+                      </Box>
+                    </Flex>
+                  ))}
+                </>
+              )}
+            </Box>
+          </>
+        )}
+      </Box>
+    </Flex>
+  );
+};
+
 // ── Command generators ────────────────────────────────────────────────────────
 const kerbCmd = (item, dom) => {
   const user = item.name?.split('@')[0] || 'USER';
@@ -739,6 +1203,7 @@ const BloodHoundView = () => {
             {/* Tab bar */}
             <Flex gap={1} px={6} py={3} borderBottom={`1px solid ${BORDER}`} flexShrink={0} flexWrap="wrap">
               {[
+                { id:'graph',           label:'Graph',          badge: 0 },
                 { id:'overview',        label:'Attack Paths',   badge: session?.attackPaths?.length },
                 { id:'kerberoastable',  label:'Kerberoastable', badge: st.kerberoastable },
                 { id:'asrep',           label:'AS-REP',         badge: st.asrepRoastable },
@@ -752,7 +1217,7 @@ const BloodHoundView = () => {
             </Flex>
 
             {/* Search bar (for data tabs) */}
-            {tab !== 'overview' && (
+            {tab !== 'overview' && tab !== 'graph' && (
               <Flex px={6} py={2.5} gap={3} align="center" borderBottom={`1px solid ${BORDER}`} flexShrink={0}>
                 <Box flex="1" position="relative" maxW="400px">
                   <Box position="absolute" left={3} top="50%" transform="translateY(-50%)" zIndex={1}>
@@ -765,7 +1230,15 @@ const BloodHoundView = () => {
               </Flex>
             )}
 
+            {/* Graph tab — full height, no scroll wrapper */}
+            {tab === 'graph' && (
+              <Box flex="1" overflow="hidden">
+                <GraphTab engId={engId} isReady={isReady} />
+              </Box>
+            )}
+
             {/* Content area */}
+            {tab !== 'graph' && (
             <Box flex="1" overflowY="auto"
               css={{
                 '&::-webkit-scrollbar': { width:'3px' },
@@ -1088,6 +1561,7 @@ const BloodHoundView = () => {
               )}
 
             </Box>
+            )} {/* end tab !== 'graph' content Box */}
           </Flex>
         )}
       </Box>

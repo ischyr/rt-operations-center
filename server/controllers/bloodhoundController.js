@@ -76,6 +76,33 @@ const findingSchema = new mongoose.Schema({
 
 findingSchema.index({ engagementId: 1, category: 1 });
 
+const nodeSchema = new mongoose.Schema({
+  engagementId: { type: String, required: true, index: true },
+  objectId:     { type: String, required: true },
+  objectType:   { type: String, enum: ['user','computer','group','domain','ou','gpo'], default: 'user' },
+  name:         { type: String, default: '' },
+  domain:       { type: String, default: '' },
+  props:        { type: mongoose.Schema.Types.Mixed, default: {} },
+});
+nodeSchema.index({ engagementId: 1, objectId: 1 }, { unique: true });
+nodeSchema.index({ engagementId: 1, name: 'text' });
+
+const edgeSchema = new mongoose.Schema({
+  engagementId: { type: String, required: true, index: true },
+  fromId:   String,
+  fromName: String,
+  fromType: String,
+  toId:     String,
+  toName:   String,
+  toType:   String,
+  label:    String,
+});
+edgeSchema.index({ engagementId: 1, fromId: 1 });
+edgeSchema.index({ engagementId: 1, toId: 1 });
+
+const BhNode = mongoose.models.BhNode || mongoose.model('BhNode', nodeSchema);
+const BhEdge = mongoose.models.BhEdge || mongoose.model('BhEdge', edgeSchema);
+
 const BhSession = mongoose.models.BhSession || mongoose.model('BhSession', sessionSchema);
 const BhFinding = mongoose.models.BhFinding || mongoose.model('BhFinding', findingSchema);
 
@@ -317,6 +344,86 @@ async function processBloodHound(engagementId, jsonFiles, filename) {
 
   // ── Derive attack paths ────────────────────────────────────────────────────
   const attackPaths = deriveAttackPaths(findings, stats, domain);
+
+  // ── Build graph nodes & edges ──────────────────────────────────────────────
+  const nodes = [];
+  const edges = [];
+
+  // Domain nodes
+  for (const d of domains) {
+    const p = d.Properties || {};
+    const oid = (d.ObjectIdentifier || '').toUpperCase();
+    if (!oid) continue;
+    nodes.push({ engagementId, objectId: oid, objectType: 'domain', name: p.name || oid, domain: p.name || '', props: p });
+    for (const trust of (d.Trusts || [])) {
+      const toId = (trust.TargetDomainSID || trust.TargetDomainName || '').toUpperCase();
+      edges.push({ engagementId, fromId: oid, fromName: p.name || oid, fromType: 'domain', toId, toName: trust.TargetDomainName || '', toType: 'domain', label: trust.TrustType || 'Trust' });
+    }
+  }
+
+  // Group nodes + MemberOf edges
+  for (const g of groups) {
+    const p = g.Properties || {};
+    const oid = (g.ObjectIdentifier || '').toUpperCase();
+    if (!oid) continue;
+    nodes.push({ engagementId, objectId: oid, objectType: 'group', name: p.name || oid, domain: p.domain || domain, props: p });
+    for (const m of (g.Members || [])) {
+      const mId = (m.ObjectIdentifier || '').toUpperCase();
+      const mName = sidMap.get(mId) || mId;
+      const mType = (m.ObjectType || 'user').toLowerCase();
+      edges.push({ engagementId, fromId: mId, fromName: mName, fromType: mType, toId: oid, toName: p.name || oid, toType: 'group', label: 'MemberOf' });
+    }
+    // ACE edges on groups
+    for (const ace of (g.Aces || [])) {
+      if (!ace.RightName || ace.IsInherited) continue;
+      const pId = (ace.PrincipalSID || '').toUpperCase();
+      const pName = sidMap.get(pId) || pId;
+      edges.push({ engagementId, fromId: pId, fromName: pName, fromType: (ace.PrincipalType || 'user').toLowerCase(), toId: oid, toName: p.name || oid, toType: 'group', label: ace.RightName });
+    }
+  }
+
+  // User nodes + ACE edges
+  for (const u of users) {
+    const p = u.Properties || {};
+    const oid = (u.ObjectIdentifier || '').toUpperCase();
+    if (!oid) continue;
+    nodes.push({ engagementId, objectId: oid, objectType: 'user', name: p.name || oid, domain: p.domain || domain, props: p });
+    for (const ace of (u.Aces || [])) {
+      if (!ace.RightName || ace.IsInherited) continue;
+      const pId = (ace.PrincipalSID || '').toUpperCase();
+      const pName = sidMap.get(pId) || pId;
+      edges.push({ engagementId, fromId: pId, fromName: pName, fromType: (ace.PrincipalType || 'user').toLowerCase(), toId: oid, toName: p.name || oid, toType: 'user', label: ace.RightName });
+    }
+  }
+
+  // Computer nodes + ACE + delegation edges
+  for (const c of computers) {
+    const p = c.Properties || {};
+    const oid = (c.ObjectIdentifier || '').toUpperCase();
+    if (!oid) continue;
+    nodes.push({ engagementId, objectId: oid, objectType: 'computer', name: p.name || oid, domain: p.domain || domain, props: p });
+    for (const delegTo of (p.allowedtodelegate || [])) {
+      edges.push({ engagementId, fromId: oid, fromName: p.name || oid, fromType: 'computer', toId: delegTo.toUpperCase(), toName: delegTo, toType: 'computer', label: 'AllowedToDelegate' });
+    }
+    for (const ace of (c.Aces || [])) {
+      if (!ace.RightName || ace.IsInherited) continue;
+      const pId = (ace.PrincipalSID || '').toUpperCase();
+      const pName = sidMap.get(pId) || pId;
+      edges.push({ engagementId, fromId: pId, fromName: pName, fromType: (ace.PrincipalType || 'user').toLowerCase(), toId: oid, toName: p.name || oid, toType: 'computer', label: ace.RightName });
+    }
+  }
+
+  // ── Persist graph ────────────────────────────────────────────────────────
+  await BhNode.deleteMany({ engagementId });
+  await BhEdge.deleteMany({ engagementId });
+  const NODE_BATCH = 500;
+  for (let i = 0; i < nodes.length; i += NODE_BATCH) {
+    await BhNode.insertMany(nodes.slice(i, i + NODE_BATCH), { ordered: false }).catch(() => {});
+  }
+  const EDGE_BATCH = 500;
+  for (let i = 0; i < edges.length; i += EDGE_BATCH) {
+    await BhEdge.insertMany(edges.slice(i, i + EDGE_BATCH), { ordered: false }).catch(() => {});
+  }
 
   // ── Persist ────────────────────────────────────────────────────────────────
   await BhFinding.deleteMany({ engagementId });
@@ -561,6 +668,146 @@ exports.updateFinding = async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 };
 
+// ── searchNodes ────────────────────────────────────────────────────────────────
+exports.searchNodes = async (req, res) => {
+  try {
+    const { engagementId } = req.params;
+    const q    = (req.query.q || '').trim();
+    const type = req.query.type || '';
+    if (!q) return res.json([]);
+
+    const filter = { engagementId, name: { $regex: q, $options: 'i' } };
+    if (type) filter.objectType = type;
+
+    const nodes = await BhNode.find(filter).limit(30).select('objectId objectType name domain').lean();
+    res.json(nodes);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// ── getNodeGraph ───────────────────────────────────────────────────────────────
+exports.getNodeGraph = async (req, res) => {
+  try {
+    const { engagementId, objectId } = req.params;
+    const center = await BhNode.findOne({ engagementId, objectId: objectId.toUpperCase() }).lean();
+    if (!center) return res.status(404).json({ error: 'Node not found' });
+
+    // Get all edges touching this node (first degree)
+    const [outEdges, inEdges] = await Promise.all([
+      BhEdge.find({ engagementId, fromId: objectId.toUpperCase() }).limit(100).lean(),
+      BhEdge.find({ engagementId, toId:   objectId.toUpperCase() }).limit(100).lean(),
+    ]);
+
+    const allEdges = [...outEdges, ...inEdges];
+
+    // Collect neighbor IDs
+    const neighborIds = new Set();
+    for (const e of allEdges) {
+      if (e.fromId !== objectId.toUpperCase()) neighborIds.add(e.fromId);
+      if (e.toId   !== objectId.toUpperCase()) neighborIds.add(e.toId);
+    }
+
+    const neighbors = await BhNode.find({ engagementId, objectId: { $in: [...neighborIds] } })
+      .select('objectId objectType name domain props').lean();
+
+    // For any neighbor IDs referenced in edges but not found in BhNode,
+    // create stub nodes so the graph library never gets a dangling edge reference.
+    const foundIds = new Set(neighbors.map(n => n.objectId));
+    const stubNeighbors = [];
+    for (const e of allEdges) {
+      for (const id of [e.fromId, e.toId]) {
+        if (id !== objectId.toUpperCase() && !foundIds.has(id) && !stubNeighbors.find(s => s.objectId === id)) {
+          stubNeighbors.push({
+            objectId:   id,
+            objectType: e.fromId === id ? e.fromType : e.toType,
+            name:       e.fromId === id ? (e.fromName || id) : (e.toName || id),
+            domain:     '',
+            props:      {},
+          });
+          foundIds.add(id);
+        }
+      }
+    }
+
+    res.json({ center, neighbors: [...neighbors, ...stubNeighbors], edges: allEdges });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
+// ── rebuildGraph — synthesise BhNode/BhEdge from existing BhFindings ──────────
+// Used when data was imported before graph support was added.
+exports.rebuildGraph = async (req, res) => {
+  try {
+    const { engagementId } = req.params;
+    const findings = await BhFinding.find({ engagementId }).lean();
+    if (!findings.length) return res.status(400).json({ error: 'No findings to build graph from. Re-import your data.' });
+
+    const nodeMap = new Map(); // objectId → node
+    const edges   = [];
+
+    const upsertNode = (id, type, name, domain, props = {}) => {
+      if (!id) return;
+      const key = id.toUpperCase();
+      if (!nodeMap.has(key)) nodeMap.set(key, { engagementId, objectId: key, objectType: type, name: name || key, domain: domain || '', props });
+    };
+
+    for (const f of findings) {
+      const sid    = (f.sid || '').toUpperCase();
+      const name   = f.name || '';
+      const domain = f.domain || '';
+
+      upsertNode(sid, f.objectType || 'user', name, domain, {
+        enabled: f.enabled, admincount: f.adminCount, description: f.description,
+        pwdneverexpires: f.pwdNeverExpires, lastlogon: f.lastLogon,
+        serviceprincipalnames: f.spns, operatingsystem: f.os,
+        objectsid: sid,
+      });
+
+      // ACL path → edge from principal to target
+      if (f.aclRight && f.targetSid) {
+        const tSid = f.targetSid.toUpperCase();
+        upsertNode(tSid, f.targetType || 'group', f.targetName, domain);
+        edges.push({ engagementId, fromId: sid, fromName: name, fromType: f.objectType || 'user', toId: tSid, toName: f.targetName, toType: f.targetType || 'group', label: f.aclRight });
+      }
+
+      // Delegation → edges to targets
+      if (f.delegationTarget?.length) {
+        for (const dt of f.delegationTarget) {
+          const dtUpper = dt.toUpperCase();
+          upsertNode(dtUpper, 'computer', dt, domain);
+          edges.push({ engagementId, fromId: sid, fromName: name, fromType: 'computer', toId: dtUpper, toName: dt, toType: 'computer', label: 'AllowedToDelegate' });
+        }
+      }
+
+      // Trust → edge domain→domain
+      if (f.category === 'trust' && f.trustTarget) {
+        const tKey = f.trustTarget.toUpperCase();
+        upsertNode(tKey, 'domain', f.trustTarget, f.trustTarget);
+        edges.push({ engagementId, fromId: sid, fromName: name, fromType: 'domain', toId: tKey, toName: f.trustTarget, toType: 'domain', label: f.trustType || 'Trust' });
+      }
+
+      // DA/EA membership → edge member→group
+      if (f.category === 'da_member' || f.category === 'ea_member') {
+        const grpName = f.category === 'da_member' ? 'DOMAIN ADMINS' : 'ENTERPRISE ADMINS';
+        const grpKey  = `${domain}-${f.category === 'da_member' ? '512' : '519'}`;
+        upsertNode(grpKey, 'group', `${grpName}@${domain}`, domain);
+        edges.push({ engagementId, fromId: sid, fromName: name, fromType: f.objectType, toId: grpKey, toName: `${grpName}@${domain}`, toType: 'group', label: 'MemberOf' });
+      }
+    }
+
+    const nodes = [...nodeMap.values()];
+
+    await BhNode.deleteMany({ engagementId });
+    await BhEdge.deleteMany({ engagementId });
+
+    const BATCH = 500;
+    for (let i = 0; i < nodes.length; i += BATCH)
+      await BhNode.insertMany(nodes.slice(i, i + BATCH), { ordered: false }).catch(() => {});
+    for (let i = 0; i < edges.length; i += BATCH)
+      await BhEdge.insertMany(edges.slice(i, i + BATCH), { ordered: false }).catch(() => {});
+
+    res.json({ nodes: nodes.length, edges: edges.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+};
+
 // ── Clear session ─────────────────────────────────────────────────────────────
 exports.clearSession = async (req, res) => {
   try {
@@ -568,6 +815,8 @@ exports.clearSession = async (req, res) => {
     await Promise.all([
       BhSession.findOneAndUpdate({ engagementId }, { status: 'idle', stats: {}, attackPaths: [], domain: '', filename: '', importedAt: null }),
       BhFinding.deleteMany({ engagementId }),
+      BhNode.deleteMany({ engagementId }),
+      BhEdge.deleteMany({ engagementId }),
     ]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

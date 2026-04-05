@@ -30,5 +30,8 @@ router.get('/:engagementId/session',          protect, ctrl.getSession);
 router.get('/:engagementId/findings',         protect, ctrl.getFindings);
 router.patch('/:engagementId/findings/:id',   protect, ctrl.updateFinding);
 router.delete('/:engagementId/session',       protect, ctrl.clearSession);
+router.get ('/:engagementId/graph/search',          protect, ctrl.searchNodes);
+router.get ('/:engagementId/graph/node/:objectId',  protect, ctrl.getNodeGraph);
+router.post('/:engagementId/graph/rebuild',         protect, ctrl.rebuildGraph);
 
 module.exports = router;

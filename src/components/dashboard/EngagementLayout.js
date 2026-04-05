@@ -46,6 +46,7 @@ import SocialMediaView from './views/SocialMediaView';
 import NetworkScannerView from './views/NetworkScannerView';
 import WebserverEnumView  from './views/WebserverEnumView';
 import BloodHoundView from './views/BloodHoundView';
+import CypherLibraryView from './views/CypherLibraryView';
 
 const NotFound = ({ slug }) => {
   const navigate = useNavigate();
@@ -136,7 +137,9 @@ const EngagementLayout = () => {
       <Route path="pillaging/emails"      element={<EmailsView />} />
       <Route path="pillaging/documents"   element={<DocumentsView />} />
       <Route path="pillaging/file-meta"   element={<FileMetaView />} />
-      <Route path="pillaging/bloodhound" element={<BloodHoundView />} />
+      {/* BLOODHOUND */}
+      <Route path="bloodhound/analyzer"       element={<BloodHoundView />} />
+      <Route path="bloodhound/cypher-library" element={<CypherLibraryView />} />
 
       {/* COMMS */}
       <Route path="comms/white-team"      element={<WhiteTeamView />} />

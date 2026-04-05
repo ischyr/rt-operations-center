@@ -127,16 +127,22 @@ const engagementNav = [
   {
     section: 'PILLAGING',
     items: [
-      { key: 'pillaging/domain-recon', label: 'Domain Recon', icon: InfoIcon       },
-      { key: 'pillaging/subdomains',  label: 'Subdomains',  icon: SearchIcon     },
-      { key: 'pillaging/services',        label: 'Network Scanning',    icon: SearchIcon },
-      { key: 'pillaging/webserver-enum',  label: 'Webserver Enum',      icon: SearchIcon },
-      { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
-      { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
-      { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },
-      { key: 'pillaging/documents',     label: 'Documents',        icon: AttachmentIcon },
-      { key: 'pillaging/file-meta',     label: 'File Metadata',    icon: SearchIcon     },
-      { key: 'pillaging/bloodhound',     label: 'BloodHound',       icon: SearchIcon     },
+      { key: 'pillaging/domain-recon',    label: 'Domain Recon',      icon: InfoIcon       },
+      { key: 'pillaging/subdomains',      label: 'Subdomains',        icon: SearchIcon     },
+      { key: 'pillaging/services',        label: 'Network Scanning',  icon: SearchIcon     },
+      { key: 'pillaging/webserver-enum',  label: 'Webserver Enum',    icon: SearchIcon     },
+      { key: 'pillaging/leaks',           label: 'Leaks',             icon: UnlockIcon     },
+      { key: 'pillaging/credentials',     label: 'Credentials',       icon: LockIcon       },
+      { key: 'pillaging/emails',          label: 'Emails Harvester',  icon: EmailIcon      },
+      { key: 'pillaging/documents',       label: 'Documents',         icon: AttachmentIcon },
+      { key: 'pillaging/file-meta',       label: 'File Metadata',     icon: SearchIcon     },
+    ],
+  },
+  {
+    section: 'BLOODHOUND',
+    items: [
+      { key: 'bloodhound/analyzer',       label: 'Analyzer',          icon: SearchIcon     },
+      { key: 'bloodhound/cypher-library', label: 'Cypher Library',    icon: CopyIcon       },
     ],
   },
   {
