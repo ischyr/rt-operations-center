@@ -41,8 +41,10 @@ import MfaPushView from './views/MfaPushView';
 import ReportsView from './views/ReportsView';
 import PlaceholderView from './views/PlaceholderView';
 import WhiteTeamView from './views/WhiteTeamView';
+import WebhookAlerterView from './views/WebhookAlerterView';
 import SocialMediaView from './views/SocialMediaView';
 import NetworkScannerView from './views/NetworkScannerView';
+import WebserverEnumView  from './views/WebserverEnumView';
 import BloodHoundView from './views/BloodHoundView';
 
 const NotFound = ({ slug }) => {
@@ -127,7 +129,8 @@ const EngagementLayout = () => {
       {/* Pillaging */}
       <Route path="pillaging/domain-recon" element={<DomainReconView />} />
       <Route path="pillaging/subdomains"   element={<SubdomainsView />} />
-      <Route path="pillaging/services"    element={<NetworkScannerView />} />
+      <Route path="pillaging/services"        element={<NetworkScannerView />} />
+      <Route path="pillaging/webserver-enum"  element={<WebserverEnumView />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
       <Route path="pillaging/emails"      element={<EmailsView />} />
@@ -136,7 +139,8 @@ const EngagementLayout = () => {
       <Route path="pillaging/bloodhound" element={<BloodHoundView />} />
 
       {/* COMMS */}
-      <Route path="comms/white-team" element={<WhiteTeamView />} />
+      <Route path="comms/white-team"      element={<WhiteTeamView />} />
+      <Route path="comms/webhook-alerter" element={<WebhookAlerterView />} />
 
       {/* Reporting */}
       <Route path="reporting/reports"                  element={<ReportsView />} />

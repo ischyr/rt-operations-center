@@ -129,7 +129,8 @@ const engagementNav = [
     items: [
       { key: 'pillaging/domain-recon', label: 'Domain Recon', icon: InfoIcon       },
       { key: 'pillaging/subdomains',  label: 'Subdomains',  icon: SearchIcon     },
-      { key: 'pillaging/services',    label: 'Network Scanning', icon: SearchIcon },
+      { key: 'pillaging/services',        label: 'Network Scanning',    icon: SearchIcon },
+      { key: 'pillaging/webserver-enum',  label: 'Webserver Enum',      icon: SearchIcon },
       { key: 'pillaging/leaks',       label: 'Leaks',       icon: UnlockIcon     },
       { key: 'pillaging/credentials', label: 'Credentials', icon: LockIcon       },
       { key: 'pillaging/emails',      label: 'Emails Harvester',      icon: EmailIcon      },
@@ -141,7 +142,8 @@ const engagementNav = [
   {
     section: 'COMMS',
     items: [
-      { key: 'comms/white-team', label: 'White Team', icon: ChatIcon },
+      { key: 'comms/white-team',        label: 'White Team',      icon: ChatIcon  },
+      { key: 'comms/webhook-alerter',   label: 'Webhook Alerter', icon: LinkIcon  },
     ],
   },
   {

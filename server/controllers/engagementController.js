@@ -1,5 +1,6 @@
 const Engagement = require('../models/Engagement');
 const User       = require('../models/User');
+const { sendFindingAlert } = require('./telegramController');
 
 const slugify = (name) =>
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -90,6 +91,8 @@ exports.updateEngagement = async (req, res) => {
           `New ${added?.severity || ''} finding: ${added?.title || 'finding logged'}`,
           'finding'
         ));
+        // Fire Telegram alert (non-blocking)
+        sendFindingAlert(eng._id.toString(), added, eng.name);
       } else if (newCount < prevCount) {
         newLogs.push(logEntry('finding_removed', `Finding removed`, 'finding'));
       }

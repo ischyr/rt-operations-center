@@ -757,6 +757,7 @@ const WhiteTeamView = () => {
         @keyframes wt-ping  { 0% { transform:scale(1); opacity:1 } 70%,100% { transform:scale(1.5); opacity:0 } }
         @keyframes wt-pulse { 0%,100%  { opacity:1 } 50% { opacity:0.35 } }
       `}</style>
+
     </Flex>
   );
 };
