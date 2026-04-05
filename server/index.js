@@ -59,6 +59,7 @@ app.use('/api/social-media',    require('./routes/socialMedia'));
 app.use('/api/network-scanner',  require('./routes/networkScanner'));
 app.use('/api/webserver-enum',   require('./routes/webserverEnum'));
 app.use('/api/telegram',         require('./routes/telegram'));
+app.use('/api/ghdb',             require('./routes/ghdb'));
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }));
 

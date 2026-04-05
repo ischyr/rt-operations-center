@@ -38,7 +38,8 @@ const resourcesNav = [
   { key: 'resources/ransom-feed',  label: 'Ransom Feed',  icon: LockIcon       },
   { key: 'resources/email-leaks',  label: 'Email Leaks',  icon: EmailIcon      },
   { key: 'resources/lolbins',      label: 'LOLBIN / LOLBAS', icon: SearchIcon  },
-  { key: 'resources/domain-cat',   label: 'Domain Cat Checker', icon: SearchIcon },
+  { key: 'resources/domain-cat',    label: 'Domain Cat Checker', icon: SearchIcon },
+  { key: 'resources/google-dorking', label: 'Google Dorking',    icon: SearchIcon },
 ];
 
 // ── Cloning nav (always visible, global) ──────────────────────────────────────
@@ -96,15 +97,19 @@ const engagementNav = [
       { key: 'intelligence/pass-cookie',          label: 'Pass-the-Cookie',      icon: CopyIcon         },
       { key: 'intelligence/evil-oauth',           label: 'Evil OAuth Generator', icon: UnlockIcon       },
       { key: 'intelligence/mfa-push',            label: 'MFA Push Fatigue',     icon: WarningTwoIcon   },
+      { key: 'intelligence/clickfix',            label: 'ClickFix Builder',     icon: ExternalLinkIcon },
     ],
   },
   {
     section: 'BUILDERS',
     items: [
-      { key: 'builders/username-gen',  label: 'Username Generator',  icon: AtSignIcon },
-      { key: 'builders/typosquat',     label: 'Typosquat Generator', icon: SearchIcon },
-      { key: 'builders/qr-codes',      label: 'QR Code Generator',   icon: CopyIcon   },
-      { key: 'builders/wordlist-gen',  label: 'Wordlist Generator',  icon: EditIcon   },
+      { key: 'builders/username-gen',       label: 'Username Generator',    icon: AtSignIcon },
+      { key: 'builders/typosquat',          label: 'Typosquat Generator',   icon: SearchIcon },
+      { key: 'builders/qr-codes',           label: 'QR Code Generator',     icon: CopyIcon   },
+      { key: 'builders/wordlist-gen',       label: 'Wordlist Generator',    icon: EditIcon   },
+      { key: 'builders/redirector-chain',   label: 'Redirector Chain',      icon: LinkIcon   },
+      { key: 'builders/card-generation',    label: 'Card Generation',       icon: CopyIcon   },
+      { key: 'builders/fake-teams',         label: 'Fake Teams Message',    icon: ChatIcon   },
     ],
   },
   {

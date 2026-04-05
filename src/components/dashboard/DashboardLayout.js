@@ -23,6 +23,7 @@ import MalwareScannerView from './views/MalwareScannerView';
 import VoiceClonerView from './views/VoiceClonerView';
 import LolbinView from './views/LolbinView';
 import DomainCatView from './views/DomainCatView';
+import GoogleDorkingView from './views/GoogleDorkingView';
 
 const MotionFlex = motion(Flex);
 
@@ -59,7 +60,8 @@ const DashboardLayout = () => (
           <Route path="resources/ransom-feed"   element={<RansomFeedView />} />
           <Route path="resources/email-leaks"  element={<EmailLeaksView />} />
           <Route path="resources/lolbins"      element={<LolbinView />} />
-          <Route path="resources/domain-cat"   element={<DomainCatView />} />
+          <Route path="resources/domain-cat"      element={<DomainCatView />} />
+          <Route path="resources/google-dorking" element={<GoogleDorkingView />} />
           {/* Cloning routes */}
           <Route path="cloning/voice-cloner" element={<VoiceClonerView />} />
           {/* Malware Analysis routes */}

@@ -47,6 +47,10 @@ import NetworkScannerView from './views/NetworkScannerView';
 import WebserverEnumView  from './views/WebserverEnumView';
 import BloodHoundView from './views/BloodHoundView';
 import CypherLibraryView from './views/CypherLibraryView';
+import ClickFixView from './views/ClickFixView';
+import RedirectorChainView from './views/RedirectorChainView';
+import CardGenerationView from './views/CardGenerationView';
+import FakeTeamsView from './views/FakeTeamsView';
 
 const NotFound = ({ slug }) => {
   const navigate = useNavigate();
@@ -104,12 +108,16 @@ const EngagementLayout = () => {
       <Route path="intelligence/pass-cookie"                                   element={<PassCookieView />} />
       <Route path="intelligence/evil-oauth"                                    element={<EvilOAuthView />} />
       <Route path="intelligence/mfa-push"                                     element={<MfaPushView />} />
+      <Route path="intelligence/clickfix"                                      element={<ClickFixView />} />
 
       {/* Builders */}
-      <Route path="builders/username-gen"  element={<UsernameGeneratorView />} />
-      <Route path="builders/typosquat"     element={<TyposquatView />} />
-      <Route path="builders/qr-codes"      element={<QRCodeView />} />
-      <Route path="builders/wordlist-gen"  element={<WordlistView />} />
+      <Route path="builders/username-gen"      element={<UsernameGeneratorView />} />
+      <Route path="builders/typosquat"         element={<TyposquatView />} />
+      <Route path="builders/qr-codes"          element={<QRCodeView />} />
+      <Route path="builders/wordlist-gen"      element={<WordlistView />} />
+      <Route path="builders/redirector-chain"  element={<RedirectorChainView />} />
+      <Route path="builders/card-generation"  element={<CardGenerationView />} />
+      <Route path="builders/fake-teams"       element={<FakeTeamsView />} />
 
       {/* Sock Puppets */}
       <Route path="sockpuppets/personas"     element={<PersonasView />} />
