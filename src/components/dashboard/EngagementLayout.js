@@ -51,6 +51,8 @@ import ClickFixView from './views/ClickFixView';
 import RedirectorChainView from './views/RedirectorChainView';
 import CardGenerationView from './views/CardGenerationView';
 import FakeTeamsView from './views/FakeTeamsView';
+import OrgChartView from './views/OrgChartView';
+import KerberosView from './views/KerberosView';
 
 const NotFound = ({ slug }) => {
   const navigate = useNavigate();
@@ -142,12 +144,17 @@ const EngagementLayout = () => {
       <Route path="pillaging/webserver-enum"  element={<WebserverEnumView />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
+      <Route path="pillaging/kerberos"    element={<KerberosView />} />
       <Route path="pillaging/emails"      element={<EmailsView />} />
       <Route path="pillaging/documents"   element={<DocumentsView />} />
       <Route path="pillaging/file-meta"   element={<FileMetaView />} />
       {/* BLOODHOUND */}
       <Route path="bloodhound/analyzer"       element={<BloodHoundView />} />
       <Route path="bloodhound/cypher-library" element={<CypherLibraryView />} />
+
+      {/* OSINT */}
+      <Route path="osint/emails"    element={<EmailsView />} />
+      <Route path="osint/org-chart" element={<OrgChartView />} />
 
       {/* COMMS */}
       <Route path="comms/white-team"      element={<WhiteTeamView />} />

@@ -138,7 +138,7 @@ const engagementNav = [
       { key: 'pillaging/webserver-enum',  label: 'Webserver Enum',    icon: SearchIcon     },
       { key: 'pillaging/leaks',           label: 'Leaks',             icon: UnlockIcon     },
       { key: 'pillaging/credentials',     label: 'Credentials',       icon: LockIcon       },
-      { key: 'pillaging/emails',          label: 'Emails Harvester',  icon: EmailIcon      },
+      { key: 'pillaging/kerberos',        label: 'Kerberos Tickets',  icon: UnlockIcon     },
       { key: 'pillaging/documents',       label: 'Documents',         icon: AttachmentIcon },
       { key: 'pillaging/file-meta',       label: 'File Metadata',     icon: SearchIcon     },
     ],
@@ -148,6 +148,13 @@ const engagementNav = [
     items: [
       { key: 'bloodhound/analyzer',       label: 'Analyzer',          icon: SearchIcon     },
       { key: 'bloodhound/cypher-library', label: 'Cypher Library',    icon: CopyIcon       },
+    ],
+  },
+  {
+    section: 'OSINT',
+    items: [
+      { key: 'osint/emails',    label: 'Emails Harvester', icon: EmailIcon      },
+      { key: 'osint/org-chart', label: 'Org Chart Mapper', icon: LinkIcon       },
     ],
   },
   {
