@@ -86,6 +86,7 @@ const engagementNav = [
       { key: 'intelligence/evidence-vault',  label: 'Evidence Vault',          icon: LockIcon   },
       { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
       { key: 'intelligence/reverse-shells',  label: 'Reverse Shells',          icon: ChevronRightIcon },
+      { key: 'intelligence/cve-research',    label: 'CVE Research Board',      icon: WarningTwoIcon },
     ],
   },
   {
@@ -98,6 +99,7 @@ const engagementNav = [
       { key: 'intelligence/evil-oauth',           label: 'Evil OAuth Generator', icon: UnlockIcon       },
       { key: 'intelligence/mfa-push',            label: 'MFA Push Fatigue',     icon: WarningTwoIcon   },
       { key: 'intelligence/clickfix',            label: 'ClickFix Builder',     icon: ExternalLinkIcon },
+      { key: 'intelligence/ad-grapher',          label: 'AD Grapher',            icon: LinkIcon         },
     ],
   },
   {

@@ -53,6 +53,8 @@ import CardGenerationView from './views/CardGenerationView';
 import FakeTeamsView from './views/FakeTeamsView';
 import OrgChartView from './views/OrgChartView';
 import KerberosView from './views/KerberosView';
+import CVEResearchView from './views/CVEResearchView';
+import ADGrapherView from './views/ADGrapherView';
 
 const NotFound = ({ slug }) => {
   const navigate = useNavigate();
@@ -102,6 +104,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/loot-tracker"    element={<LootTrackerView />} />
       <Route path="intelligence/evidence-vault"  element={<EvidenceVaultView />} />
       <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
+      <Route path="intelligence/cve-research"   element={<CVEResearchView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PhishingView />} />
       <Route path="intelligence/reverse-shells"        element={<ReverseShellView />} />
@@ -111,6 +114,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/evil-oauth"                                    element={<EvilOAuthView />} />
       <Route path="intelligence/mfa-push"                                     element={<MfaPushView />} />
       <Route path="intelligence/clickfix"                                      element={<ClickFixView />} />
+      <Route path="intelligence/ad-grapher"                                    element={<ADGrapherView />} />
 
       {/* Builders */}
       <Route path="builders/username-gen"      element={<UsernameGeneratorView />} />
