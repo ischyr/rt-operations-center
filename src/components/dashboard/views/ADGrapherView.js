@@ -631,6 +631,12 @@ const ADGrapherView = () => {
     }
   }, [selectedNode?.id]); // eslint-disable-line
 
+  // Live-apply edit form to canvas — no need to click "Save Changes"
+  useEffect(() => {
+    if (!selectedId) return;
+    setNodes(prev => prev.map(n => n.id === selectedId ? { ...n, ...editForm } : n));
+  }, [editForm]); // eslint-disable-line
+
   // Measure containers
   useEffect(() => {
     const el = containerRef.current; if (!el) return;
@@ -709,10 +715,19 @@ const ADGrapherView = () => {
   }, []);
 
   // ── Graph data ──
+  // Sort so large boundary nodes (domain, ou) are first in array → painted first →
+  // smaller nodes painted on top → smaller nodes win pointer-area hit test when overlapping.
+  const BOUNDARY_TYPES = new Set(['domain', 'ou']);
   const graphData = useMemo(() => ({
-    nodes: nodes.map(n => ({ ...n, fx: n.x, fy: n.y })),
+    nodes: [...nodes]
+      .sort((a, b) => {
+        const aB = BOUNDARY_TYPES.has(a.type) ? 0 : 1;
+        const bB = BOUNDARY_TYPES.has(b.type) ? 0 : 1;
+        return aB - bB; // boundaries first (0), others last (1)
+      })
+      .map(n => ({ ...n, fx: n.x, fy: n.y })),
     links: edges,
-  }), [nodes, edges]);
+  }), [nodes, edges]); // eslint-disable-line
 
   // ── Canvas node rendering ──
   const nodeCanvasObject = useCallback((node, ctx, globalScale) => {
@@ -785,9 +800,39 @@ const ADGrapherView = () => {
 
   const nodePointerAreaPaint = useCallback((node, color, ctx) => {
     const rawSz = NSIZES[node.type] || 15;
-    const sz = rawSz * (node.sizeMultiplier || 1) + 6;
-    ctx.beginPath(); ctx.arc(node.x, node.y, sz, 0, Math.PI*2);
-    ctx.fillStyle = color; ctx.fill();
+    const mult  = node.sizeMultiplier || 1;
+    const { x, y } = node;
+
+    if (node.type === 'domain') {
+      // Paint the triangle OUTLINE as a thick stroke — interior stays empty so inner
+      // nodes are still clickable, but clicking near any edge selects the domain.
+      const hw = rawSz * mult * 0.95, ht = rawSz * mult * 0.92;
+      ctx.beginPath();
+      ctx.moveTo(x, y - ht);
+      ctx.lineTo(x - hw, y + ht * 0.6);
+      ctx.lineTo(x + hw, y + ht * 0.6);
+      ctx.closePath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 18;
+      ctx.stroke();
+      // Also paint a small circle at the label position so the label is clickable
+      ctx.beginPath();
+      ctx.arc(x, y + ht * 0.6 + 10, 16, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    } else if (node.type === 'ou') {
+      // Folder outline as thick stroke
+      const fw = rawSz * mult * 1.55, fh = rawSz * mult * 1.05;
+      ctx.beginPath();
+      ctx.rect(x - fw / 2, y - fh / 2, fw, fh);
+      ctx.strokeStyle = color; ctx.lineWidth = 14; ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y + fh / 2 + 10, 14, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    } else {
+      const sz = rawSz * mult + 6;
+      ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    }
   }, []);
 
   // ── Link canvas (labels on arrows) ──
@@ -883,7 +928,12 @@ const ADGrapherView = () => {
     if (nodes.length === 0) return;
     const timer = setTimeout(() => {
       const ref = fullscreen ? fsFgRef : fgRef;
-      ref.current?.zoomToFit(400, 60);
+      if (nodes.length === 1) {
+        // Single node — zoom to a comfortable fixed level so it doesn't fill the screen
+        ref.current?.zoom(2, 400);
+      } else {
+        ref.current?.zoomToFit(400, 80);
+      }
     }, 120);
     return () => clearTimeout(timer);
   }, [nodes.length, fullscreen]); // eslint-disable-line
@@ -909,6 +959,8 @@ const ADGrapherView = () => {
     onNodeDragEnd,
     onBackgroundClick,
     enableNodeDrag: mode !== 'connect',
+    minZoom: 0.1,
+    maxZoom: 8,
     nodeLabel: () => '',
   };
 
@@ -924,7 +976,6 @@ const ADGrapherView = () => {
   };
 
   const emptyCanvas = nodes.length === 0;
-  const mc = MODE_COLOR[mode];
 
   return (
     <>

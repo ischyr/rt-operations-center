@@ -138,6 +138,7 @@ const engagementNav = [
       { key: 'pillaging/subdomains',      label: 'Subdomains',        icon: SearchIcon     },
       { key: 'pillaging/services',        label: 'Network Scanning',  icon: SearchIcon     },
       { key: 'pillaging/webserver-enum',  label: 'Webserver Enum',    icon: SearchIcon     },
+      { key: 'pillaging/domain-flyover',  label: 'Domain Flyover',    icon: ExternalLinkIcon },
       { key: 'pillaging/leaks',           label: 'Leaks',             icon: UnlockIcon     },
       { key: 'pillaging/credentials',     label: 'Credentials',       icon: LockIcon       },
       { key: 'pillaging/kerberos',        label: 'Kerberos Tickets',  icon: UnlockIcon     },

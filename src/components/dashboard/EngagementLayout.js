@@ -45,6 +45,7 @@ import WebhookAlerterView from './views/WebhookAlerterView';
 import SocialMediaView from './views/SocialMediaView';
 import NetworkScannerView from './views/NetworkScannerView';
 import WebserverEnumView  from './views/WebserverEnumView';
+import DomainFlyoverView  from './views/DomainFlyoverView';
 import BloodHoundView from './views/BloodHoundView';
 import CypherLibraryView from './views/CypherLibraryView';
 import ClickFixView from './views/ClickFixView';
@@ -146,6 +147,7 @@ const EngagementLayout = () => {
       <Route path="pillaging/subdomains"   element={<SubdomainsView />} />
       <Route path="pillaging/services"        element={<NetworkScannerView />} />
       <Route path="pillaging/webserver-enum"  element={<WebserverEnumView />} />
+      <Route path="pillaging/domain-flyover"  element={<DomainFlyoverView />} />
       <Route path="pillaging/leaks"       element={<PlaceholderView title="Leaks" />} />
       <Route path="pillaging/credentials" element={<PlaceholderView title="Credentials" />} />
       <Route path="pillaging/kerberos"    element={<KerberosView />} />
