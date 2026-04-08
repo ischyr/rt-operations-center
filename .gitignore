@@ -15,11 +15,20 @@
 # production
 /build
 
+# Claude Code local settings — never commit (contains personal config)
+/.claude/
+
 # WhatsApp sessions — never commit (contains auth credentials)
 /server/wa-sessions/
 
+# WhatsApp web.js browser cache — large and machine-specific
+/server/.wwebjs_cache/
+
 # BloodHound uploaded ZIPs/JSONs — temp processing files, can be large
 /server/uploads/bloodhound/
+
+# Subdomain scan workspaces — contain per-engagement IDs and may hold API keys
+/server/subdomains/workspaces/
 
 # misc
 .DS_Store
