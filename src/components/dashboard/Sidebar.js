@@ -5,7 +5,7 @@ import {
   AtSignIcon, AttachmentIcon, UnlockIcon, LockIcon,
   RepeatIcon, LinkIcon, EmailIcon, CopyIcon,
   WarningTwoIcon, ExternalLinkIcon, SettingsIcon,
-  SearchIcon, InfoIcon, ChevronRightIcon, ChatIcon,
+  SearchIcon, InfoIcon, ChevronRightIcon, ChatIcon, TimeIcon,
 } from '@chakra-ui/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -38,7 +38,6 @@ const resourcesNav = [
   { key: 'resources/ransom-feed',  label: 'Ransom Feed',  icon: LockIcon       },
   { key: 'resources/email-leaks',  label: 'Email Leaks',  icon: EmailIcon      },
   { key: 'resources/lolbins',      label: 'LOLBIN / LOLBAS', icon: SearchIcon  },
-  { key: 'resources/domain-cat',    label: 'Domain Cat Checker', icon: SearchIcon },
   { key: 'resources/google-dorking', label: 'Google Dorking',    icon: SearchIcon },
 ];
 
@@ -69,6 +68,7 @@ const engagementNav = [
       { key: 'operations/skill-requests', label: 'Skill Requests',     icon: StarIcon         },
       { key: 'operations/ttx',            label: 'TTX Planner',        icon: EditIcon         },
       { key: 'operations/team-vault',     label: 'Team Vault',         icon: LockIcon         },
+      { key: 'operations/sessions',       label: 'Operator Sessions',  icon: TimeIcon         },
       { key: 'operations/assumed-breach', label: 'Assumed Breach',     icon: ChevronRightIcon },
     ],
   },
@@ -98,7 +98,6 @@ const engagementNav = [
       { key: 'intelligence/pass-cookie',          label: 'Pass-the-Cookie',      icon: CopyIcon         },
       { key: 'intelligence/evil-oauth',           label: 'Evil OAuth Generator', icon: UnlockIcon       },
       { key: 'intelligence/mfa-push',            label: 'MFA Push Fatigue',     icon: WarningTwoIcon   },
-      { key: 'intelligence/clickfix',            label: 'ClickFix Builder',     icon: ExternalLinkIcon },
       { key: 'intelligence/ad-grapher',          label: 'AD Grapher',            icon: LinkIcon         },
     ],
   },

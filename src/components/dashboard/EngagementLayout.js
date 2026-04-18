@@ -27,6 +27,7 @@ import TTPDetailView from './views/TTPDetailView';
 import ReverseShellView from './views/ReverseShellView';
 import DomainReconView from './views/DomainReconView';
 import AssumedBreachView from './views/AssumedBreachView';
+import OperatorSessionsView from './views/OperatorSessionsView';
 import UsernameGeneratorView from './views/UsernameGeneratorView';
 import TyposquatView from './views/TyposquatView';
 import EmailsView from './views/EmailsView';
@@ -48,7 +49,6 @@ import WebserverEnumView  from './views/WebserverEnumView';
 import DomainFlyoverView  from './views/DomainFlyoverView';
 import BloodHoundView from './views/BloodHoundView';
 import CypherLibraryView from './views/CypherLibraryView';
-import ClickFixView from './views/ClickFixView';
 import RedirectorChainView from './views/RedirectorChainView';
 import CardGenerationView from './views/CardGenerationView';
 import FakeTeamsView from './views/FakeTeamsView';
@@ -95,6 +95,7 @@ const EngagementLayout = () => {
       <Route path="operations/skill-requests" element={<SkillRequestsView />} />
       <Route path="operations/ttx"            element={<TTXPlannerView />} />
       <Route path="operations/team-vault"     element={<TeamVaultView />} />
+      <Route path="operations/sessions"       element={<OperatorSessionsView />} />
       <Route path="operations/assumed-breach" element={<AssumedBreachView />} />
 
       {/* Team */}
@@ -114,7 +115,6 @@ const EngagementLayout = () => {
       <Route path="intelligence/pass-cookie"                                   element={<PassCookieView />} />
       <Route path="intelligence/evil-oauth"                                    element={<EvilOAuthView />} />
       <Route path="intelligence/mfa-push"                                     element={<MfaPushView />} />
-      <Route path="intelligence/clickfix"                                      element={<ClickFixView />} />
       <Route path="intelligence/ad-grapher"                                    element={<ADGrapherView />} />
 
       {/* Builders */}
