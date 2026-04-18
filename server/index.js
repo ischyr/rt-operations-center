@@ -59,6 +59,7 @@ app.use('/api/network-scanner',  require('./routes/networkScanner'));
 app.use('/api/webserver-enum',   require('./routes/webserverEnum'));
 app.use('/api/domain-flyover',   require('./routes/domainFlyover'));
 app.use('/api/operator-sessions', require('./routes/operatorSessions'));
+app.use('/api/attack-relay',      require('./routes/attackRelay'));
 app.use('/api/telegram',         require('./routes/telegram'));
 app.use('/api/ghdb',             require('./routes/ghdb'));
 app.use('/api/kerberos',         require('./routes/kerberos'));

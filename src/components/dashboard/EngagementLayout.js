@@ -28,6 +28,7 @@ import ReverseShellView from './views/ReverseShellView';
 import DomainReconView from './views/DomainReconView';
 import AssumedBreachView from './views/AssumedBreachView';
 import OperatorSessionsView from './views/OperatorSessionsView';
+import AttackRelayView from './views/AttackRelayView';
 import UsernameGeneratorView from './views/UsernameGeneratorView';
 import TyposquatView from './views/TyposquatView';
 import EmailsView from './views/EmailsView';
@@ -96,6 +97,7 @@ const EngagementLayout = () => {
       <Route path="operations/ttx"            element={<TTXPlannerView />} />
       <Route path="operations/team-vault"     element={<TeamVaultView />} />
       <Route path="operations/sessions"       element={<OperatorSessionsView />} />
+      <Route path="operations/attack-relay"   element={<AttackRelayView />} />
       <Route path="operations/assumed-breach" element={<AssumedBreachView />} />
 
       {/* Team */}
