@@ -30,6 +30,9 @@
 # Subdomain scan workspaces — contain per-engagement IDs and may hold API keys
 /server/subdomains/workspaces/
 
+# Leak & credential uploads — contain sensitive client data, never commit
+/server/leaks/
+
 # misc
 .DS_Store
 .env.local
