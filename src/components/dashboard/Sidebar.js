@@ -70,6 +70,7 @@ const engagementNav = [
       { key: 'operations/team-vault',     label: 'Team Vault',         icon: LockIcon         },
       { key: 'operations/sessions',       label: 'Operator Sessions',  icon: TimeIcon         },
       { key: 'operations/attack-relay',   label: 'Attack Relay Board', icon: ArrowForwardIcon },
+      { key: 'operations/bingo',          label: 'Engagement Bingo',   icon: StarIcon         },
       { key: 'operations/assumed-breach', label: 'Assumed Breach',     icon: ChevronRightIcon },
     ],
   },
