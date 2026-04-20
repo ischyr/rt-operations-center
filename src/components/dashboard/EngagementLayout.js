@@ -31,6 +31,7 @@ import OperatorSessionsView from './views/OperatorSessionsView';
 import AttackRelayView from './views/AttackRelayView';
 import LeaksCredentialsView from './views/LeaksCredentialsView';
 import BingoView from './views/BingoView';
+import TasksPlannerView from './views/TasksPlannerView';
 import UsernameGeneratorView from './views/UsernameGeneratorView';
 import TyposquatView from './views/TyposquatView';
 import EmailsView from './views/EmailsView';
@@ -101,6 +102,7 @@ const EngagementLayout = () => {
       <Route path="operations/sessions"       element={<OperatorSessionsView />} />
       <Route path="operations/attack-relay"   element={<AttackRelayView />} />
       <Route path="operations/bingo"          element={<BingoView />} />
+      <Route path="operations/tasks"          element={<TasksPlannerView />} />
       <Route path="operations/assumed-breach" element={<AssumedBreachView />} />
 
       {/* Team */}

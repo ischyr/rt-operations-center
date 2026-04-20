@@ -71,6 +71,7 @@ const engagementNav = [
       { key: 'operations/sessions',       label: 'Operator Sessions',  icon: TimeIcon         },
       { key: 'operations/attack-relay',   label: 'Attack Relay Board', icon: ArrowForwardIcon },
       { key: 'operations/bingo',          label: 'Engagement Bingo',   icon: StarIcon         },
+      { key: 'operations/tasks',          label: 'Tasks Planner',      icon: EditIcon         },
       { key: 'operations/assumed-breach', label: 'Assumed Breach',     icon: ChevronRightIcon },
     ],
   },
