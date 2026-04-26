@@ -23,6 +23,7 @@ import MalwareScannerView from './views/MalwareScannerView';
 import VoiceClonerView from './views/VoiceClonerView';
 import LolbinView from './views/LolbinView';
 import GoogleDorkingView from './views/GoogleDorkingView';
+import CommandPalette from './CommandPalette';
 
 const MotionFlex = motion(Flex);
 
@@ -34,6 +35,7 @@ const DashboardLayout = () => (
     transition={{ duration: 0.45, ease: 'easeOut' }}
   >
     <Sidebar />
+    <CommandPalette />
     <Flex direction="column" flex="1" overflow="hidden">
       <TopBar />
       <Box flex="1" overflowY="auto" p={6}
