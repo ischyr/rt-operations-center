@@ -30,6 +30,7 @@ import AssumedBreachView from './views/AssumedBreachView';
 import OperatorSessionsView from './views/OperatorSessionsView';
 import AttackRelayView from './views/AttackRelayView';
 import LeaksCredentialsView from './views/LeaksCredentialsView';
+import JWTStudioView from './views/JWTStudioView';
 import BingoView from './views/BingoView';
 import TasksPlannerView from './views/TasksPlannerView';
 import UsernameGeneratorView from './views/UsernameGeneratorView';
@@ -155,6 +156,7 @@ const EngagementLayout = () => {
       <Route path="pillaging/services"        element={<NetworkScannerView />} />
       <Route path="pillaging/webserver-enum"  element={<WebserverEnumView />} />
       <Route path="pillaging/domain-flyover"  element={<DomainFlyoverView />} />
+      <Route path="pillaging/jwt-studio"      element={<JWTStudioView />} />
       <Route path="pillaging/credentials" element={<LeaksCredentialsView />} />
       <Route path="pillaging/kerberos"    element={<KerberosView />} />
       <Route path="pillaging/emails"      element={<EmailsView />} />

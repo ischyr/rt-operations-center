@@ -141,6 +141,7 @@ const engagementNav = [
       { key: 'pillaging/services',        label: 'Network Scanning',  icon: SearchIcon     },
       { key: 'pillaging/webserver-enum',  label: 'Webserver Enum',    icon: SearchIcon     },
       { key: 'pillaging/domain-flyover',  label: 'Domain Flyover',    icon: ExternalLinkIcon },
+      { key: 'pillaging/jwt-studio',      label: 'JWT Studio',        icon: UnlockIcon     },
       { key: 'pillaging/credentials',     label: 'Leaks & Credentials', icon: LockIcon     },
       { key: 'pillaging/kerberos',        label: 'Kerberos Tickets',  icon: UnlockIcon     },
       { key: 'pillaging/documents',       label: 'Documents',         icon: AttachmentIcon },
