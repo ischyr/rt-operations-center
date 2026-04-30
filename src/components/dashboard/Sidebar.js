@@ -90,6 +90,7 @@ const engagementNav = [
       { key: 'intelligence/cleanup-tracker', label: 'Cleanup Tracker',         icon: RepeatIcon },
       { key: 'intelligence/reverse-shells',  label: 'Reverse Shells',          icon: ChevronRightIcon },
       { key: 'intelligence/cve-research',    label: 'CVE Research Board',      icon: WarningTwoIcon },
+      { key: 'intelligence/service-catalog', label: 'Service Catalog',         icon: SearchIcon       },
     ],
   },
   {

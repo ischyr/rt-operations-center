@@ -65,6 +65,7 @@ app.use('/api/bingo',             require('./routes/bingo'));
 app.use('/api/tasks',             require('./routes/tasks'));
 app.use('/api/search',            require('./routes/search'));
 app.use('/api/jwt-studio',        require('./routes/jwtStudio'));
+app.use('/api/service-catalog',   require('./routes/serviceCatalog'));
 app.use('/api/telegram',         require('./routes/telegram'));
 app.use('/api/ghdb',             require('./routes/ghdb'));
 app.use('/api/kerberos',         require('./routes/kerberos'));

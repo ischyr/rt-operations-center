@@ -31,6 +31,7 @@ import OperatorSessionsView from './views/OperatorSessionsView';
 import AttackRelayView from './views/AttackRelayView';
 import LeaksCredentialsView from './views/LeaksCredentialsView';
 import JWTStudioView from './views/JWTStudioView';
+import ServiceCatalogView from './views/ServiceCatalogView';
 import BingoView from './views/BingoView';
 import TasksPlannerView from './views/TasksPlannerView';
 import UsernameGeneratorView from './views/UsernameGeneratorView';
@@ -115,6 +116,7 @@ const EngagementLayout = () => {
       <Route path="intelligence/evidence-vault"  element={<EvidenceVaultView />} />
       <Route path="intelligence/cleanup-tracker" element={<CleanupTrackerView />} />
       <Route path="intelligence/cve-research"   element={<CVEResearchView />} />
+      <Route path="intelligence/service-catalog" element={<ServiceCatalogView />} />
       <Route path="intelligence/c2"              element={<C2View />} />
       <Route path="intelligence/phishing"        element={<PhishingView />} />
       <Route path="intelligence/reverse-shells"        element={<ReverseShellView />} />
