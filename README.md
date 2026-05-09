@@ -137,28 +137,6 @@ Visiting `/` redirects authenticated operators to `/dashboard` and unauthenticat
 
 ---
 
-## Platform Screenshots
-
-### Landing Page
-![Landing Page](docs/screenshots/01-landing.png)
-
-### Operations Dashboard
-![Dashboard](docs/screenshots/02-dashboard.png)
-
-### Cheatsheet — Payload & Evasion Map
-![Cheatsheet](docs/screenshots/04-cheatsheet.png)
-
-### Lab Configs
-![Lab Configs](docs/screenshots/05-lab-configs.png)
-
-### CVE Feed
-![CVE Feed](docs/screenshots/06-cve-feed.png)
-
-### Email Leaks
-![Email Leaks](docs/screenshots/07-email-leaks.png)
-
----
-
 ## Dashboard
 
 ### Layout
