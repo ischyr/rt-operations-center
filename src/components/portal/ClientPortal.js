@@ -314,6 +314,7 @@ const LoginScreen = ({ onLogin }) => {
 const ClientDashboard = ({ tenant, token, onLogout }) => {
   const [eng, setEng]                     = useState(null);
   const [loading, setLoading]             = useState(true);
+  const [loadError, setLoadError]         = useState(null);
   const [activeTab, setActiveTab]         = useState('overview');
   const [selectedFinding, setSelectedFinding] = useState(null);
 
@@ -323,8 +324,16 @@ const ClientDashboard = ({ tenant, token, onLogout }) => {
         const res = await fetch(`${API}/portal/engagement`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (res.ok) setEng(await res.json());
-      } catch { /* ignore */ }
+        if (res.ok) {
+          setEng(await res.json());
+        } else {
+          let serverMsg = '';
+          try { serverMsg = (await res.json())?.message || ''; } catch { /* non-JSON response */ }
+          setLoadError({ status: res.status, message: serverMsg || res.statusText || 'Request failed' });
+        }
+      } catch (err) {
+        setLoadError({ status: 0, message: err?.message || 'Network error — backend unreachable' });
+      }
       setLoading(false);
     })();
   }, [token]);
@@ -366,11 +375,89 @@ const ClientDashboard = ({ tenant, token, onLogout }) => {
   if (loading) return (
     <Flex minH="100vh" bg="#0d0d12" align="center" justify="center"><Spinner size="xl" color={RED} /></Flex>
   );
-  if (!eng) return (
-    <Flex minH="100vh" bg="#0d0d12" align="center" justify="center">
-      <Text color="rgba(255,255,255,0.5)">Unable to load engagement data.</Text>
-    </Flex>
-  );
+  if (!eng) {
+    const status = loadError?.status;
+    const reason =
+      status === 401 ? 'Your session has expired or your tenant account has been disabled. Sign out and sign back in, or contact your operator.'
+      : status === 403 ? 'Your tenant account has been disabled by the operator team.'
+      : status === 404 ? 'The engagement linked to your tenant account no longer exists. The operator team needs to re-link your tenant to a current engagement.'
+      : status === 0   ? 'The backend is unreachable. Check that the server is running and try again.'
+      : 'The server returned an unexpected error.';
+
+    return (
+      <Flex minH="100vh" bg="#0d0d12" align="center" justify="center" px={6}>
+        <Box maxW="560px" w="100%">
+          <Flex direction="column" align="center" mb={5}>
+            <Flex w="56px" h="56px" borderRadius="14px" bg="rgba(252,129,129,0.10)"
+              border="1px solid rgba(252,129,129,0.30)" align="center" justify="center" mb={4}>
+              <AlertIcon boxSize="24px" color={RED} />
+            </Flex>
+            <Text fontSize="18px" fontWeight="bold" color="white">Unable to load engagement data</Text>
+            <Text fontSize="12px" color="rgba(255,255,255,0.45)" mt={1} textAlign="center">{reason}</Text>
+          </Flex>
+
+          {loadError && (
+            <Box bg="rgba(252,129,129,0.06)" border="1px solid rgba(252,129,129,0.25)"
+              borderRadius="10px" px={4} py={3} mb={4}>
+              <Text fontSize="10px" fontWeight="bold" color={RED}
+                textTransform="uppercase" letterSpacing="wider" mb={1}>
+                Server response{loadError.status ? ` · ${loadError.status}` : ''}
+              </Text>
+              <Text fontSize="12px" color="rgba(255,255,255,0.75)" fontFamily="'Fira Code', monospace">
+                {loadError.message}
+              </Text>
+            </Box>
+          )}
+
+          <Box bg="rgba(255,255,255,0.03)" border="1px solid rgba(255,255,255,0.08)"
+            borderRadius="12px" px={5} py={4} mb={4}>
+            <Text fontSize="11px" fontWeight="bold" color="rgba(255,255,255,0.5)"
+              textTransform="uppercase" letterSpacing="wider" mb={3}>
+              What needs to happen
+            </Text>
+            <Stack spacing={2.5}>
+              {[
+                ['1', 'An operator creates an engagement in the dashboard.'],
+                ['2', 'The operator creates a tenant for that engagement (Reporting → Client Portal) with your company, your email, and a password.'],
+                ['3', 'You sign into this portal with that email and password.'],
+                ['4', 'The tenant must stay enabled and linked to an existing engagement.'],
+              ].map(([n, t]) => (
+                <Flex key={n} gap={3} align="flex-start">
+                  <Flex w="18px" h="18px" borderRadius="full" bg={`${RED}20`}
+                    border={`1px solid ${RED}40`} align="center" justify="center" flexShrink={0} mt="1px">
+                    <Text fontSize="9px" fontWeight="bold" color={RED}>{n}</Text>
+                  </Flex>
+                  <Text fontSize="12px" color="rgba(255,255,255,0.7)" lineHeight="1.6">{t}</Text>
+                </Flex>
+              ))}
+            </Stack>
+          </Box>
+
+          <Flex gap={2}>
+            <Button flex={1} h="40px" borderRadius="10px"
+              bg="rgba(255,255,255,0.04)" border="1px solid rgba(255,255,255,0.1)"
+              color="rgba(255,255,255,0.7)" fontSize="12px" fontWeight="semibold"
+              _hover={{ bg: 'rgba(255,255,255,0.08)', color: 'white' }}
+              onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+            <Button flex={1} h="40px" borderRadius="10px"
+              bg="rgba(252,129,129,0.12)" border="1px solid rgba(252,129,129,0.35)"
+              color={RED} fontSize="12px" fontWeight="bold"
+              leftIcon={<LogOutIcon boxSize="13px" />}
+              _hover={{ bg: 'rgba(252,129,129,0.20)' }}
+              onClick={onLogout}>
+              Sign Out
+            </Button>
+          </Flex>
+
+          <Text fontSize="10px" color="rgba(255,255,255,0.2)" textAlign="center" mt={6}>
+            Signed in as {tenant?.contactEmail || tenant?.company || 'unknown tenant'}
+          </Text>
+        </Box>
+      </Flex>
+    );
+  }
 
   const sc = STATUS_COLORS[eng.status] || BLUE;
   const daysLeft = eng.endDate ? Math.max(0, Math.ceil((new Date(eng.endDate) - new Date()) / 86400000)) : null;

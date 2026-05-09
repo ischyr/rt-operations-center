@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
   Box, Flex, Text, Button, Input, Select,
-  SimpleGrid, IconButton, Heading,
+  SimpleGrid, IconButton, Heading, Icon,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, CheckIcon, EditIcon, CloseIcon } from '@chakra-ui/icons';
+import { FaBoxOpen } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -229,7 +230,13 @@ const ResourcesView = () => {
       {resources.length === 0 ? (
         <Flex direction="column" align="center" py={16} gap={3}
           bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="14px">
-          <Text fontSize="2xl">📦</Text>
+          <Flex
+            align="center" justify="center"
+            w="48px" h="48px" borderRadius="12px"
+            bg="rgba(255,80,95,0.10)" border="1px solid rgba(255,80,95,0.25)"
+          >
+            <Icon as={FaBoxOpen} boxSize={5} color="red.300" />
+          </Flex>
           <Text fontWeight="semibold" color="var(--dash-text-primary)">No resources tracked</Text>
           <Text fontSize="sm" color="var(--dash-text-muted)">Add resources to track utilization across this engagement.</Text>
         </Flex>

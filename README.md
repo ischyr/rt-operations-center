@@ -4,20 +4,128 @@ A platform that helps red team operators build structure, planning, and executio
 
 ---
 
-## Running the App
+## Quick Start
 
-**Terminal 1 — Backend:**
+**Prerequisites:**
+- Node.js 18+
+- MongoDB running locally on port `27017`
+- Docker Desktop (only for the pillaging / scanning features)
+
+**Install:**
 ```bash
-cd server
-npm run dev
+# Frontend deps
+npm install
+
+# Backend deps
+cd server && npm install && cd ..
 ```
 
-**Terminal 2 — Frontend:**
+**Run (two terminals):**
+
 ```bash
+# Terminal 1 — backend
+cd server
+npm run dev
+
+# Terminal 2 — frontend
 npm start
 ```
 
-> Make sure MongoDB is running locally on port `27017` before starting the server.
+Frontend runs at `http://localhost:3000`, backend at `http://localhost:5000`.
+
+---
+
+## Environment Variables
+
+All server config is loaded from `server/.env`. Copy the template below and fill in the values you need — most variables have sensible defaults, and OAuth / external API keys are optional (the corresponding features just turn off if absent).
+
+### `server/.env`
+
+```env
+# ── Core ────────────────────────────────────────────────────────────────────
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/rt-ops-center
+JWT_SECRET=change_this_to_a_long_random_string_in_production
+JWT_EXPIRES_IN=7d
+
+# ── URLs ────────────────────────────────────────────────────────────────────
+FRONTEND_URL=http://localhost:3000
+BACKEND_URL=http://localhost:5000
+
+# ── Session (only used for the OAuth redirect dance) ────────────────────────
+SESSION_SECRET=change_this_to_a_random_string
+
+# ── Google OAuth (optional) — https://console.cloud.google.com/ ─────────────
+# Leave commented to disable Google sign-in
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+
+# ── GitHub OAuth (optional) — https://github.com/settings/developers ────────
+# Leave commented to disable GitHub sign-in
+# GITHUB_CLIENT_ID=
+# GITHUB_CLIENT_SECRET=
+
+# ── External API keys (optional, per-feature) ───────────────────────────────
+# Intel X — used by the Emails Harvester
+# https://intelx.io/account?tab=developer
+# INTELX_API_KEY=
+
+# Have I Been Pwned — used by Email Leaks
+# https://haveibeenpwned.com/API/Key
+# HIBP_API_KEY=
+
+# VirusTotal — used by Malware Scanner
+# https://www.virustotal.com/gui/my-apikey
+# VT_API_KEY=
+
+# Chrome / Chromium executable path — used by White Team comms screenshotting
+# Leave unset to use the bundled puppeteer Chromium
+# CHROME_PATH=
+```
+
+### Variable reference
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `PORT` | No | `5000` | Backend HTTP port |
+| `MONGODB_URI` | **Yes** | — | Mongo connection string |
+| `JWT_SECRET` | **Yes** | — | Signs auth + portal JWTs |
+| `JWT_EXPIRES_IN` | No | `7d` | JWT lifetime |
+| `FRONTEND_URL` | No | `http://localhost:3000` | CORS origin + OAuth redirect base |
+| `BACKEND_URL` | No | `http://localhost:5000` | Used to build OAuth callback URLs |
+| `SESSION_SECRET` | No | `redteam-session-secret` | Express-session secret (OAuth only) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | — | Enables Google OAuth sign-in |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | No | — | Enables GitHub OAuth sign-in |
+| `INTELX_API_KEY` | No | — | Powers the Emails Harvester searches |
+| `HIBP_API_KEY` | No | — | Powers the Email Leaks lookup |
+| `VT_API_KEY` | No | — | Powers the Malware Scanner |
+| `CHROME_PATH` | No | bundled Chromium | Override for puppeteer's Chrome binary |
+
+> The root-level `.env` (next to `package.json`) only contains the CRA dev flag `DANGEROUSLY_DISABLE_HOST_CHECK=true`. It's gitignored.
+
+---
+
+## Tech Stack
+
+- **Frontend:** React 18, Chakra UI v2, framer-motion, react-router-dom, react-icons
+- **Backend:** Node.js + Express, Mongoose, Passport (Google + GitHub strategies), JWT auth, express-session, bcryptjs
+- **DB:** MongoDB
+- **External tooling:** Docker (subfinder, httpx, gowitness, rustscan), VirusTotal, HIBP, Intel X
+
+---
+
+## Public Site
+
+The marketing surface is intentionally minimal. The top navigation has four entries:
+
+| Item | Path | Purpose |
+|---|---|---|
+| OPERATORS | `/operators` | Team roster |
+| PRICING | `/pricing` | Pricing tiers |
+| SIGN IN | `/signin` | Operator login |
+| REGISTER | `/register` | New operator registration |
+
+Visiting `/` redirects authenticated operators to `/dashboard` and unauthenticated visitors to `/signin`.
 
 ---
 
@@ -44,9 +152,6 @@ npm start
 ### Email Leaks
 ![Email Leaks](docs/screenshots/07-email-leaks.png)
 
-### Malware Scanner
-![Malware Scanner](docs/screenshots/08-malware-scanner.png)
-
 ---
 
 ## Dashboard
@@ -57,7 +162,7 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 
 ```
 ┌─────────────┬──────────────────────────────────────────┐
-│             │  TopBar (@callsign · search · bell)       │
+│             │  TopBar (search · bell · @callsign)       │
 │   Sidebar   ├──────────────────────────────────────────┤
 │             │                                          │
 │  CHEATSHEET │           Active View                    │
@@ -73,6 +178,8 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 └─────────────┴──────────────────────────────────────────┘
 ```
 
+A global Command Palette is also mounted (Ctrl/Cmd + K) for fast nav across every section.
+
 ### Sidebar Navigation
 
 **Global sections (always visible):**
@@ -81,439 +188,169 @@ The dashboard uses a persistent full-screen layout with a fixed left sidebar and
 |---|---|
 | *(top)* | Dashboard, Engagements |
 | **CHEATSHEET** | Red Team Ops Map, AD Attack Map, Payload & Evasion Map |
-| **RED LAB** | Lab Configs, Lab Connectivity |
-| **RESOURCES & MATERIALS** | Tools, CVE Feed, Ransom Feed, Email Leaks, LOLBIN / LOLBAS, Domain Cat Checker, Google Dorking |
-| **CLONING** | Voice Cloner |
-| **MALWARE ANALYSIS** | Scanner, Reports |
+| **RED LAB** | Lab Configs |
+| **RESOURCES & MATERIALS** | Tools, CVE Feed, Ransom Feed, Email Leaks, LOLBIN / LOLBAS, Google Dorking |
+| **MALWARE ANALYSIS** | Scanner |
 | **DIAGRAM DRAWING** | Editor, My Diagrams |
 
 **Per-engagement sections (shown when inside an engagement):**
 
 | Section | Items |
 |---|---|
-| **OPERATIONS** | Activity Log, Calendar, Skill Requests, TTX Planner, Team Vault, Assumed Breach |
+| **OPERATIONS** | Activity Log, Calendar, Skill Requests, TTX Planner, Team Vault, Operator Sessions, Attack Relay Board, Engagement Bingo, Tasks Planner, Assumed Breach |
 | **TEAM** | People & Skills, Resources |
-| **INTELLIGENCE** | Loot Tracker, Evidence Vault, Cleanup Tracker, Reverse Shells, CVE Research Board |
-| **INFRASTRUCTURE** | C2 Infrastructure, Phishing Infrastructure, Device Code Phishing, Pass-the-Cookie, Evil OAuth Generator, MFA Push Fatigue, ClickFix Builder, AD Grapher |
+| **INTELLIGENCE** | Loot Tracker, Evidence Vault, Cleanup Tracker, Reverse Shells, CVE Research Board, Service Catalog |
+| **INFRASTRUCTURE** | C2 Infrastructure, Phishing Infrastructure, Device Code Phishing, Pass-the-Cookie, Evil OAuth Generator, MFA Push Fatigue, AD Grapher |
 | **BUILDERS** | Username Generator, Typosquat Generator, QR Code Generator, Wordlist Generator, Redirector Chain, Card Generation, Fake Teams Message |
 | **SOCK PUPPETS** | Personas, Social Media |
 | **TTPs** | Initial Access, Windows, Linux, Active Directory, Network |
-| **PILLAGING** | Domain Recon, Subdomains, Network Scanning, Webserver Enum, Domain Flyover, Leaks, Credentials, Kerberos Tickets, Documents, File Metadata |
+| **PILLAGING** | Domain Recon, Subdomains, Network Scanning, Webserver Enum, Domain Flyover, JWT Studio, Leaks & Credentials, Kerberos Tickets, Documents, File Metadata |
 | **BLOODHOUND** | Analyzer, Cypher Library |
 | **OSINT** | Emails Harvester, Org Chart Mapper |
 | **COMMS** | White Team, Webhook Alerter |
 | **REPORTING** | Reports, Findings, Client Portal |
 
-- Active item is highlighted with a red left border + red tinted background
-- Section labels are uppercase in muted gray
-- Brand mark "Red Ops Center" with pulsing red dot at top
-- Settings + Sign Out always pinned at the bottom
-
 ### TopBar
 
-- **Search** — operations search input (left)
-- **Bell** — notification icon with red dot indicator (right)
-- **@callsign chip** — shows the logged-in operator's callsign with avatar initial (right)
+- **Search** — operations search (left)
+- **Bell** — notifications popover with the last activity entries (red dot indicator when there are unread events)
+- **@callsign chip** — operator callsign + avatar initial; clicking opens the profile modal
 
 ### Dashboard Overview (`/dashboard`)
 
-**Stat Cards (top row):**
+**Stat cards:** Active Engagements · Team Members · Total Findings · Active Beacons.
 
-| Card | Value | Accent |
-|---|---|---|
-| Active Engagements | Live count | Red gradient |
-| Team Members | Live count | Teal gradient |
-| Total Findings | Live count | Orange/yellow gradient |
-| Active Beacons | Live count | Green gradient |
+**Active Engagements panel** — paginated cards (3 at a time) showing operation name, scope, dates, operators, current phase, status badge, severity badges, and an overall progress bar.
 
-**Active Engagements panel** — shows up to 3 cards at a time (fixed 504px height), paginated:
-- Operation name + client + scope
-- Started / Ends dates · Operators · Current phase
-- Overall progress bar (color varies by status)
-- Status badge: `IN PROGRESS` · `REPORTING` · `PLANNING` · `COMPLETED`
-- Severity badges: `CRITICAL` · `HIGH` · `MED` · `LOW`
+**Findings Breakdown** — bar chart by severity (Critical / High / Medium / Low) with total count.
 
-**Findings Breakdown panel** — horizontal bars per severity (Critical / High / Medium / Low) + total count
+**Resource Utilization** — top-5 resources by usage ratio.
 
-**Resource Utilization panel** — top 5 by usage ratio, progress bars with footer total count
+**Recent Activity feed** — timestamped events with colored type indicators.
 
-**Recent Activity feed** — timestamped events with colored dot indicators per type
-
-**Team Skill Coverage** — skill bars with color thresholds (green ≥80% · yellow ≥65% · orange <65%)
+**Team Skill Coverage** — skill bars with green ≥ 80%, yellow ≥ 65%, orange < 65% thresholds.
 
 ---
 
-## Key Features
+## Feature Catalog
 
-### Webserver Enumeration
+### Operations
 
-The Webserver Enumeration page (`/pillaging/webserver-enum`) probes HTTP/HTTPS targets using `projectdiscovery/httpx` running in Docker.
+- **Activity Log** — chronological timeline of every engagement event (findings, milestones, manual entries) with type filtering and a free-text search.
+- **Calendar** — operation calendar showing engagement dates, deadlines, and scheduled events.
+- **Skill Requests** — log skill gaps the team hits during an engagement, assign who needs to learn them, track Open → Learning → Resolved status.
+- **TTX Planner** — break the engagement into phases (Recon, Initial Access, Lateral Movement, …), assign operators, drag to reorder, track per-phase progress.
+- **Team Vault** — shared engagement-scoped credential vault for team members.
+- **Operator Sessions** — track who is currently on-shift, hand-off notes, and active operator presence.
+- **Attack Relay Board** — kanban-style board for active attack chains, current step, and next moves.
+- **Engagement Bingo** — gamified objective board with bingo-style tile completion for the team.
+- **Tasks Planner** — engagement to-do list with assignees, priorities, and due dates.
+- **Assumed Breach** — record the assumed access level and starting credentials/tokens for assumed-breach engagements.
 
-- Single domain or bulk import via `.txt` / `.json` file (subdomain export format supported)
-- Drag-and-drop file import zone
-- Live Docker terminal output during scanning
-- Results: status code (color-coded), URL with copy + open buttons, page title, technology badges
-- Filter results by status code range (2xx / 3xx / 4xx / 5xx)
-- Export filtered URLs to `.txt`
-- Scan history sidebar with per-scan delete
-- Scans persist while navigating — resumes on page return
+### Team
 
-**Docker image:** `projectdiscovery/httpx`
-**Command:** `httpx -list /targets.txt -status-code -title -tech-detect`
+- **People & Skills** — operator roster with skill assignments and proficiency levels.
+- **Resources** — track tools, accounts, hardware, and other resources allocated to the engagement.
 
----
+### Intelligence
 
-### Domain Flyover
+- **Loot Tracker** — captured creds, tokens, files, and trophies with source / context fields.
+- **Evidence Vault** — long-term evidence storage tagged by finding.
+- **Cleanup Tracker** — outstanding cleanup actions (artifacts to remove, accounts to disable) with status.
+- **Reverse Shells** — generator for shell payloads across protocols, encodings, and target shells.
+- **CVE Research Board** — engagement-relevant CVEs with auto-populated CVSS data, exploitation status, and finding linkage.
+- **Service Catalog** — catalog of internal services discovered during the engagement, with risk and exposure metadata.
 
-The Domain Flyover page (`/pillaging/domain-flyover`) captures visual screenshots of web targets using `leonjza/gowitness` running in Docker.
+### Infrastructure
 
-- Single domain or bulk import via `.txt` / `.json` file (subdomain export format supported)
-- Drag-and-drop file import zone
-- Bare domains are automatically prefixed with `https://`
-- Results displayed as a screenshot grid — each card shows the rendered page thumbnail, HTTP status badge, URL, page title, and redirect chain if applicable
-- Click any card to expand the full screenshot in a lightbox modal
-- Filter by status code range (2xx / 3xx / 4xx / 5xx)
-- Live Docker terminal output while scanning
-- Flyover history sidebar with per-scan delete
-- Scans persist while navigating
+- **C2 Infrastructure** — manage C2 droplets, DNS, redirectors, and listener config per engagement.
+- **Phishing Infrastructure** — phishing campaigns, sender domains, lures, and click-through tracking.
+- **Device Code Phishing** — automate the OAuth 2.0 Device Authorization Grant flow against Microsoft 365: generate a `user_code` from `https://login.microsoftonline.com/common/oauth2/v2.0/devicecode`, deliver the lure, poll for completion, store tokens in the local Token Vault, and run pre-built Microsoft Graph queries against captured tokens.
+- **Pass-the-Cookie** — paste raw cookie strings (XSS output, infostealer logs, MITM captures), categorize by target app (Microsoft 365, Google Workspace, GitHub, AWS, Okta, custom), and replay sessions in a new tab to bypass MFA.
+- **Evil OAuth Generator** — consent phishing for Azure AD: pick from 12 Microsoft app presets (Teams Meeting Add-in, SharePoint Site Sync, OneDrive Backup Agent, …) or build a custom one, generate an OAuth 2.0 authorization-code URL, capture callbacks server-side, auto-exchange `code` for tokens, and push them into the Token Vault. Tabs: App Builder · Phishing Lures · Capture Tracker · Reference.
+- **MFA Push Fatigue** — track MFA push-bombing campaigns, configure timing/frequency/target, log victim responses.
+- **AD Grapher** — visual Active Directory relationship mapping with attack-path highlighting, BloodHound-compatible.
 
-**Docker image:** `leonjza/gowitness`
-**Command:** `gowitness scan file -f /targets.txt --screenshot-path /screenshots --threads 3`
+### Builders
 
----
+- **Username Generator** — permutations from first/last name and patterns.
+- **Typosquat Generator** — typosquat candidates for phishing or campaign infrastructure.
+- **QR Code Generator** — generate QR codes for arbitrary payloads or URLs.
+- **Wordlist Generator** — custom wordlist builder for password-spray / brute-force.
+- **Redirector Chain** — design multi-hop redirect chains (HTTP 301/302, meta-refresh, JS) and export config.
+- **Card Generation** — fake employee badges / visitor passes / ID cards for physical engagements.
+- **Fake Teams Message** — render convincing Teams message screenshots (light/dark, custom sender, avatar, timestamp) as PNG.
 
-### Network Scanning
+### Sock Puppets
 
-The Network Scanning page (`/pillaging/services`) performs fast port scanning using `rustscan` running in Docker.
+- **Personas** — manage operator personas (background, accounts, contact info) used across social-engineering ops.
+- **Social Media** — track social-media presence per persona.
 
-- Single IP or bulk import
-- Configurable ports and scan options
-- Results show open ports, detected services, and banners
-- Live Docker terminal output
-- Scan history per engagement
+### TTPs
 
-**Docker image:** `rustscan/rustscan`
+Per-engagement MITRE ATT&CK technique tracking across five categories: Initial Access · Windows · Linux · Active Directory · Network. Each entry stores ATT&CK ID, title, status (Planned / In Progress / Success / Failed / Detected), narrative, timeline, and evidence links.
 
----
+### Pillaging
 
-### Subdomain Enumeration
+- **Domain Recon** — DNS records (A/MX/TXT/NS/CNAME), WHOIS, mail-security posture (SPF / DKIM / DMARC).
+- **Subdomain Enumeration** — passive + active discovery via `projectdiscovery/subfinder` (Docker). Live streaming, deduped, JSON export.
+- **Network Scanning** — fast port/service scan via `rustscan/rustscan` (Docker). Configurable ports, live terminal output, history per engagement.
+- **Webserver Enumeration** — HTTP/HTTPS probing via `projectdiscovery/httpx` (Docker). Status codes, page titles, technology fingerprints, drag-and-drop bulk import, status-range filters, `.txt` export.
+- **Domain Flyover** — visual screenshot capture via `leonjza/gowitness` (Docker). Lightbox grid, redirect chains, status-range filters, `https://` auto-prefix.
+- **JWT Studio** — decode, inspect, edit, sign, and forge JWTs. Tamper claims, switch algorithms, run alg=none + key-confusion checks.
+- **Leaks & Credentials** — combined unified view for breach data and harvested credentials, with per-engagement isolation.
+- **Kerberos Tickets** — log captured TGTs, service tickets, AS-REPs (Silver / Golden / Diamond), tracking SPN, encryption type, and cracking status.
+- **Documents** — track documents discovered or exfiltrated with classification, source path, sensitivity, and finding links.
+- **File Metadata** — extract metadata from Office docs / PDFs / images (author, organization, GPS, software version, revision history) for OSINT and target profiling.
 
-The Subdomains page (`/pillaging/subdomains`) runs passive and active subdomain discovery using `projectdiscovery/subfinder` in Docker.
+### BloodHound
 
-- Single root domain input
-- Results stream live as subdomains are discovered
-- Export discovered subdomains to `.json` (compatible with Webserver Enum and Domain Flyover import)
-- Scan history per engagement
-- Deduplication of results
+- **Analyzer** — upload BloodHound ZIP/JSON exports and run pre-built or custom Cypher queries against the dataset.
+- **Cypher Library** — searchable, categorized Cypher query library (Shortest Paths, Kerberos, ACL Abuse, Group Membership, GPO, …).
 
-**Docker image:** `projectdiscovery/subfinder`
+### OSINT
 
----
+- **Emails Harvester** — Intel X-backed email enumeration for a target domain plus manual entries.
+- **Org Chart Mapper** — build visual organizational charts from OSINT-gathered employee data.
 
-### Device Code Phishing
+### Comms
 
-The Device Code Phishing module (`/intelligence/device-code-phishing`) automates the OAuth 2.0 Device Authorization Grant flow to harvest Microsoft 365 tokens without requiring a redirect URI — ideal for phishing target users over chat, email, or social engineering.
+- **White Team** — log white-team contacts, de-confliction requests, approvals, and stop/start authorizations.
+- **Webhook Alerter** — fire real-time alerts to Slack / Teams / Discord / custom webhooks on engagement events.
 
-**How it works:**
+### Reporting
 
-1. **Generate a device code** — the server calls `https://login.microsoftonline.com/common/oauth2/v2.0/devicecode` and receives a short `user_code` (e.g. `ABC-12345`) and a `device_code`. The user_code is valid for ~15 minutes.
+- **Reports** — engagement reports with Type (Pentest, Red Team, Purple Team, Assumed Breach, Social Engineering), Status (Draft / In Review / Finalized / Delivered), and Classification (TLP:WHITE / GREEN / AMBER / RED). Sections: Executive Summary, Methodology, Attack Narrative, Recommendations.
+- **Findings** — engagement findings with severity, status, evidence links, and detail view for editing.
+- **Client Portal** — read-only view that clients can access via tenant-scoped JWT to track progress.
 
-2. **Deliver the lure** — the operator sends the victim a convincing message instructing them to visit `https://microsoft.com/devicelogin` and enter the user_code. This is a legitimate Microsoft page, so it passes browser security checks.
+### Cheatsheet
 
-3. **Poll for completion** — the server continuously polls the token endpoint using the `device_code`. Once the victim authenticates and approves the requested scopes, Microsoft returns an access token + refresh token.
+- **Red Team Ops Map** — high-level red-team operations reference map.
+- **AD Attack Map** — Active Directory attack-path reference.
+- **Payload & Evasion Map** — payload generation and EDR-evasion reference.
 
-4. **Token vault** — captured tokens are stored in localStorage under `dc_tokens` and displayed in the Token Vault tab with the victim's UPN (extracted from the id_token JWT), scopes, and capture time.
+### Red Lab
 
-5. **Graph enumeration** — the operator can run pre-built Microsoft Graph API queries directly from the tool (user info, mailbox, OneDrive, Teams, SharePoint, conditional access policies, devices, etc.) using the captured token. Results are shown in a dedicated Graph Result view.
+- **Lab Configs** — Ludus template cards with one-click deploy modal for spinning up engagement-scoped lab environments.
 
-**Scopes supported:** The tool ships with pre-built scope sets for Microsoft Graph (`Mail.Read`, `Files.Read`, `User.Read.All`, `Directory.Read.All`, etc.) and Azure management APIs. Custom scopes can be entered manually.
+### Resources & Materials
 
-**Backend routes:** `/api/device-code/*` — all protected by JWT.
+- **Tools** — curated red team tools reference.
+- **CVE Feed** — live CVE feed with by-ID search and severity filtering.
+- **Ransom Feed** — ransomware group activity feed.
+- **Email Leaks** — HIBP-backed breach lookup for emails / domains.
+- **LOLBIN / LOLBAS** — searchable encyclopedia of Living-Off-the-Land Binaries and Scripts. Filter by OS / category, MITRE ATT&CK mapping, copy-to-clipboard examples.
+- **Google Dorking** — categorized Google dork library (files, login pages, cameras, configs, …) with one-click copy.
 
----
+### Malware Analysis
 
-### Evil OAuth App Generator
+- **Scanner** — VirusTotal-backed scanner for files / URLs / hashes / IPs.
 
-The Evil OAuth App Generator (`/intelligence/evil-oauth`) is a consent phishing toolkit for Azure AD. It builds convincing Azure App Registration personas, generates consent phishing URLs, and auto-exchanges authorization codes for access tokens — all without ever exposing credentials.
+### Diagram Drawing
 
-**How it works:**
-
-1. **Build the app** — select one of 12 pre-built Microsoft app presets (Teams Meeting Add-in, SharePoint Site Sync, OneDrive Backup Agent, Entra ID Governance, Power Automate Bridge, etc.) or customize the App Name, Client ID, Tenant ID, and Redirect URI. Each preset comes with recommended high-value scopes.
-
-2. **Generate the consent URL** — the server builds an OAuth 2.0 Authorization Code Flow URL pointing to `https://login.microsoftonline.com/<tenant>/oauth2/v2.0/authorize` with your chosen scopes and a `state` parameter for tracking.
-
-3. **Deliver the lure** — use the Phishing Lures tab to generate ready-made email/Teams message templates referencing your app persona. The victim clicks the URL, is taken to a real Microsoft consent page under your app's name, and approves the requested delegated permissions.
-
-4. **Callback capture** — when the victim approves, Microsoft redirects to your configured callback URI (`/api/evil-oauth/callback`). The server captures the `code` + `state`, returns a convincing Microsoft "Staying signed in?" HTML splash page to avoid suspicion, and stores the capture in memory.
-
-5. **Auto-exchange** — the Capture Tracker tab shows all pending captures. One click triggers a server-side token exchange (`POST /api/evil-oauth/exchange`) using the `authorization_code` grant against the Microsoft token endpoint — never exposing the client secret to the browser.
-
-6. **Token vault integration** — successfully exchanged tokens are pushed directly into the Device Code Phishing Token Vault (`dc_tokens` in localStorage) so Graph enumeration queries can be run against them immediately.
-
-**Important:** You must register an Azure App Registration with `http://localhost:5000/api/evil-oauth/callback` as an allowed redirect URI and set `response_type=code` in the app manifest. The Client Secret is stored server-side only.
-
-**Tabs:**
-- **App Builder** — select preset or build custom app + scope picker
-- **Phishing Lures** — copy-ready email and Teams message templates
-- **Capture Tracker** — live list of pending codes, exchange status, victim UPN
-- **Reference** — OAuth 2.0 flow diagram + scope reference table
-
-**Backend routes:** `/api/evil-oauth/*` — callback is public (no auth), all other routes protected.
-
----
-
-### MFA Push Fatigue
-
-The MFA Push Fatigue module (`/intelligence/mfa-push`) assists with MFA push notification fatigue attacks (also known as MFA bombing).
-
-- Generate and track push notification campaigns
-- Configure timing, frequency, and target parameters
-- Log victim responses and authentication attempts
-
----
-
-### ClickFix Builder
-
-The ClickFix Builder (`/intelligence/clickfix`) generates social engineering lures that instruct victims to paste a malicious command into their terminal/run dialog by disguising it as a CAPTCHA or browser verification step.
-
-- Pre-built ClickFix templates for common lure scenarios
-- Customizable payload and lure text
-- Copy-ready HTML/Markdown output
-
----
-
-### AD Grapher
-
-The AD Grapher (`/intelligence/ad-grapher`) provides visual Active Directory relationship mapping from BloodHound-compatible data.
-
-- Import AD data and visualize object relationships
-- Highlight attack paths and high-value targets
-
----
-
-### Pass-the-Cookie Dashboard
-
-The Pass-the-Cookie Dashboard (`/intelligence/pass-cookie`) is a session hijacking toolkit for storing, managing, and replaying captured browser cookies against known SaaS targets.
-
-**How it works:**
-
-1. **Add cookies** — paste raw cookie strings (from XSS output, infostealer logs, MITM captures, or manual browser extraction) into the Add to Vault modal. The parser auto-detects the number of cookies and associates the entry with a target app (Microsoft 365, Google Workspace, GitHub, AWS Console, Okta, or custom).
-
-2. **Vault management** — all entries are stored in localStorage under `ptc_entries`. Each entry shows target app, session label, cookie count, and capture time. Entries can be deleted individually or cleared in bulk.
-
-3. **Replay session** — a "Use Cookies" button opens a new browser tab to the target app's URL. The workflow guides the operator through injecting the cookies via DevTools to hijack the session — bypassing MFA since the cookie already contains an authenticated session.
-
----
-
-### BloodHound Analyzer
-
-The BloodHound Analyzer (`/bloodhound/analyzer`) provides in-platform analysis of BloodHound data exports.
-
-- Upload BloodHound ZIP/JSON exports
-- Run pre-built and custom Cypher queries against the dataset
-- Visualize attack paths and identify shortest paths to Domain Admin
-
-### Cypher Library
-
-The Cypher Library (`/bloodhound/cypher-library`) is a searchable collection of BloodHound Cypher queries organized by attack category.
-
-- Browse and search queries by technique or target object type
-- One-click copy for use in BloodHound or the Analyzer
-- Categories: Shortest Paths, Kerberos, ACL Abuse, Group Membership, GPO, etc.
-
----
-
-### CVE Research Board
-
-The CVE Research Board (`/intelligence/cve-research`) tracks CVEs relevant to the current engagement.
-
-- Add CVEs by ID with auto-populated CVSS score, description, and affected products
-- Set exploitation status (Not Tested / Attempted / Exploited / Patched)
-- Link CVEs to findings for report integration
-- Filter by severity and status
-
----
-
-### Kerberos Tickets
-
-The Kerberos Tickets view (`/pillaging/kerberos`) tracks Kerberos tickets and related artifacts captured during an engagement.
-
-- Log captured TGTs, service tickets, and AS-REP hashes
-- Record ticket type (TGT, TGS, AS-REP, Silver, Golden, Diamond)
-- Track associated user, SPN, encryption type, and cracking status
-- Export ticket list for reporting
-
----
-
-### Redirector Chain Builder
-
-The Redirector Chain Builder (`/builders/redirector-chain`) designs multi-hop redirect infrastructure for phishing and C2 obfuscation.
-
-- Visually build redirect chains with configurable hop types
-- Supports HTTP 301/302, meta-refresh, and JavaScript redirects
-- Export chain configuration for deployment
-
----
-
-### Card Generation
-
-The Card Generation view (`/builders/card-generation`) generates fake identity cards and badges for physical red team engagements.
-
-- Customizable templates for employee badges, visitor passes, and ID cards
-- Input name, title, department, photo, and organization details
-- Export as printable image
-
----
-
-### Fake Teams Message
-
-The Fake Teams Message builder (`/builders/fake-teams`) generates convincing Microsoft Teams message screenshots for social engineering lures.
-
-- Compose a message with custom sender name, avatar, and timestamp
-- Choose Teams light or dark theme
-- Export as PNG for use in phishing emails or physical props
-
----
-
-### Org Chart Mapper
-
-The Org Chart Mapper (`/osint/org-chart`) builds visual organizational charts from OSINT-gathered employee data.
-
-- Add people with name, title, department, and reporting relationships
-- Auto-layout organizational hierarchy
-- Export chart for engagement documentation
-
----
-
-### Google Dorking
-
-The Google Dorking reference (`/resources/google-dorking`) provides a searchable library of Google dork queries for information gathering.
-
-- Categorized by target type (files, login pages, cameras, configs, etc.)
-- One-click copy for each dork
-- Useful for pre-engagement OSINT and attack surface discovery
-
----
-
-### Voice Cloner
-
-The Voice Cloner (`/cloning/voice-cloner`) assists with voice cloning operations for vishing engagements.
-
-- Interface for managing voice cloning workflows
-- Integration with voice synthesis tooling
-
----
-
-### Webhook Alerter
-
-The Webhook Alerter (`/comms/webhook-alerter`) sends real-time notifications to Slack, Teams, or Discord webhooks when engagement events occur.
-
-- Configure multiple webhook endpoints (Slack, Teams, Discord, custom)
-- Test webhook connectivity
-- Trigger manual alerts or tie to engagement events
-
----
-
-### White Team Communications
-
-The White Team view (`/comms/white-team`) manages communications with the white team (authorizing officials) during the engagement.
-
-- Log white team contacts with timestamps
-- Track de-confliction requests and approvals
-- Record stop/start authorizations
-
----
-
-### Reports View
-
-The Reports module (`/reporting/reports`) provides structured engagement report management per operation:
-
-- Create reports with type (Pentest, Red Team, Purple Team, Assumed Breach, Social Engineering), status (Draft, In Review, Finalized, Delivered), and classification (TLP:WHITE, TLP:GREEN, TLP:AMBER, TLP:RED)
-- Rich text sections: Executive Summary, Methodology, Attack Narrative, Recommendations
-- Track creation date, last updated, and assigned author
-- All reports are stored in MongoDB and scoped to the engagement
-
----
-
-### LOLBIN / LOLBAS Reference
-
-The LOLBIN / LOLBAS reference (`/resources/lolbins`) is a searchable, filterable encyclopedia of Living-Off-the-Land Binaries and Scripts for Windows and Linux.
-
-- Search by binary name, description, or ATT&CK technique ID
-- Filter by OS (Windows / Linux / macOS) and category (Execute, Download, Bypass, Lateral Movement, etc.)
-- Each entry shows the binary, usage examples, detection notes, and MITRE ATT&CK mapping
-- Copy-to-clipboard on all command examples
-
----
-
-### Domain Category Checker
-
-The Domain Category Checker (`/resources/domain-cat`) lets operators verify whether a newly registered domain has been categorized by web filtering vendors before using it in phishing infrastructure.
-
-- Submit a domain and check its category across multiple reputation sources
-- Uncategorized or "Unknown" domains are ideal for phishing C2 since they bypass category-based URL filtering
-- Shows content category, risk score, and first/last seen dates
-
----
-
-### Assumed Breach Simulation
-
-The Assumed Breach view (`/operations/assumed-breach`) tracks the starting conditions and scope for assumed breach engagements:
-
-- Document the assumed access level (workstation user, DA, cloud admin, etc.)
-- Track what credentials, certificates, or tokens are in scope from day 1
-- Log the narrative starting point for the red team engagement
-
----
-
-### File Metadata Extractor
-
-The File Metadata view (`/pillaging/file-meta`) extracts and analyzes metadata from uploaded documents:
-
-- Upload Office documents (DOCX, XLSX, PPTX), PDFs, and images
-- Extracts author, organization, creation/modification timestamps, GPS coordinates (images), software version, and revision history
-- Flags high-value metadata fields useful for OSINT and target profiling
-
----
-
-### Emails Harvester
-
-The Emails Harvester (`/osint/emails`) collects and organizes email addresses found during reconnaissance:
-
-- Add email addresses with associated name, department, and source
-- Import bulk email lists from paste format
-- Export collected emails for use in phishing campaigns or password spraying
-
----
-
-### Documents
-
-The Documents view (`/pillaging/documents`) tracks documents discovered or exfiltrated during an engagement:
-
-- Store document metadata: filename, type, source path, classification, and notes
-- Tag documents with sensitivity level and relevance to the engagement
-- Link documents to findings for evidence trail
-
----
-
-### Domain Recon
-
-The Domain Recon view (`/pillaging/domain-recon`) aggregates passive reconnaissance data for target domains:
-
-- DNS record enumeration (A, MX, TXT, NS, CNAME)
-- WHOIS data including registrar, registration date, and expiry
-- Mail security posture: SPF, DKIM, DMARC presence + policy analysis
-- Results stored per engagement for reporting
-
----
-
-### TTPs Tracker
-
-The TTPs module provides per-engagement technique tracking across five MITRE ATT&CK categories: Initial Access, Windows, Linux, Active Directory, and Network.
-
-- Each TTP entry records: technique ID (e.g. T1566.001), title, description, status (Planned / In Progress / Success / Failed / Detected), and notes
-- Detailed TTP view shows full narrative, timeline, and evidence links
-- Delete with themed confirmation modal (no native browser dialogs)
+- **Editor** — embedded draw.io editor with save-to-DB.
+- **My Diagrams** — grid of saved diagrams owned by the operator.
 
 ---
 
@@ -521,193 +358,104 @@ The TTPs module provides per-engagement technique tracking across five MITRE ATT
 
 All routes under `/dashboard/*` are protected — unauthenticated users are redirected to `/signin`.
 
-**Global routes:**
+### Global routes
 
-| Path | View | Status |
-|---|---|---|
-| `/dashboard` | Operations Overview | Built |
-| `/dashboard/engagements` | Engagements List | Built |
-| `/dashboard/settings` | Settings | Built |
-| `/dashboard/cheatsheet/red-team-map` | Red Team Ops Map | Built |
-| `/dashboard/cheatsheet/ad-map` | AD Attack Map | Built |
-| `/dashboard/cheatsheet/payload-map` | Payload & Evasion Map | Built |
-| `/dashboard/lab/configs` | Lab Configs | Built |
-| `/dashboard/lab/connectivity` | Lab Connectivity (Twingate) | Built |
-| `/dashboard/resources/tools` | Tools | Built |
-| `/dashboard/resources/cve-feed` | CVE Feed | Built |
-| `/dashboard/resources/ransom-feed` | Ransomware Feed | Built |
-| `/dashboard/resources/email-leaks` | Email Leaks (HIBP) | Built |
-| `/dashboard/resources/lolbins` | LOLBIN / LOLBAS Reference | Built |
-| `/dashboard/resources/domain-cat` | Domain Category Checker | Built |
-| `/dashboard/resources/google-dorking` | Google Dorking | Built |
-| `/dashboard/cloning/voice-cloner` | Voice Cloner | Built |
-| `/dashboard/malware/scanner` | Malware Scanner | Built |
-| `/dashboard/malware/reports` | Analysis Reports | Placeholder |
-| `/dashboard/diagrams/editor` | Diagram Editor (draw.io embed) | Built |
-| `/dashboard/diagrams/library` | My Diagrams | Built |
+| Path | View |
+|---|---|
+| `/dashboard` | Operations Overview |
+| `/dashboard/engagements` | Engagements list |
+| `/dashboard/settings` | Settings |
+| `/dashboard/cheatsheet/red-team-map` | Red Team Ops Map |
+| `/dashboard/cheatsheet/ad-map` | AD Attack Map |
+| `/dashboard/cheatsheet/payload-map` | Payload & Evasion Map |
+| `/dashboard/lab/configs` | Lab Configs |
+| `/dashboard/resources/tools` | Tools |
+| `/dashboard/resources/cve-feed` | CVE Feed |
+| `/dashboard/resources/ransom-feed` | Ransom Feed |
+| `/dashboard/resources/email-leaks` | Email Leaks (HIBP) |
+| `/dashboard/resources/lolbins` | LOLBIN / LOLBAS |
+| `/dashboard/resources/google-dorking` | Google Dorking |
+| `/dashboard/malware/scanner` | Malware Scanner |
+| `/dashboard/diagrams/editor` | Diagram Editor |
+| `/dashboard/diagrams/library` | My Diagrams |
 
-**Per-engagement routes (under `/:slug/*`):**
+### Per-engagement routes (under `/dashboard/:slug/*`)
 
-| Path | View | Status |
-|---|---|---|
-| `/:slug` | Engagement Detail | Built |
-| `/:slug/operations/activity` | Activity Log | Built |
-| `/:slug/operations/calendar` | Calendar | Built |
-| `/:slug/operations/skill-requests` | Skill Requests | Built |
-| `/:slug/operations/ttx` | TTX Planner | Built |
-| `/:slug/operations/team-vault` | Team Vault | Built |
-| `/:slug/operations/assumed-breach` | Assumed Breach | Built |
-| `/:slug/team/people` | People & Skills | Built |
-| `/:slug/team/resources` | Resources | Built |
-| `/:slug/intelligence/loot-tracker` | Loot Tracker | Built |
-| `/:slug/intelligence/evidence-vault` | Evidence Vault | Built |
-| `/:slug/intelligence/cleanup-tracker` | Cleanup Tracker | Built |
-| `/:slug/intelligence/reverse-shells` | Reverse Shells | Built |
-| `/:slug/intelligence/cve-research` | CVE Research Board | Built |
-| `/:slug/intelligence/c2` | C2 Infrastructure | Built |
-| `/:slug/intelligence/phishing` | Phishing Infrastructure | Built |
-| `/:slug/intelligence/device-code-phishing` | Device Code Phishing | Built |
-| `/:slug/intelligence/device-code-phishing/:category/:querySlug` | Graph Result | Built |
-| `/:slug/intelligence/pass-cookie` | Pass-the-Cookie | Built |
-| `/:slug/intelligence/evil-oauth` | Evil OAuth Generator | Built |
-| `/:slug/intelligence/mfa-push` | MFA Push Fatigue | Built |
-| `/:slug/intelligence/clickfix` | ClickFix Builder | Built |
-| `/:slug/intelligence/ad-grapher` | AD Grapher | Built |
-| `/:slug/builders/username-gen` | Username Generator | Built |
-| `/:slug/builders/typosquat` | Typosquat Generator | Built |
-| `/:slug/builders/qr-codes` | QR Code Generator | Built |
-| `/:slug/builders/wordlist-gen` | Wordlist Generator | Built |
-| `/:slug/builders/redirector-chain` | Redirector Chain | Built |
-| `/:slug/builders/card-generation` | Card Generation | Built |
-| `/:slug/builders/fake-teams` | Fake Teams Message | Built |
-| `/:slug/sockpuppets/personas` | Personas | Built |
-| `/:slug/sockpuppets/social-media` | Social Media | Placeholder |
-| `/:slug/ttps/initial-access` | Initial Access TTPs | Built |
-| `/:slug/ttps/initial-access/:ttpId` | TTP Detail | Built |
-| `/:slug/ttps/windows` | Windows TTPs | Built |
-| `/:slug/ttps/windows/:ttpId` | TTP Detail | Built |
-| `/:slug/ttps/linux` | Linux TTPs | Built |
-| `/:slug/ttps/linux/:ttpId` | TTP Detail | Built |
-| `/:slug/ttps/active-directory` | Active Directory TTPs | Built |
-| `/:slug/ttps/active-directory/:ttpId` | TTP Detail | Built |
-| `/:slug/ttps/network` | Network TTPs | Built |
-| `/:slug/ttps/network/:ttpId` | TTP Detail | Built |
-| `/:slug/pillaging/domain-recon` | Domain Recon | Built |
-| `/:slug/pillaging/subdomains` | Subdomain Enumeration | Built |
-| `/:slug/pillaging/services` | Network Scanning | Built |
-| `/:slug/pillaging/webserver-enum` | Webserver Enumeration | Built |
-| `/:slug/pillaging/domain-flyover` | Domain Flyover | Built |
-| `/:slug/pillaging/leaks` | Leaks | Placeholder |
-| `/:slug/pillaging/credentials` | Credentials | Placeholder |
-| `/:slug/pillaging/kerberos` | Kerberos Tickets | Built |
-| `/:slug/pillaging/emails` | Emails Harvester | Built |
-| `/:slug/pillaging/documents` | Documents | Built |
-| `/:slug/pillaging/file-meta` | File Metadata | Built |
-| `/:slug/bloodhound/analyzer` | BloodHound Analyzer | Built |
-| `/:slug/bloodhound/cypher-library` | Cypher Library | Built |
-| `/:slug/osint/emails` | Emails Harvester | Built |
-| `/:slug/osint/org-chart` | Org Chart Mapper | Built |
-| `/:slug/comms/white-team` | White Team | Built |
-| `/:slug/comms/webhook-alerter` | Webhook Alerter | Built |
-| `/:slug/reporting/reports` | Reports | Built |
-| `/:slug/reporting/findings` | Findings | Built |
-| `/:slug/reporting/findings/:findingId` | Finding Detail | Built |
-| `/:slug/reporting/client-portal` | Client Portal | Built |
+| Path | View |
+|---|---|
+| `/:slug` | Engagement Detail |
+| `/:slug/operations/activity` | Activity Log |
+| `/:slug/operations/calendar` | Calendar |
+| `/:slug/operations/skill-requests` | Skill Requests |
+| `/:slug/operations/ttx` | TTX Planner |
+| `/:slug/operations/team-vault` | Team Vault |
+| `/:slug/operations/sessions` | Operator Sessions |
+| `/:slug/operations/attack-relay` | Attack Relay Board |
+| `/:slug/operations/bingo` | Engagement Bingo |
+| `/:slug/operations/tasks` | Tasks Planner |
+| `/:slug/operations/assumed-breach` | Assumed Breach |
+| `/:slug/team/people` | People & Skills |
+| `/:slug/team/resources` | Resources |
+| `/:slug/intelligence/loot-tracker` | Loot Tracker |
+| `/:slug/intelligence/evidence-vault` | Evidence Vault |
+| `/:slug/intelligence/cleanup-tracker` | Cleanup Tracker |
+| `/:slug/intelligence/reverse-shells` | Reverse Shells |
+| `/:slug/intelligence/cve-research` | CVE Research Board |
+| `/:slug/intelligence/service-catalog` | Service Catalog |
+| `/:slug/intelligence/c2` | C2 Infrastructure |
+| `/:slug/intelligence/phishing` | Phishing Infrastructure |
+| `/:slug/intelligence/device-code-phishing` | Device Code Phishing |
+| `/:slug/intelligence/device-code-phishing/:category/:querySlug` | Graph Result |
+| `/:slug/intelligence/pass-cookie` | Pass-the-Cookie |
+| `/:slug/intelligence/evil-oauth` | Evil OAuth Generator |
+| `/:slug/intelligence/mfa-push` | MFA Push Fatigue |
+| `/:slug/intelligence/ad-grapher` | AD Grapher |
+| `/:slug/builders/username-gen` | Username Generator |
+| `/:slug/builders/typosquat` | Typosquat Generator |
+| `/:slug/builders/qr-codes` | QR Code Generator |
+| `/:slug/builders/wordlist-gen` | Wordlist Generator |
+| `/:slug/builders/redirector-chain` | Redirector Chain |
+| `/:slug/builders/card-generation` | Card Generation |
+| `/:slug/builders/fake-teams` | Fake Teams Message |
+| `/:slug/sockpuppets/personas` | Personas |
+| `/:slug/sockpuppets/social-media` | Social Media |
+| `/:slug/ttps/:category` | TTPs list (initial-access / windows / linux / active-directory / network) |
+| `/:slug/ttps/:category/:ttpId` | TTP Detail |
+| `/:slug/pillaging/domain-recon` | Domain Recon |
+| `/:slug/pillaging/subdomains` | Subdomain Enumeration |
+| `/:slug/pillaging/services` | Network Scanning |
+| `/:slug/pillaging/webserver-enum` | Webserver Enumeration |
+| `/:slug/pillaging/domain-flyover` | Domain Flyover |
+| `/:slug/pillaging/jwt-studio` | JWT Studio |
+| `/:slug/pillaging/credentials` | Leaks & Credentials |
+| `/:slug/pillaging/kerberos` | Kerberos Tickets |
+| `/:slug/pillaging/documents` | Documents |
+| `/:slug/pillaging/file-meta` | File Metadata |
+| `/:slug/bloodhound/analyzer` | BloodHound Analyzer |
+| `/:slug/bloodhound/cypher-library` | Cypher Library |
+| `/:slug/osint/emails` | Emails Harvester |
+| `/:slug/osint/org-chart` | Org Chart Mapper |
+| `/:slug/comms/white-team` | White Team |
+| `/:slug/comms/webhook-alerter` | Webhook Alerter |
+| `/:slug/reporting/reports` | Reports |
+| `/:slug/reporting/findings` | Findings |
+| `/:slug/reporting/findings/:findingId` | Finding Detail |
+| `/:slug/reporting/client-portal` | Client Portal |
 
 ---
 
-## Dashboard File Structure
+## Docker Requirements
 
-```
-src/components/dashboard/
-├── DashboardLayout.js              # Full-screen layout — sidebar + topbar + nested routes
-├── EngagementLayout.js             # Per-engagement route wrapper
-├── Sidebar.js                      # Left nav — global + per-engagement sections
-├── TopBar.js                       # Search + notifications + @callsign chip
-├── DeleteConfirmModal.js           # Shared themed delete confirmation modal
-├── views/
-│   ├── DashboardView.js            # Operations Overview — stat cards + all widgets
-│   ├── PlaceholderView.js          # Reusable "under construction" view
-│   ├── EngagementsView.js          # Engagements list + create
-│   ├── EngagementDetailView.js     # Single engagement overview
-│   ├── SettingsView.js             # User settings (profile, password, compact mode)
-│   ├── RedTeamMapView.js           # Cheatsheet — Red Team Ops Map
-│   ├── ADAttackMapView.js          # Cheatsheet — AD Attack Map
-│   ├── PayloadMapView.js           # Cheatsheet — Payload & Evasion Map
-│   ├── LabConfigsView.js           # Red Lab — Ludus template cards + deploy modal
-│   ├── LabConnectivityView.js      # Red Lab — Twingate VPN walkthrough
-│   ├── CVEFeedView.js              # Resources — live CVE feed + CVE ID search
-│   ├── RansomFeedView.js           # Resources — ransomware group feed
-│   ├── EmailLeaksView.js           # Resources — HIBP breach lookup
-│   ├── LolbinView.js               # Resources — LOLBIN/LOLBAS reference
-│   ├── DomainCatView.js            # Resources — domain category checker
-│   ├── GoogleDorkingView.js        # Resources — Google dork library
-│   ├── ToolsView.js                # Resources — red team tools reference
-│   ├── VoiceClonerView.js          # Cloning — voice cloning workflow
-│   ├── MalwareScannerView.js       # Malware — VirusTotal scanner
-│   ├── DiagramEditorView.js        # Diagrams — draw.io embed with save to DB
-│   ├── DiagramLibraryView.js       # Diagrams — grid of saved diagrams
-│   ├── ActivityView.js             # Operations — activity log
-│   ├── CalendarView.js             # Operations — engagement calendar
-│   ├── SkillRequestsView.js        # Operations — skill requests tracker
-│   ├── TTXPlannerView.js           # Operations — tabletop exercise planner
-│   ├── TeamVaultView.js            # Operations — shared team credential vault
-│   ├── AssumedBreachView.js        # Operations — assumed breach starting conditions
-│   ├── PeopleSkillsView.js         # Team — operator list + skill assignment
-│   ├── ResourcesView.js            # Team — resource tracking
-│   ├── LootTrackerView.js          # Intelligence — loot tracker
-│   ├── EvidenceVaultView.js        # Intelligence — evidence vault
-│   ├── CleanupTrackerView.js       # Intelligence — cleanup tracker
-│   ├── ReverseShellView.js         # Intelligence — reverse shell generator
-│   ├── CVEResearchView.js          # Intelligence — CVE research board
-│   ├── C2View.js                   # Infrastructure — C2 infrastructure manager
-│   ├── PhishingView.js             # Infrastructure — phishing infrastructure
-│   ├── DeviceCodePhishingView.js   # Infrastructure — device code phishing + token vault
-│   ├── graphEnumCatalog.js         # Infrastructure — Graph API query catalog
-│   ├── GraphResultView.js          # Infrastructure — Graph enumeration results
-│   ├── PassCookieView.js           # Infrastructure — pass-the-cookie vault
-│   ├── EvilOAuthView.js            # Infrastructure — Evil OAuth consent phishing
-│   ├── MfaPushView.js              # Infrastructure — MFA push fatigue
-│   ├── ClickFixView.js             # Infrastructure — ClickFix lure builder
-│   ├── ADGrapherView.js            # Infrastructure — AD relationship grapher
-│   ├── UsernameGeneratorView.js    # Builders — username permutation generator
-│   ├── TyposquatView.js            # Builders — typosquat domain generator
-│   ├── QRCodeView.js               # Builders — QR code generator
-│   ├── WordlistView.js             # Builders — custom wordlist builder
-│   ├── RedirectorChainView.js      # Builders — redirector chain designer
-│   ├── CardGenerationView.js       # Builders — fake badge / ID card generator
-│   ├── FakeTeamsView.js            # Builders — fake Teams message screenshot
-│   ├── PersonasView.js             # Sock Puppets — persona manager
-│   ├── SocialMediaView.js          # Sock Puppets — social media presence tracker
-│   ├── TTPsView.js                 # TTPs — technique list per category
-│   ├── TTPDetailView.js            # TTPs — single technique detail + edit
-│   ├── DomainReconView.js          # Pillaging — DNS/WHOIS/mail security recon
-│   ├── SubdomainsView.js           # Pillaging — subdomain enumeration (subfinder)
-│   ├── NetworkScannerView.js       # Pillaging — port/service scanner (rustscan)
-│   ├── WebserverEnumView.js        # Pillaging — HTTP/S probing (httpx)
-│   ├── DomainFlyoverView.js        # Pillaging — visual screenshot capture (gowitness)
-│   ├── KerberosView.js             # Pillaging — Kerberos ticket tracker
-│   ├── EmailsView.js               # Pillaging / OSINT — emails harvester
-│   ├── DocumentsView.js            # Pillaging — exfiltrated document tracker
-│   ├── FileMetaView.js             # Pillaging — file metadata extractor
-│   ├── BloodHoundView.js           # BloodHound — data analyzer
-│   ├── CypherLibraryView.js        # BloodHound — Cypher query library
-│   ├── OrgChartView.js             # OSINT — org chart mapper
-│   ├── WhiteTeamView.js            # Comms — white team communications log
-│   ├── WebhookAlerterView.js       # Comms — webhook notification sender
-│   ├── ReportsView.js              # Reporting — engagement report manager
-│   ├── FindingsView.js             # Reporting — findings list
-│   ├── FindingDetailView.js        # Reporting — single finding detail + edit
-│   └── ClientPortalView.js         # Reporting — client portal
-└── widgets/
-    ├── StatCard.js                 # Colored-accent stat card
-    ├── EngagementCard.js           # Individual operation card with progress + findings
-    ├── ActiveEngagements.js        # Fixed-height paginated panel of EngagementCards
-    ├── FindingsBreakdown.js        # Severity bar chart + total count
-    ├── ResourceUtilization.js      # Top-5 resource bars by usage ratio
-    ├── RecentActivity.js           # Timestamped activity feed with colored dots
-    └── TeamSkillCoverage.js        # Skill coverage bars with color thresholds
-```
+Several pillaging features run as Docker containers. Make sure Docker Desktop is running before using them.
+
+| Feature | Image | Pull |
+|---|---|---|
+| Subdomain Enumeration | `projectdiscovery/subfinder` | `docker pull projectdiscovery/subfinder` |
+| Webserver Enumeration | `projectdiscovery/httpx` | `docker pull projectdiscovery/httpx` |
+| Domain Flyover | `leonjza/gowitness` | `docker pull leonjza/gowitness` |
+| Network Scanning | `rustscan/rustscan` | `docker pull rustscan/rustscan` |
+
+> On Windows, ensure `C:\Users\<you>\AppData\Local\Temp` is shared with Docker Desktop (Settings → Resources → File Sharing).
 
 ---
 
@@ -715,119 +463,188 @@ src/components/dashboard/
 
 ```
 red-team-operations-center/
-├── docs/                               # Documentation assets (screenshots etc.)
+├── docs/                               # Screenshots & documentation assets
 ├── server/                             # Node.js + Express backend
-│   ├── index.js                        # Entry point — CORS, session, passport, route mounts
-│   ├── .env                            # Environment variables (never commit)
+│   ├── index.js                        # CORS, session, passport, route mounts
+│   ├── .env                            # Environment variables (gitignored)
 │   ├── config/
-│   │   ├── db.js                       # Mongoose connection to MongoDB
-│   │   └── passport.js                 # Passport Google + GitHub OAuth strategies
-│   ├── models/
-│   │   ├── User.js                     # User schema
-│   │   ├── Engagement.js               # Engagement schema — full op data
-│   │   └── Diagram.js                  # Diagram schema — name, XML, thumbnail, owner
-│   ├── controllers/
-│   │   ├── authController.js           # register(), login(), 2FA business logic
-│   │   ├── engagementController.js     # Engagement CRUD
-│   │   ├── userController.js           # Profile + password update
-│   │   ├── c2Controller.js             # C2 droplet CRUD
-│   │   ├── phishingController.js       # Phishing campaign CRUD
-│   │   ├── deviceCodeController.js     # Device code flow — generate, poll, exchange
-│   │   ├── passCookieController.js     # Pass-the-cookie vault CRUD
-│   │   ├── evilOAuthController.js      # Evil OAuth — URL gen, callback capture, exchange
-│   │   ├── lootController.js           # Loot tracker CRUD
-│   │   ├── evidenceController.js       # Evidence vault CRUD
-│   │   ├── cleanupController.js        # Cleanup tracker CRUD
-│   │   ├── vaultController.js          # Team vault CRUD
-│   │   ├── documentsController.js      # Document tracker CRUD
-│   │   ├── assumedBreachController.js  # Assumed breach entries CRUD
-│   │   ├── fileMetaController.js       # File metadata extraction
-│   │   ├── reportController.js         # Engagement reports CRUD
-│   │   ├── networkScannerController.js # Port/service scanning via rustscan Docker
-│   │   ├── webserverEnumController.js  # HTTP/S probing via httpx Docker
-│   │   ├── domainFlyoverController.js  # Screenshot capture via gowitness Docker
-│   │   ├── subdomainsController.js     # Subdomain enumeration via subfinder Docker
-│   │   ├── kerberosController.js       # Kerberos ticket tracker CRUD
-│   │   ├── bloodhoundController.js     # BloodHound data analysis
-│   │   ├── leakxController.js          # LeakIX proxy
-│   │   ├── cveController.js            # CVE feed + research board
-│   │   ├── ghdbController.js           # Google Dorking / GHDB
-│   │   └── qrController.js             # QR code generation
-│   ├── routes/
-│   │   ├── auth.js                     # /api/auth/*
-│   │   ├── oauth.js                    # /api/oauth/*
-│   │   ├── engagements.js              # /api/engagements/*
-│   │   ├── users.js                    # /api/users/*
-│   │   ├── cve.js                      # /api/cve/*
-│   │   ├── diagrams.js                 # /api/diagrams/*
-│   │   ├── c2.js                       # /api/c2/*
-│   │   ├── phishing.js                 # /api/phishing/*
-│   │   ├── deviceCode.js               # /api/device-code/*
-│   │   ├── passCookie.js               # /api/pass-cookie/*
-│   │   ├── evilOAuth.js                # /api/evil-oauth/*
-│   │   ├── loot.js                     # /api/loot/*
-│   │   ├── evidence.js                 # /api/evidence/*
-│   │   ├── cleanup.js                  # /api/cleanup/*
-│   │   ├── vault.js                    # /api/vault/*
-│   │   ├── documents.js                # /api/documents/*
-│   │   ├── assumedBreach.js            # /api/assumed-breach/*
-│   │   ├── fileMeta.js                 # /api/file-meta/*
-│   │   ├── reports.js                  # /api/reports/*
-│   │   ├── recon.js                    # /api/recon/*
-│   │   ├── domainCat.js                # /api/domain-cat/*
-│   │   ├── networkScanner.js           # /api/network-scanner/*
-│   │   ├── webserverEnum.js            # /api/webserver-enum/*
-│   │   ├── domainFlyover.js            # /api/domain-flyover/*
-│   │   ├── subdomains.js               # /api/subdomains/*
-│   │   ├── bloodhound.js               # /api/bloodhound/*
-│   │   ├── kerberos.js                 # /api/kerberos/*
-│   │   ├── leakx.js                    # /api/leakx/*
-│   │   ├── emailleaks.js               # /api/email-leaks/*
-│   │   ├── malware.js                  # /api/malware/*
-│   │   ├── ransom.js                   # /api/ransom/*
-│   │   ├── portal.js                   # /api/portal/*
-│   │   ├── emails.js                   # /api/emails/*
-│   │   ├── ghdb.js                     # /api/ghdb/*
-│   │   ├── telegram.js                 # /api/telegram/*
-│   │   ├── qr.js                       # /api/qr/*
-│   │   └── tools.js                    # /api/tools/*
+│   │   ├── db.js                       # Mongoose connection
+│   │   └── passport.js                 # Google + GitHub OAuth strategies (conditional)
+│   ├── models/                         # Mongoose schemas (User, Engagement, Diagram, …)
+│   ├── controllers/                    # Per-feature business logic
+│   ├── routes/                         # Express route mounts (/api/*)
 │   ├── middleware/
-│   │   ├── validate.js                 # express-validator input rules per route
-│   │   └── authMiddleware.js           # protect() — JWT verification
+│   │   ├── validate.js                 # express-validator rules
+│   │   └── authMiddleware.js           # JWT verification (protect)
 │   └── utils/
-│       └── token.js                    # signToken(), verifyToken(), temp token helpers
+│       └── token.js                    # JWT signing / verification helpers
 │
 └── src/                                # React frontend
     ├── App.js                          # ChakraProvider + AnimatePresence + Routes
-    ├── theme.js                        # Chakra UI dark theme (Inter font, #111111 bg)
-    ├── index.js                        # React DOM entry point
+    ├── theme.js                        # Chakra UI dark theme
+    ├── index.js                        # React DOM entry
     ├── styles/
-    │   └── cardStyles.js               # Shared commonCard style object
+    │   └── cardStyles.js
     ├── contexts/
-    │   ├── AuthContext.js              # Auth state — login, register, 2FA, OAuth, JWT
-    │   ├── SettingsContext.js          # User settings (compact mode etc.)
+    │   ├── AuthContext.js              # Auth — login, register, 2FA, OAuth, JWT
+    │   ├── SettingsContext.js          # User preferences
     │   └── EngagementContext.js        # Engagement state + dashboard stats
     └── components/
         ├── common/
-        │   ├── Navigation.js           # Frosted-glass nav bar, route-aware active state
-        │   ├── PageLayout.js           # Shared wrapper for static pages
-        │   └── SparkleQuote.js         # Hover sparkle animation component
+        │   ├── Navigation.js           # Public top nav (Operators, Pricing, Sign In, Register)
+        │   ├── PageLayout.js           # Public-page wrapper
+        │   └── SparkleQuote.js
         ├── auth/
-        │   └── AuthForm.js             # Sign in / Register form + Google/GitHub OAuth buttons
-        └── dashboard/                  # See Dashboard File Structure above
+        │   ├── AuthForm.js             # Sign in / Register form + OAuth buttons
+        │   └── OAuthCallback.js
+        ├── pages/                      # Public marketing pages
+        │   ├── LandingLayout.js
+        │   ├── LandingHero.js
+        │   ├── Operators.js
+        │   ├── Pricing.js
+        │   └── …
+        ├── portal/
+        │   └── ClientPortal.js         # Tenant-scoped client portal
+        └── dashboard/                  # See Dashboard Views below
+```
+
+### Dashboard views
+
+```
+src/components/dashboard/
+├── DashboardLayout.js                  # Sidebar + topbar + nested routes
+├── EngagementLayout.js                 # Per-engagement route wrapper
+├── Sidebar.js                          # Left nav — global + per-engagement sections
+├── TopBar.js                           # Search + notifications + @callsign chip
+├── CommandPalette.js                   # Global Ctrl/Cmd + K nav
+├── DeleteConfirmModal.js               # Themed delete confirmation
+├── ProfileModal.js                     # Operator profile modal
+└── views/
+    ├── DashboardView.js                # Operations Overview
+    ├── PlaceholderView.js              # Reusable empty/placeholder view
+    ├── EngagementsView.js              # Engagements list + create
+    ├── EngagementDetailView.js         # Single engagement overview
+    ├── SettingsView.js                 # User settings
+    │
+    ├── RedTeamMapView.js               # Cheatsheet — Red Team Ops Map
+    ├── ADAttackMapView.js              # Cheatsheet — AD Attack Map
+    ├── PayloadMapView.js               # Cheatsheet — Payload & Evasion Map
+    │
+    ├── LabConfigsView.js               # Red Lab — Ludus templates
+    │
+    ├── CVEFeedView.js                  # Resources — CVE feed
+    ├── RansomFeedView.js               # Resources — ransom group feed
+    ├── EmailLeaksView.js               # Resources — HIBP lookup
+    ├── LolbinView.js                   # Resources — LOLBIN/LOLBAS reference
+    ├── GoogleDorkingView.js            # Resources — Google dork library
+    ├── ToolsView.js                    # Resources — tools reference
+    │
+    ├── MalwareScannerView.js           # Malware — VirusTotal scanner
+    │
+    ├── DiagramEditorView.js            # Diagrams — draw.io embed
+    ├── DiagramLibraryView.js           # Diagrams — saved diagrams grid
+    │
+    ├── ActivityView.js                 # Operations — activity log
+    ├── CalendarView.js                 # Operations — engagement calendar
+    ├── SkillRequestsView.js            # Operations — skill requests
+    ├── TTXPlannerView.js               # Operations — TTX planner
+    ├── TeamVaultView.js                # Operations — team vault
+    ├── OperatorSessionsView.js         # Operations — operator sessions
+    ├── AttackRelayView.js              # Operations — attack relay board
+    ├── BingoView.js                    # Operations — engagement bingo
+    ├── TasksPlannerView.js             # Operations — tasks planner
+    ├── AssumedBreachView.js            # Operations — assumed breach
+    │
+    ├── PeopleSkillsView.js             # Team — people & skills
+    ├── ResourcesView.js                # Team — resources
+    │
+    ├── LootTrackerView.js              # Intelligence — loot tracker
+    ├── EvidenceVaultView.js            # Intelligence — evidence vault
+    ├── CleanupTrackerView.js           # Intelligence — cleanup tracker
+    ├── ReverseShellView.js             # Intelligence — reverse shells
+    ├── CVEResearchView.js              # Intelligence — CVE research board
+    ├── ServiceCatalogView.js           # Intelligence — service catalog
+    │
+    ├── C2View.js                       # Infrastructure — C2
+    ├── PhishingView.js                 # Infrastructure — phishing
+    ├── DeviceCodePhishingView.js       # Infrastructure — device code phishing
+    ├── graphEnumCatalog.js             # Infrastructure — Graph API catalog
+    ├── GraphResultView.js              # Infrastructure — Graph results
+    ├── PassCookieView.js               # Infrastructure — pass-the-cookie
+    ├── EvilOAuthView.js                # Infrastructure — Evil OAuth
+    ├── MfaPushView.js                  # Infrastructure — MFA push
+    ├── ADGrapherView.js                # Infrastructure — AD grapher
+    │
+    ├── UsernameGeneratorView.js        # Builders — username generator
+    ├── TyposquatView.js                # Builders — typosquat generator
+    ├── QRCodeView.js                   # Builders — QR codes
+    ├── WordlistView.js                 # Builders — wordlist
+    ├── RedirectorChainView.js          # Builders — redirector chain
+    ├── CardGenerationView.js           # Builders — fake badges/IDs
+    ├── FakeTeamsView.js                # Builders — fake Teams message
+    │
+    ├── PersonasView.js                 # Sock Puppets — personas
+    ├── SocialMediaView.js              # Sock Puppets — social media
+    │
+    ├── TTPsView.js                     # TTPs — list per category
+    ├── TTPDetailView.js                # TTPs — single technique detail
+    │
+    ├── DomainReconView.js              # Pillaging — domain recon
+    ├── SubdomainsView.js               # Pillaging — subdomains
+    ├── NetworkScannerView.js           # Pillaging — port scanner
+    ├── WebserverEnumView.js            # Pillaging — HTTP probing
+    ├── DomainFlyoverView.js            # Pillaging — screenshots
+    ├── JWTStudioView.js                # Pillaging — JWT studio
+    ├── LeaksCredentialsView.js         # Pillaging — leaks & credentials
+    ├── KerberosView.js                 # Pillaging — Kerberos tickets
+    ├── DocumentsView.js                # Pillaging — documents
+    ├── FileMetaView.js                 # Pillaging — file metadata
+    │
+    ├── BloodHoundView.js               # BloodHound — analyzer
+    ├── CypherLibraryView.js            # BloodHound — Cypher library
+    │
+    ├── EmailsView.js                   # OSINT — emails harvester
+    ├── OrgChartView.js                 # OSINT — org chart mapper
+    │
+    ├── WhiteTeamView.js                # Comms — white team
+    ├── WebhookAlerterView.js           # Comms — webhook alerter
+    │
+    ├── ReportsView.js                  # Reporting — reports
+    ├── FindingsView.js                 # Reporting — findings list
+    ├── FindingDetailView.js            # Reporting — finding detail
+    ├── ClientPortalView.js             # Reporting — client portal
+    └── LeakIXView.js                   # Reporting / Resources — LeakIX proxy view
+```
+
+### Dashboard widgets
+
+```
+src/components/dashboard/widgets/
+├── StatCard.js                         # Colored-accent stat card
+├── EngagementCard.js                   # Operation card with progress + findings
+├── ActiveEngagements.js                # Paginated panel of EngagementCards
+├── FindingsBreakdown.js                # Severity bar chart + total
+├── ResourceUtilization.js              # Top-5 resource usage bars
+├── RecentActivity.js                   # Activity feed with type indicators
+└── TeamSkillCoverage.js                # Skill coverage bars
 ```
 
 ---
 
-## Docker Requirements
+## Auth Flow
 
-Several pillaging and scanning tools run as Docker containers. Make sure Docker Desktop is running before using these features.
+- **Email + password** with optional TOTP-based 2FA (`speakeasy` + `qrcode` for QR provisioning).
+- **Google OAuth** via Passport (only registered if `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` are set).
+- **GitHub OAuth** via Passport (only registered if `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` are set).
+- **JWT** issued on successful login, stored client-side, sent as `Authorization: Bearer <token>`.
+- **Client portal** uses a separate tenant-scoped JWT for read-only client access.
 
-| Feature | Image | Pull Command |
-|---|---|---|
-| Subdomain Enumeration | `projectdiscovery/subfinder` | `docker pull projectdiscovery/subfinder` |
-| Webserver Enumeration | `projectdiscovery/httpx` | `docker pull projectdiscovery/httpx` |
-| Domain Flyover | `leonjza/gowitness` | `docker pull leonjza/gowitness` |
-| Network Scanning | `rustscan/rustscan` | `docker pull rustscan/rustscan` |
+If the OAuth env vars are commented out (the default), the server starts cleanly with both providers disabled — only the email/password and 2FA flows are active.
 
-> On Windows with Docker Desktop, ensure the `C:\Users\<you>\AppData\Local\Temp` path is shared with Docker (Settings → Resources → File Sharing).
+---
+
+## Notes
+
+- The platform is intended for authorized red team engagements, security research, and CTFs. Use only against systems and identities you own or have explicit written permission to test.
+- All persistent data is stored in MongoDB; per-feature local state (token vaults, pass-the-cookie entries, OAuth config drafts) is kept in browser `localStorage` so it survives reloads but is wiped on browser cache clear.
+- Several modules talk to live external services (Microsoft Graph, HIBP, VirusTotal, Intel X). Respect each provider's rate limits and ToS.

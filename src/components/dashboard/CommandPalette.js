@@ -174,8 +174,6 @@ const CommandPalette = () => {
       { icon: 'lock',     label: 'AD Attack Map',       route: '/dashboard/cheatsheet/ad-map' },
       { icon: 'attach',   label: 'Payload & Evasion Map', route: '/dashboard/cheatsheet/payload-map' },
       { icon: 'settings', label: 'Lab Configs',         route: '/dashboard/lab/configs' },
-      { icon: 'arrow',    label: 'Lab Connectivity',    route: '/dashboard/lab/connectivity' },
-      { icon: 'attach',   label: 'Voice Cloner',        route: '/dashboard/cloning/voice-cloner' },
       { icon: 'search',   label: 'Malware Scanner',     route: '/dashboard/malware/scanner' },
       { icon: 'edit',     label: 'Diagram Editor',      route: '/dashboard/diagrams/editor' },
       { icon: 'attach',   label: 'My Diagrams',         route: '/dashboard/diagrams/library' },

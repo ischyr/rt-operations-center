@@ -3,12 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
-  { key: 'about',          label: 'ABOUT',          path: '/about'          },
-  { key: 'operators',      label: 'OPERATORS',      path: '/operators'      },
-  { key: 'certifications', label: 'CERTIFICATIONS', path: '/certifications' },
-  { key: 'pricing',        label: 'PRICING',        path: '/pricing'        },
-  { key: 'signin',         label: 'SIGN IN',        path: '/signin'         },
-  { key: 'register',       label: 'REGISTER',       path: '/register'       },
+  { key: 'operators', label: 'OPERATORS', path: '/operators' },
+  { key: 'pricing',   label: 'PRICING',   path: '/pricing'   },
+  { key: 'signin',    label: 'SIGN IN',   path: '/signin'    },
+  { key: 'register',  label: 'REGISTER',  path: '/register'  },
 ];
 
 const Navigation = () => {
@@ -17,11 +15,9 @@ const Navigation = () => {
   const { clearMessage } = useAuth();
 
   const active = (() => {
-    if (location.pathname.startsWith('/about'))          return 'about';
-    if (location.pathname.startsWith('/operators'))      return 'operators';
-    if (location.pathname.startsWith('/certifications')) return 'certifications';
-    if (location.pathname.startsWith('/pricing'))        return 'pricing';
-    if (location.pathname.startsWith('/register'))       return 'register';
+    if (location.pathname.startsWith('/operators')) return 'operators';
+    if (location.pathname.startsWith('/pricing'))   return 'pricing';
+    if (location.pathname.startsWith('/register'))  return 'register';
     return 'signin';
   })();
 

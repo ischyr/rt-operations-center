@@ -73,8 +73,16 @@ const NotifPanel = ({ logs, pos, onClose, panelRef }) => {
       {/* Body */}
       <Box px={4} py={3}>
         {logs.length === 0 ? (
-          <Flex direction="column" align="center" py={8} gap={2}>
-            <Text fontSize="xl">🔔</Text>
+          <Flex direction="column" align="center" py={8} gap={3}>
+            <Flex
+              align="center" justify="center"
+              w="32px" h="32px"
+              borderRadius="9px"
+              bg="rgba(255,80,95,0.10)"
+              border="1px solid rgba(255,80,95,0.25)"
+            >
+              <BellIcon boxSize={3.5} color="red.300" />
+            </Flex>
             <Text fontSize="sm" color="var(--dash-text-muted)">No activity yet.</Text>
             <Text fontSize="11px" color="var(--dash-text-muted)">Start an engagement to see logs here.</Text>
           </Flex>

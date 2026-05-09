@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box, Flex, Text, Heading, Button, IconButton, Input,
   SimpleGrid, Spinner, Menu, MenuButton, MenuList, MenuItem,
-  Modal, ModalOverlay, ModalContent, ModalBody,
+  Modal, ModalOverlay, ModalContent, ModalBody, Icon,
 } from '@chakra-ui/react';
+import { FaGlobe } from 'react-icons/fa';
 import {
   SearchIcon, DeleteIcon, CopyIcon, CheckIcon,
   ChevronDownIcon, ChevronUpIcon, RepeatIcon, DownloadIcon,
@@ -985,7 +986,13 @@ const SubdomainsView = () => {
       {scans.length === 0 ? (
         <Flex direction="column" align="center" justify="center" gap={3} py={16}
           borderRadius="14px" bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)">
-          <Text fontSize="28px">🌐</Text>
+          <Flex
+            align="center" justify="center"
+            w="48px" h="48px" borderRadius="12px"
+            bg="rgba(255,80,95,0.10)" border="1px solid rgba(255,80,95,0.25)"
+          >
+            <Icon as={FaGlobe} boxSize={5} color="red.300" />
+          </Flex>
           <Text fontWeight="bold" color="var(--dash-text-primary)">No scans yet</Text>
           <Text fontSize="sm" color="var(--dash-text-muted)">
             Enter a domain above and hit Scan to start enumerating.

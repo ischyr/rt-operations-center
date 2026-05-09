@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
   Box, Flex, Text, Heading, Button, IconButton, Input, Textarea,
-  SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody,
+  SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody, Icon,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, CloseIcon } from '@chakra-ui/icons';
+import { FaMap } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
@@ -504,7 +505,13 @@ const TTXPlannerView = () => {
       {phases.length === 0 ? (
         <Flex direction="column" align="center" justify="center" py={16} gap={3}
           bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)" borderRadius="16px">
-          <Text fontSize="36px">🗺️</Text>
+          <Flex
+            align="center" justify="center"
+            w="48px" h="48px" borderRadius="12px"
+            bg="rgba(255,80,95,0.10)" border="1px solid rgba(255,80,95,0.25)"
+          >
+            <Icon as={FaMap} boxSize={5} color="red.300" />
+          </Flex>
           <Text fontSize="14px" fontWeight="semibold" color="var(--dash-text-primary)">No phases planned yet</Text>
           <Text fontSize="12px" color="var(--dash-text-muted)" textAlign="center" maxW="380px">
             Break the engagement into phases — Recon, Initial Access, Lateral Movement — assign

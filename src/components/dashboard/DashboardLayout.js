@@ -11,7 +11,6 @@ import RedTeamMapView from './views/RedTeamMapView';
 import ADAttackMapView from './views/ADAttackMapView';
 import PayloadMapView from './views/PayloadMapView';
 import LabConfigsView from './views/LabConfigsView';
-import LabConnectivityView from './views/LabConnectivityView';
 import PlaceholderView from './views/PlaceholderView';
 import CVEFeedView from './views/CVEFeedView';
 import RansomFeedView from './views/RansomFeedView';
@@ -20,7 +19,6 @@ import DiagramEditorView from './views/DiagramEditorView';
 import DiagramLibraryView from './views/DiagramLibraryView';
 import ToolsView from './views/ToolsView';
 import MalwareScannerView from './views/MalwareScannerView';
-import VoiceClonerView from './views/VoiceClonerView';
 import LolbinView from './views/LolbinView';
 import GoogleDorkingView from './views/GoogleDorkingView';
 import CommandPalette from './CommandPalette';
@@ -54,7 +52,6 @@ const DashboardLayout = () => (
           <Route path="cheatsheet/payload-map"  element={<PayloadMapView />} />
           {/* Red Lab routes */}
           <Route path="lab/configs"      element={<LabConfigsView />} />
-          <Route path="lab/connectivity" element={<LabConnectivityView />} />
           {/* Resources & Materials routes */}
           <Route path="resources/tools"        element={<ToolsView />} />
           <Route path="resources/cve-feed"    element={<CVEFeedView />} />
@@ -62,11 +59,8 @@ const DashboardLayout = () => (
           <Route path="resources/email-leaks"  element={<EmailLeaksView />} />
           <Route path="resources/lolbins"      element={<LolbinView />} />
           <Route path="resources/google-dorking" element={<GoogleDorkingView />} />
-          {/* Cloning routes */}
-          <Route path="cloning/voice-cloner" element={<VoiceClonerView />} />
           {/* Malware Analysis routes */}
           <Route path="malware/scanner" element={<MalwareScannerView />} />
-          <Route path="malware/reports" element={<PlaceholderView title="Analysis Reports" />} />
           {/* Diagram Drawing routes */}
           <Route path="diagrams/editor"  element={<DiagramEditorView />} />
           <Route path="diagrams/library" element={<DiagramLibraryView />} />

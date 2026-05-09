@@ -260,7 +260,7 @@ export default function EvilOAuthView() {
   const [appName, setAppName]     = useState('');
   const [clientId, setClientId]   = useState('');
   const [clientSecret, setSecret] = useState('');
-  const [tenant, setTenant]       = useState('organizations');
+  const [tenant, setTenant]       = useState('');
   const [redirectUri, setRedirectUri] = useState(
     () => window.location.origin.replace(':3000', ':5000') + '/api/evil-oauth/callback'
   );

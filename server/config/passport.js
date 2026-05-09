@@ -46,43 +46,51 @@ const findOrCreate = async (provider, profileId, email, displayName, avatarUrl) 
 };
 
 // ── Google ─────────────────────────────────────────────────────────────────────
-passport.use(new GoogleStrategy(
-  {
-    clientID:     process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:  `${BACKEND_URL}/api/oauth/google/callback`,
-  },
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      const email     = profile.emails?.[0]?.value;
-      const avatarUrl = profile.photos?.[0]?.value;
-      const user = await findOrCreate('google', profile.id, email, profile.displayName, avatarUrl);
-      done(null, user);
-    } catch (e) {
-      done(e);
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy(
+    {
+      clientID:     process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL:  `${BACKEND_URL}/api/oauth/google/callback`,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email     = profile.emails?.[0]?.value;
+        const avatarUrl = profile.photos?.[0]?.value;
+        const user = await findOrCreate('google', profile.id, email, profile.displayName, avatarUrl);
+        done(null, user);
+      } catch (e) {
+        done(e);
+      }
     }
-  }
-));
+  ));
+} else {
+  console.warn('[passport] Google OAuth disabled — GOOGLE_CLIENT_ID/SECRET not set');
+}
 
 // ── GitHub ─────────────────────────────────────────────────────────────────────
-passport.use(new GitHubStrategy(
-  {
-    clientID:     process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL:  `${BACKEND_URL}/api/oauth/github/callback`,
-    scope:        ['user:email'],
-  },
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      const email     = profile.emails?.[0]?.value;
-      const avatarUrl = profile.photos?.[0]?.value;
-      const user = await findOrCreate('github', profile.id, email, profile.displayName || profile.username, avatarUrl);
-      done(null, user);
-    } catch (e) {
-      done(e);
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  passport.use(new GitHubStrategy(
+    {
+      clientID:     process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL:  `${BACKEND_URL}/api/oauth/github/callback`,
+      scope:        ['user:email'],
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email     = profile.emails?.[0]?.value;
+        const avatarUrl = profile.photos?.[0]?.value;
+        const user = await findOrCreate('github', profile.id, email, profile.displayName || profile.username, avatarUrl);
+        done(null, user);
+      } catch (e) {
+        done(e);
+      }
     }
-  }
-));
+  ));
+} else {
+  console.warn('[passport] GitHub OAuth disabled — GITHUB_CLIENT_ID/SECRET not set');
+}
 
 // Minimal session serialisation (only used during the OAuth redirect dance)
 passport.serializeUser((user, done)   => done(null, user._id.toString()));

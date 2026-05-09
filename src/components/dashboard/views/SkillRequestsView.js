@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
   Box, Flex, Text, Heading, Button, IconButton, Input, Select, Textarea,
-  SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody,
+  SimpleGrid, Modal, ModalOverlay, ModalContent, ModalBody, Icon, useDisclosure,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, CloseIcon, EditIcon } from '@chakra-ui/icons';
+import { FaBrain } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import { useEngagements } from '../../../contexts/EngagementContext';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -228,9 +229,20 @@ const SkillRequestsView = () => {
 
   const [filterStatus, setFilterStatus] = useState('all');
   const [search,       setSearch]       = useState('');
-  const [modal,        setModal]        = useState(false);
+  const { isOpen: modal, onOpen: openModal, onClose: closeModalRaw } = useDisclosure();
   const [form,         setForm]         = useState(BLANK);
   const [editingId,    setEditingId]    = useState(null);
+
+  const closeModal = () => {
+    closeModalRaw();
+    setEditingId(null);
+  };
+
+  const openNewModal = () => {
+    setForm(BLANK);
+    setEditingId(null);
+    openModal();
+  };
 
   if (!eng) return null;
 
@@ -289,40 +301,42 @@ const SkillRequestsView = () => {
       description: req.description || '',
       assignedTo:  (req.assignedTo || []).map(String),
     });
-    setModal(true);
+    openModal();
   };
 
-  const saveRequest = () => {
+  const saveRequest = async () => {
     if (!form.skill.trim()) return;
 
-    if (editingId) {
-      // Update existing
-      updateEngagement(eng.id, {
-        skillRequests: requests.map(r =>
-          (r.id || String(r._id)) === editingId
-            ? { ...r, skill: form.skill.trim(), category: form.category, priority: form.priority, description: form.description.trim(), assignedTo: form.assignedTo }
-            : r
-        ),
-      });
-    } else {
-      // Create new
-      const req = {
-        id:                  Date.now().toString(),
-        skill:               form.skill.trim(),
-        category:            form.category,
-        priority:            form.priority,
-        description:         form.description.trim(),
-        status:              'Open',
-        assignedTo:          form.assignedTo,
-        requestedBy:         myId,
-        requestedByCallsign: currentUser?.callsign || '',
-      };
-      updateEngagement(eng.id, { skillRequests: [...requests, req] });
-    }
+    const updates = editingId
+      ? {
+          skillRequests: requests.map(r =>
+            (r.id || String(r._id)) === editingId
+              ? { ...r, skill: form.skill.trim(), category: form.category, priority: form.priority, description: form.description.trim(), assignedTo: form.assignedTo }
+              : r
+          ),
+        }
+      : {
+          skillRequests: [
+            ...requests,
+            {
+              id:                  Date.now().toString(),
+              skill:               form.skill.trim(),
+              category:            form.category,
+              priority:            form.priority,
+              description:         form.description.trim(),
+              status:              'Open',
+              assignedTo:          form.assignedTo,
+              requestedBy:         myId,
+              requestedByCallsign: currentUser?.callsign || '',
+            },
+          ],
+        };
+
+    await updateEngagement(eng.id, updates);
 
     setForm(BLANK);
     setEditingId(null);
-    setModal(false);
+    closeModalRaw();
   };
 
   const deleteRequest = (rid) => {
@@ -356,7 +370,7 @@ const SkillRequestsView = () => {
         <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" borderRadius="8px"
           bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
           color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
-          onClick={() => { setForm(BLANK); setEditingId(null); setModal(true); }}>
+          onClick={openNewModal}>
           Add Skill Gap
         </Button>
       </Flex>
@@ -382,7 +396,13 @@ const SkillRequestsView = () => {
         <Flex direction="column" align="center" justify="center" py={16} gap={3}
           bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
           borderRadius="16px">
-          <Text fontSize="36px">🧠</Text>
+          <Flex
+            align="center" justify="center"
+            w="48px" h="48px" borderRadius="12px"
+            bg="rgba(255,80,95,0.10)" border="1px solid rgba(255,80,95,0.25)"
+          >
+            <Icon as={FaBrain} boxSize={5} color="red.300" />
+          </Flex>
           <Text fontSize="14px" fontWeight="semibold" color="var(--dash-text-primary)">
             No skill gaps logged yet
           </Text>
@@ -393,7 +413,7 @@ const SkillRequestsView = () => {
           <Button size="sm" leftIcon={<AddIcon boxSize={2.5} />} fontSize="12px" mt={2}
             borderRadius="8px" bg="rgba(255,80,95,0.1)" border="1px solid rgba(255,80,95,0.3)"
             color="rgba(255,130,130,0.9)" _hover={{ bg: 'rgba(255,80,95,0.18)' }}
-            onClick={() => { setForm(BLANK); setEditingId(null); setModal(true); }}>
+            onClick={openNewModal}>
             Log First Skill Gap
           </Button>
         </Flex>
@@ -421,7 +441,7 @@ const SkillRequestsView = () => {
       )}
 
       {/* ── Add Skill Gap Modal ── */}
-      <Modal isOpen={modal} onClose={() => { setModal(false); setEditingId(null); }} isCentered size="md">
+      <Modal isOpen={modal} onClose={closeModal} isCentered size="md">
         <ModalOverlay bg="rgba(0,0,0,0.65)" backdropFilter="blur(4px)" />
         <ModalContent bg="var(--dash-card-bg)" border="1px solid var(--dash-card-border)"
           borderRadius="16px" overflow="hidden" p={0}
@@ -449,7 +469,7 @@ const SkillRequestsView = () => {
                 <IconButton icon={<CloseIcon boxSize={2.5} />} size="xs" variant="ghost"
                   color="var(--dash-text-muted)" borderRadius="8px"
                   _hover={{ color: 'white', bg: 'rgba(255,255,255,0.06)' }}
-                  onClick={() => { setModal(false); setEditingId(null); }} aria-label="Close" />
+                  onClick={closeModal} aria-label="Close" />
               </Flex>
 
               {/* Skill name */}
@@ -549,7 +569,7 @@ const SkillRequestsView = () => {
                 <Button flex="1" size="sm" variant="ghost" borderRadius="10px"
                   color="var(--dash-text-muted)" border="1px solid rgba(255,255,255,0.08)"
                   _hover={{ bg: 'rgba(255,255,255,0.05)', color: 'white' }}
-                  onClick={() => { setModal(false); setEditingId(null); }}>
+                  onClick={closeModal}>
                   Cancel
                 </Button>
                 <Button flex="1" size="sm" borderRadius="10px" fontWeight="semibold"

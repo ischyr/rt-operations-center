@@ -6,13 +6,13 @@ import OperatorCard from './operators/OperatorCard';
 // ── Add / edit your team members here ────────────────────────────────────────
 const operators = [
   {
-    callsign: 'Iulian Schifirnet',
+    callsign: 'Marcus Halloway',
     realName: 'Lead Red Team Operator',
     image: '',
     aliases: ['Ghost', 'Specter'],
     firstActive: '2019',
     latestActivity: 'Present',
-    languages: ['English', 'Romanian'],
+    languages: ['English', 'Spanish'],
     geography: ['Europe', 'Middle East'],
     focus: ['Adversary Emulation', 'C2 Development'],
     motivation: ['Espionage Sim', 'Research'],
@@ -24,7 +24,7 @@ const operators = [
       'Primarily relies on living-off-the-land techniques combined with custom implants to evade modern EDR solutions. Expert in Active Directory abuse, credential harvesting, and C2 infrastructure obfuscation.',
   },
   {
-    callsign: 'Andrei Stefanescu',
+    callsign: 'Dimitri Volkov',
     realName: 'Web & Cloud Specialist',
     image: '',
     aliases: ['Viper', 'NS'],
@@ -42,7 +42,7 @@ const operators = [
       'Leverages automated recon pipelines combined with deep manual testing to identify high-impact vulnerabilities. Skilled at chaining low-severity findings into critical attack paths against cloud-native architectures.',
   },
   {
-    callsign: 'Kelyan Yesil',
+    callsign: 'Sofia Marquez',
     realName: 'OSINT & Recon Lead',
     image: '',
     aliases: ['Wolf', 'Alpha'],

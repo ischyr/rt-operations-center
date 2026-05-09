@@ -3,7 +3,7 @@ import {
   Box, Flex, Text, Heading, Grid, Badge, Button,
   Progress, Divider, Input, Select,
 } from '@chakra-ui/react';
-import { AddIcon, SearchIcon } from '@chakra-ui/icons';
+import { AddIcon, SearchIcon, WarningTwoIcon } from '@chakra-ui/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -160,11 +160,11 @@ const EmptyState = ({ onNew }) => (
     borderRadius="16px"
   >
     <Box
-      w="56px" h="56px" borderRadius="14px"
-      bg="rgba(255,80,95,0.08)" border="1px solid rgba(255,80,95,0.15)"
+      w="48px" h="48px" borderRadius="12px"
+      bg="rgba(255,80,95,0.10)" border="1px solid rgba(255,80,95,0.25)"
       display="flex" alignItems="center" justifyContent="center"
     >
-      <Box as="span" fontSize="24px">⚡</Box>
+      <WarningTwoIcon boxSize={5} color="red.300" />
     </Box>
     <Box textAlign="center">
       <Text fontWeight="bold" color="var(--dash-text-primary)" mb={1}>No engagements yet</Text>
