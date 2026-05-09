@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Flex, Text, IconButton } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { ChevronLeftIcon, ChevronRightIcon, WarningTwoIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEngagements } from '../../../contexts/EngagementContext';
@@ -164,8 +164,14 @@ const ActiveEngagements = () => {
             <Text fontSize="sm" color="var(--dash-text-muted)">Loading...</Text>
           </Flex>
         ) : activeEngagements.length === 0 ? (
-          <Flex h="100%" direction="column" align="center" justify="center" gap={2} color="var(--dash-text-muted)">
-            <Text fontSize="2xl">⚡</Text>
+          <Flex h="100%" direction="column" align="center" justify="center" gap={3} color="var(--dash-text-muted)">
+            <Box
+              w="40px" h="40px" borderRadius="10px"
+              bg="rgba(255,80,95,0.10)" border="1px solid rgba(255,80,95,0.25)"
+              display="flex" alignItems="center" justifyContent="center"
+            >
+              <WarningTwoIcon boxSize={4} color="red.300" />
+            </Box>
             <Text fontSize="sm">No engagements yet.</Text>
             <Text fontSize="11px">Create one from the Engagements page.</Text>
           </Flex>

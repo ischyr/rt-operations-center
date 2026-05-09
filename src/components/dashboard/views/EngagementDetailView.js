@@ -716,7 +716,7 @@ const EngagementDetailView = () => {
           {/* Compact info grid */}
           <Box
             pt={operators.length > 0 ? 4 : 0}
-            mt={operators.length > 0 ? 4 : 0}
+            mt={4}
             borderTop={operators.length > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none'}
           >
             <SimpleGrid columns={2} spacing={3}>

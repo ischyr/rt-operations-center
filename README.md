@@ -37,9 +37,19 @@ Frontend runs at `http://localhost:3000`, backend at `http://localhost:5000`.
 
 ## Environment Variables
 
-All server config is loaded from `server/.env`. Copy the template below and fill in the values you need — most variables have sensible defaults, and OAuth / external API keys are optional (the corresponding features just turn off if absent).
+The project uses two `.env` files — one at the repo root for the React dev server, and one in `server/` for the backend. Both are gitignored. Create them from the templates below.
+
+### `.env` (root, next to `package.json`)
+
+Only one variable is needed — it disables the strict host check that webpack-dev-server in `react-scripts 5.0.1` enforces by default. Without it, `npm start` fails with `options.allowedHosts[0] should be a non-empty string`.
+
+```env
+DANGEROUSLY_DISABLE_HOST_CHECK=true
+```
 
 ### `server/.env`
+
+All backend config is loaded from `server/.env`. Copy the template below and fill in the values you need — most variables have sensible defaults, and OAuth / external API keys are optional (the corresponding features just turn off if absent).
 
 ```env
 # ── Core ────────────────────────────────────────────────────────────────────
@@ -100,8 +110,6 @@ SESSION_SECRET=change_this_to_a_random_string
 | `HIBP_API_KEY` | No | — | Powers the Email Leaks lookup |
 | `VT_API_KEY` | No | — | Powers the Malware Scanner |
 | `CHROME_PATH` | No | bundled Chromium | Override for puppeteer's Chrome binary |
-
-> The root-level `.env` (next to `package.json`) only contains the CRA dev flag `DANGEROUSLY_DISABLE_HOST_CHECK=true`. It's gitignored.
 
 ---
 
