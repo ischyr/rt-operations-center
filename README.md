@@ -145,9 +145,6 @@ Visiting `/` redirects authenticated operators to `/dashboard` and unauthenticat
 ### Operations Dashboard
 ![Dashboard](docs/screenshots/02-dashboard.png)
 
-### Engagements Center
-![Engagements](docs/screenshots/03-engagements.png)
-
 ### Cheatsheet — Payload & Evasion Map
 ![Cheatsheet](docs/screenshots/04-cheatsheet.png)
 
